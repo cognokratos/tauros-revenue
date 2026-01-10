@@ -15,6 +15,7 @@ defmodule TaurosWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_current_scope_for_api_user
   end
 
   scope "/", TaurosWeb do
@@ -23,10 +24,9 @@ defmodule TaurosWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", TaurosWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", TaurosWeb do
+    pipe_through :api
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:tauros, :dev_routes) do
