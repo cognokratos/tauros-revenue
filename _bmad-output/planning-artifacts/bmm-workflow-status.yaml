@@ -26,7 +26,7 @@ workflow_status:
   brainstorm-project: skipped
   research: skipped
   product-brief: "/Users/victornitu/Projects/CognoKratos/tauros-revenue/_bmad-output/planning-artifacts/product-brief-tauros-revenue-2026-01-15.md"
-  prd: required
+  prd: "/Users/victornitu/Projects/CognoKratos/tauros-revenue/_bmad-output/planning-artifacts/prd.md"
   create-ux-design: conditional
   create-architecture: required
   create-epics-and-stories: required
@@ -36,4 +36,7 @@ workflow_status:
 workflow_status_metadata:
   product-brief:
     completed_at: "2026-01-15"
+    status: "completed"
+  prd:
+    completed_at: "2026-01-15 21:58:51 CET"
     status: "completed"
