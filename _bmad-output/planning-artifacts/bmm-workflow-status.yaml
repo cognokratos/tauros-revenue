@@ -27,7 +27,7 @@ workflow_status:
   research: skipped
   product-brief: "/Users/victornitu/Projects/CognoKratos/tauros-revenue/_bmad-output/planning-artifacts/product-brief-tauros-revenue-2026-01-15.md"
   prd: "/Users/victornitu/Projects/CognoKratos/tauros-revenue/_bmad-output/planning-artifacts/prd.md"
-  create-ux-design: conditional
+  create-ux-design: "/Users/victornitu/Projects/CognoKratos/tauros-revenue/_bmad-output/planning-artifacts/ux-design-specification.md"
   create-architecture: required
   create-epics-and-stories: required
   test-design: optional
@@ -39,4 +39,7 @@ workflow_status_metadata:
     status: "completed"
   prd:
     completed_at: "2026-01-15 21:58:51 CET"
+    status: "completed"
+  create-ux-design:
+    completed_at: "2026-01-16 17:18:57 CET"
     status: "completed"

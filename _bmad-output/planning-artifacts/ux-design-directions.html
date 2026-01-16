@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tauros Revenue – UX Design Directions</title>
+  <style>
+    :root {
+      --mist-50: #f6f8fb;
+      --mist-100: #eef2f7;
+      --mist-200: #e2e8f0;
+      --slate-600: #4b5563;
+      --slate-800: #1f2937;
+      --slate-900: #111827;
+      --blue-500: #3b82f6;
+      --blue-600: #2563eb;
+      --green-500: #22c55e;
+      --amber-500: #f59e0b;
+      --red-500: #ef4444;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-1: 0 12px 30px rgba(15, 23, 42, 0.12);
+      --shadow-2: 0 18px 50px rgba(15, 23, 42, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Work Sans", "Space Grotesk", system-ui, sans-serif;
+      color: var(--slate-900);
+      background: radial-gradient(1200px 800px at 20% -10%, #ffffff, var(--mist-100));
+    }
+
+    h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
+    p { margin: 0; color: var(--slate-600); }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 { font-size: clamp(28px, 2.6vw, 40px); }
+    .hero p { max-width: 720px; }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 20px 0 40px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--slate-800);
+      background: #fff;
+      border: 1px solid var(--mist-200);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .direction {
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 32px;
+      background: #fff;
+      border: 1px solid var(--mist-200);
+      box-shadow: var(--shadow-1);
+    }
+
+    .direction-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .direction-header h2 { font-size: 22px; }
+    .badge {
+      background: var(--mist-100);
+      color: var(--slate-800);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid var(--mist-200);
+    }
+
+    .mockup {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--mist-200);
+      background: var(--mist-50);
+      padding: 18px;
+    }
+
+    .mockup + .mockup { margin-top: 16px; }
+
+    .row { display: grid; gap: 16px; }
+    @media (min-width: 920px) {
+      .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid var(--mist-200);
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .card h3 { font-size: 16px; }
+    .meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--slate-600);
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .chip.pending { background: #dbeafe; color: #1e3a8a; }
+    .chip.approved { background: #dcfce7; color: #14532d; }
+    .chip.review { background: #fef3c7; color: #92400e; }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: none;
+      background: var(--blue-600);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .cta.secondary {
+      background: #fff;
+      color: var(--slate-800);
+      border: 1px solid var(--mist-200);
+    }
+
+    .rail {
+      background: #fff;
+      border: 1px solid var(--mist-200);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+      min-height: 280px;
+    }
+
+    .rail .item {
+      background: var(--mist-100);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .list-item {
+      display: grid;
+      gap: 6px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--mist-200);
+      padding: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .input {
+      border: 1px solid var(--mist-200);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 12px;
+      min-width: 180px;
+      background: #fff;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--slate-600);
+    }
+
+    .direction.alt {
+      background: linear-gradient(140deg, #ffffff, #f2f6fb);
+    }
+
+    .direction.shadow { box-shadow: var(--shadow-2); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <h1>Tauros Revenue – Design Direction Mockups</h1>
+      <p>Six visual directions aligned with Mist &amp; Slate, blue accents, modern minimal type, and compact efficiency. Each direction shows a different way to stage the “approval inbox” and the one-click validation flow.</p>
+    </div>
+
+    <nav class="nav">
+      <a href="#direction-1">01 Quiet Ledger</a>
+      <a href="#direction-2">02 Calm Feed</a>
+      <a href="#direction-3">03 Focus Panel</a>
+      <a href="#direction-4">04 Split Review</a>
+      <a href="#direction-5">05 Compact List</a>
+      <a href="#direction-6">06 Zen Flow</a>
+    </nav>
+
+    <section id="direction-1" class="direction">
+      <div class="direction-header">
+        <h2>01 Quiet Ledger</h2>
+        <span class="badge">Minimal cards + single focus pane</span>
+      </div>
+      <div class="mockup">
+        <div class="toolbar">
+          <div>
+            <h3>Invoices to Validate</h3>
+            <p>3 pending approvals · last sync 2m ago</p>
+          </div>
+          <button class="cta">Approve All Ready</button>
+        </div>
+        <div class="row">
+          <div class="list">
+            <div class="list-item">
+              <strong>Arbor Labs · $4,800</strong>
+              <span class="meta">USDC · 0x5a...f2e · Due in 5 days</span>
+              <span class="chip review">AI summary: Monthly retainer</span>
+            </div>
+            <div class="list-item">
+              <strong>Nova Health · $1,200</strong>
+              <span class="meta">ETH · 0x2b...c91 · Due in 2 days</span>
+              <span class="chip pending">AI summary: Support sprint</span>
+            </div>
+            <div class="list-item">
+              <strong>Flux Studio · $980</strong>
+              <span class="meta">USDC · 0x9e...ab1 · Due tomorrow</span>
+              <span class="chip pending">AI summary: Design subscription</span>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Why this invoice exists</h3>
+            <p>AI grouped the April retainer based on contract #A-224. Account auto-selected from USD stablecoin pool.</p>
+            <div class="meta">
+              <span>Account: USDC Treasury</span>
+              <span>Routing: Low-fee path</span>
+              <span>Status: Ready for approval</span>
+            </div>
+            <div>
+              <button class="cta">Approve Invoice</button>
+              <button class="cta secondary">Request Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">Best for: clear validation with a calm, centered explanation panel.</p>
+    </section>
+
+    <section id="direction-2" class="direction alt">
+      <div class="direction-header">
+        <h2>02 Calm Feed</h2>
+        <span class="badge">Timeline + micro-summaries</span>
+      </div>
+      <div class="mockup">
+        <div class="toolbar">
+          <div>
+            <h3>Approval Feed</h3>
+            <p>Short check-in flow for quick validations</p>
+          </div>
+          <input class="input" value="Search customers" />
+        </div>
+        <div class="list">
+          <div class="card">
+            <div class="meta">
+              <span class="chip pending">Pending</span>
+              <span>5 minutes ago</span>
+            </div>
+            <h3>Arbor Labs · $4,800</h3>
+            <p>AI billed monthly retainer, auto-selected USDC treasury.</p>
+            <button class="cta">Approve</button>
+          </div>
+          <div class="card">
+            <div class="meta">
+              <span class="chip review">Needs review</span>
+              <span>12 minutes ago</span>
+            </div>
+            <h3>Flux Studio · $980</h3>
+            <p>Design subscription, due tomorrow. Reason: milestone completion.</p>
+            <button class="cta">Approve</button>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">Best for: short check-ins with a feed-like, news-inspired rhythm.</p>
+    </section>
+
+    <section id="direction-3" class="direction shadow">
+      <div class="direction-header">
+        <h2>03 Focus Panel</h2>
+        <span class="badge">Single task with deep clarity</span>
+      </div>
+      <div class="mockup">
+        <div class="row">
+          <div class="card">
+            <h3>Next Invoice</h3>
+            <p>Arbor Labs · $4,800 · USDC</p>
+            <div class="meta">
+              <span>Reason: April retainer</span>
+              <span>Auto account: Treasury</span>
+              <span>Due: 5 days</span>
+            </div>
+            <button class="cta">Approve Now</button>
+            <button class="cta secondary">View Details</button>
+          </div>
+          <div class="rail">
+            <div class="item">AI queued 3 invoices today</div>
+            <div class="item">1 invoice awaiting edits</div>
+            <div class="item">Delivery service online</div>
+            <div class="item">Last approval: 14m ago</div>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">Best for: a focused “one task at a time” review loop.</p>
+    </section>
+
+    <section id="direction-4" class="direction">
+      <div class="direction-header">
+        <h2>04 Split Review</h2>
+        <span class="badge">List + right-side reasoning</span>
+      </div>
+      <div class="mockup">
+        <div class="row">
+          <div class="list">
+            <div class="list-item">
+              <strong>Arbor Labs · $4,800</strong>
+              <span class="meta">USDC · 0x5a...f2e · Due in 5 days</span>
+              <span class="chip pending">Ready</span>
+            </div>
+            <div class="list-item">
+              <strong>Flux Studio · $980</strong>
+              <span class="meta">USDC · 0x9e...ab1 · Due tomorrow</span>
+              <span class="chip review">Needs review</span>
+            </div>
+          </div>
+          <div class="card">
+            <h3>AI Summary</h3>
+            <p>Arbor Labs billed for April retainer. Selected USDC to reduce volatility and fees.</p>
+            <div class="meta">
+              <span>Confidence: High</span>
+              <span>Rule: Retainer automation</span>
+            </div>
+            <button class="cta">Approve</button>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">Best for: balancing scan speed with a dedicated reasoning pane.</p>
+    </section>
+
+    <section id="direction-5" class="direction alt">
+      <div class="direction-header">
+        <h2>05 Compact List</h2>
+        <span class="badge">Dense list + quick approve</span>
+      </div>
+      <div class="mockup">
+        <div class="toolbar">
+          <h3>Pending Approvals</h3>
+          <button class="cta">Approve Selected</button>
+        </div>
+        <div class="list">
+          <div class="list-item">
+            <div class="meta"><span class="chip pending">Pending</span> · Arbor Labs</div>
+            <strong>$4,800 · USDC</strong>
+            <p>Reason: April retainer. Account: Treasury.</p>
+          </div>
+          <div class="list-item">
+            <div class="meta"><span class="chip pending">Pending</span> · Flux Studio</div>
+            <strong>$980 · USDC</strong>
+            <p>Reason: Design subscription. Account: Growth.</p>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">Best for: power users who want compact, list-heavy clarity.</p>
+    </section>
+
+    <section id="direction-6" class="direction shadow">
+      <div class="direction-header">
+        <h2>06 Zen Flow</h2>
+        <span class="badge">Quiet step-by-step validation</span>
+      </div>
+      <div class="mockup">
+        <div class="card">
+          <h3>Step 1 · Review Summary</h3>
+          <p>Arbor Labs · $4,800 · USDC</p>
+          <div class="meta">
+            <span>Why: April retainer</span>
+            <span>Account: Treasury</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Step 2 · Confirm</h3>
+          <p>Invoice will be delivered automatically once approved.</p>
+          <button class="cta">Approve &amp; Close</button>
+        </div>
+      </div>
+      <p class="footer-note">Best for: calm micro-steps, emphasizing reassurance and closure.</p>
+    </section>
+  </div>
+</body>
+</html>
