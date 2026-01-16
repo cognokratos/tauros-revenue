@@ -18,6 +18,15 @@ defmodule TaurosWeb.Router do
     plug :fetch_current_scope_for_api_user
   end
 
+  pipeline :api_admin do
+    plug :accepts, ["json"]
+    plug :require_admin_api_token
+  end
+
+  pipeline :api_admin_public do
+    plug :accepts, ["json"]
+  end
+
   scope "/", TaurosWeb do
     pipe_through :browser
 
@@ -26,6 +35,18 @@ defmodule TaurosWeb.Router do
 
   scope "/api", TaurosWeb do
     pipe_through :api
+  end
+
+  scope "/api/admin", TaurosWeb.Api.Admin do
+    pipe_through :api_admin_public
+
+    post "/v1/login", LoginController, :create
+  end
+
+  scope "/api/admin", TaurosWeb.Api.Admin do
+    pipe_through :api_admin
+
+    get "/v1/test", TestController, :show
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
