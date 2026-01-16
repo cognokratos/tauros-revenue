@@ -1,0 +1,88 @@
+# generated: 2026-01-16 17:36:17
+# project: tauros-revenue
+# project_key: TR
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-16 17:36:17
+project: tauros-revenue
+project_key: TR
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: backlog
+  1-1-admin-authentication-for-admin-endpoints: backlog
+  1-2-admin-registers-agent: backlog
+  1-3-admin-registers-customer: backlog
+  1-4-enforce-customer-ownership-by-agent: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-agent-registers-wallet-account: backlog
+  2-2-admin-views-accounts-in-ui: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-agent-creates-invoice-via-mcp: backlog
+  3-2-admin-reviews-pending-invoice: backlog
+  3-3-admin-approves-or-rejects-invoice: backlog
+  3-4-admin-edits-invoice-before-approval: backlog
+  3-5-enforce-human-approval-gate: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-service-updates-invoice-status-via-api: backlog
+  4-2-track-invoice-status-transitions: backlog
+  4-3-display-invoice-status-changes-in-ui: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-record-immutable-audit-log-for-invoice-actions: backlog
+  5-2-view-audit-history-for-an-invoice: backlog
+  5-3-retain-audit-logs-until-manual-purge: backlog
+  5-4-encrypt-sensitive-fields-at-rest: backlog
+  5-5-gdpr-export-of-customer-data: backlog
+  5-6-gdpr-purge-of-customer-data: backlog
+  5-7-compliance-guidance-for-regional-rules: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-agent-queries-invoices-via-mcp: backlog
+  6-2-admin-reviews-mcp-query-outputs: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-admin-supervision-of-agent-activity-in-ui: backlog
+  7-2-publish-rest-api-reference-examples: backlog
+  7-3-publish-mcp-tool-reference-examples: backlog
+  epic-7-retrospective: optional
