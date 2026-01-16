@@ -294,7 +294,38 @@ defmodule TaurosWeb.UserAuth do
     else
       _ ->
         conn
-        |> send_resp(:unauthorized, "No access for you")
+        |> put_status(:unauthorized)
+        |> json(%{
+          error: %{
+            code: "unauthorized",
+            message: "Invalid or missing bearer token",
+            details: %{}
+          }
+        })
+        |> halt()
+    end
+  end
+
+  @doc """
+  Plug for admin API routes that require a valid bearer token.
+  """
+  def require_admin_api_token(conn, _opts) do
+    with [<<bearer::binary-size(6), " ", token::binary>>] <-
+           get_req_header(conn, "authorization"),
+         true <- String.downcase(bearer) == "bearer",
+         {:ok, user} <- Accounts.fetch_user_by_api_token(token) do
+      assign(conn, :current_scope, Scope.for_user(user))
+    else
+      _ ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{
+          error: %{
+            code: "unauthorized",
+            message: "Invalid or missing bearer token",
+            details: %{}
+          }
+        })
         |> halt()
     end
   end

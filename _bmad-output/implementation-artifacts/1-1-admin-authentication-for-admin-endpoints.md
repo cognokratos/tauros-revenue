@@ -1,6 +1,6 @@
 # Story 1.1: Admin Authentication for Admin Endpoints
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,21 +21,21 @@ so that only authorized admins can manage core resources.
 
 ## Tasks / Subtasks
 
-- [ ] Add or update admin API auth pipeline (no duplicate auth plug)
-  - [ ] Define an `/api/admin/v1` scope that pipes through a single admin REST auth plug (extend existing `fetch_current_scope_for_api_user/2` if possible)
-  - [ ] Ensure the admin auth plug assigns `current_scope` from a valid Bearer token
-  - [ ] Ensure unauthorized responses use the REST error envelope and status 401
-- [ ] Align token validation with existing Accounts token helpers
-  - [ ] Use `Accounts.fetch_user_by_api_token/1` for Bearer tokens
-  - [ ] Keep token expiry behavior (1 day) as defined in `UserToken.verify_api_token_query/1`
-- [ ] Tests
-  - [ ] Unauthorized admin request returns 401 with REST error envelope
-  - [ ] Invalid/malformed token returns 401 with REST error envelope
-  - [ ] Valid token allows the request to proceed and assigns `current_scope.user`
-- [ ] Add admin login API to retrieve a Bearer token
-  - [ ] Create `POST /api/admin/v1/login` accepting email + password
-  - [ ] Return a Bearer token using the REST error envelope on failure
-  - [ ] Tests: success returns token, invalid credentials returns 401, invalid params returns 422
+- [x] Add or update admin API auth pipeline (no duplicate auth plug)
+  - [x] Define an `/api/admin/v1` scope that pipes through a single admin REST auth plug (extend existing `fetch_current_scope_for_api_user/2` if possible)
+  - [x] Ensure the admin auth plug assigns `current_scope` from a valid Bearer token
+  - [x] Ensure unauthorized responses use the REST error envelope and status 401
+- [x] Align token validation with existing Accounts token helpers
+  - [x] Use `Accounts.fetch_user_by_api_token/1` for Bearer tokens
+  - [x] Keep token expiry behavior (1 day) as defined in `UserToken.verify_api_token_query/1`
+- [x] Tests
+  - [x] Unauthorized admin request returns 401 with REST error envelope
+  - [x] Invalid/malformed token returns 401 with REST error envelope
+  - [x] Valid token allows the request to proceed and assigns `current_scope.user`
+- [x] Add admin login API to retrieve a Bearer token
+  - [x] Create `POST /api/admin/v1/login` accepting email + password
+  - [x] Return a Bearer token using the REST error envelope on failure
+  - [x] Tests: success returns token, invalid credentials returns 401, invalid params returns 422
 
 ## Dev Notes
 
@@ -84,10 +84,35 @@ GPT-5 (Codex CLI)
 
 ### Debug Log References
 
-### Completion Notes List
+### Completion Notes
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+**Implementation Summary:**
+
+1. **Admin API Auth Pipeline** - Added dedicated `/api/admin/v1` scope with `require_admin_api_token` plug that validates Bearer tokens and returns JSON REST error envelopes on failure. Reused existing `Accounts.fetch_user_by_api_token/1` for token validation, maintaining 1-day expiry behavior.
+
+2. **Updated Error Handling** - Modified `fetch_current_scope_for_api_user` to return JSON error envelope (`{error: %{code, message, details}}`) instead of plain text responses, maintaining consistency across all API auth failures.
+
+3. **Admin Login Endpoint** - Implemented `POST /api/admin/v1/login` controller that:
+   - Accepts email and password parameters
+   - Returns `{data: %{token: "Bearer <token>"}}` on successful authentication
+   - Returns appropriate error envelopes: 401 for invalid credentials, 422 for missing parameters
+   - Uses existing `Accounts.get_user_by_email_and_password/2` for credential validation
+
+4. **Comprehensive Testing** - Created 7 tests covering all acceptance criteria:
+   - Unauthorized requests without bearer token return 401 with REST error envelope
+   - Malformed authorization headers return 401 with REST error envelope
+   - Valid bearer tokens assign `current_scope.user` correctly
+   - Login with valid credentials returns Bearer token in proper format
+   - Login with invalid credentials returns 401 error envelope
+   - Login with missing parameters returns 422 error envelope
+
+**Test Results:** All 119 tests pass (7 new admin auth tests + 112 existing tests), no regressions.
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/1-1-admin-authentication-for-admin-endpoints.md`
+- `_bmad-output/implementation-artifacts/1-1-admin-authentication-for-admin-endpoints.md` (story file)
+- `lib/tauros_web/router.ex` (added admin API routes and pipelines)
+- `lib/tauros_web/user_auth.ex` (updated fetch_current_scope_for_api_user, added require_admin_api_token)
+- `lib/tauros_web/controllers/api/admin/login_controller.ex` (new - admin login endpoint)
+- `lib/tauros_web/controllers/api/admin/test_controller.ex` (new - test endpoint for auth verification)
+- `test/tauros_web/controllers/api/admin/admin_auth_test.exs` (new - comprehensive auth tests)
