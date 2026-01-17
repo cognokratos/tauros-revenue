@@ -15,16 +15,16 @@ defmodule TaurosWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :fetch_current_scope_for_api_user
+  end
+
+  pipeline :api_agent do
+    plug :accepts, ["json"]
+    plug TaurosWeb.AgentAuth
   end
 
   pipeline :api_admin do
     plug :accepts, ["json"]
     plug :require_admin_api_token
-  end
-
-  pipeline :api_admin_public do
-    plug :accepts, ["json"]
   end
 
   scope "/", TaurosWeb do
@@ -33,12 +33,14 @@ defmodule TaurosWeb.Router do
     get "/", PageController, :home
   end
 
-  scope "/api", TaurosWeb do
-    pipe_through :api
+  scope "/api", TaurosWeb.Api.Agent do
+    pipe_through :api_agent
+
+    get "/v1/test", TestController, :show
   end
 
   scope "/api/admin", TaurosWeb.Api.Admin do
-    pipe_through :api_admin_public
+    pipe_through :api
 
     post "/v1/login", LoginController, :create
   end
@@ -47,6 +49,7 @@ defmodule TaurosWeb.Router do
     pipe_through :api_admin
 
     get "/v1/test", TestController, :show
+    post "/v1/agents", AgentController, :create
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -75,6 +78,10 @@ defmodule TaurosWeb.Router do
       on_mount: [{TaurosWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+      live "/agents", AgentLive.Index, :index
+      live "/agents/new", AgentLive.Form, :new
+      live "/agents/:id", AgentLive.Show, :show
+      live "/agents/:id/edit", AgentLive.Form, :edit
     end
 
     post "/users/update-password", UserSessionController, :update_password

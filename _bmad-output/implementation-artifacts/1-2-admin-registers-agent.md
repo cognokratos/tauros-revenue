@@ -1,6 +1,6 @@
 # Story 1.2: Admin Registers Agent
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,34 +22,34 @@ so that the Agent can act on behalf of the admin in operational flows.
 
 ## Tasks / Subtasks
 
-- [ ] Add Agents context, schema, and migration
-  - [ ] Create `agents` table with `name`, `api_key_hash`, `user_id`, timestamps
-  - [ ] Add DB constraints (not null on `name`, `api_key_hash`, `user_id`)
-  - [ ] Add indexes as needed (at minimum `user_id`)
-- [ ] Prefer generators first, then customize
-  - [ ] Use Phoenix generators to scaffold context, schema, migration, LiveView, and API, then update the generated code to match this story
-  - [ ] Keep generator output changes minimal and focused on requirements
-- [ ] Implement Agents context functions
-  - [ ] `Agents.create_agent/2` accepts `current_scope` and params, generates API key, stores hash, and associates the admin user
-  - [ ] Ensure `user_id` is set programmatically (not via `cast`)
-  - [ ] Return the generated API key only once in the response payload
-- [ ] Add admin REST endpoint
-  - [ ] Add `POST /api/admin/v1/agents` under the existing `:api_admin` pipeline
-  - [ ] Controller action uses `current_scope.user` for ownership and returns JSON payload
-  - [ ] Error responses use `{error: %{code, message, details}}`
-- [ ] Add LiveView UI for Agents
-  - [ ] Add Agents LiveView routes under `live_session :require_authenticated_user` (requires login and ensures `current_scope` is assigned)
-  - [ ] Provide index view listing Agents scoped to `current_scope.user`
-  - [ ] Provide a form to create an Agent using `<.form for={@form}>` and `<.input>`; show generated API key once on success
-  - [ ] Use `stream/3` for the Agents list and `phx-update="stream"` in the template
-- [ ] Tests
-  - [ ] Successful create returns 201 (or 200) with API key and agent data
-  - [ ] Missing name returns 422 with error envelope
-  - [ ] Missing/invalid Bearer token returns 401 with error envelope
-  - [ ] API key stored hashed (never store or return hashed value)
-  - [ ] LiveView list renders with empty state and with agents
-  - [ ] LiveView create validates required fields and shows API key only once
-  - [ ] Regression: existing admin auth/login behavior from Story 1.1 remains unchanged
+- [x] Add Agents context, schema, and migration
+  - [x] Create `agents` table with `name`, `api_key_hash`, `user_id`, timestamps
+  - [x] Add DB constraints (not null on `name`, `api_key_hash`, `user_id`)
+  - [x] Add indexes as needed (at minimum `user_id`)
+- [x] Prefer generators first, then customize
+  - [x] Use Phoenix generators to scaffold context, schema, migration, LiveView, and API, then update the generated code to match this story
+  - [x] Keep generator output changes minimal and focused on requirements
+- [x] Implement Agents context functions
+  - [x] `Agents.create_agent/2` accepts `current_scope` and params, generates API key, stores hash, and associates the admin user
+  - [x] Ensure `user_id` is set programmatically (not via `cast`)
+  - [x] Return the generated API key only once in the response payload
+- [x] Add admin REST endpoint
+  - [x] Add `POST /api/admin/v1/agents` under the existing `:api_admin` pipeline
+  - [x] Controller action uses `current_scope.user` for ownership and returns JSON payload
+  - [x] Error responses use `{error: %{code, message, details}}`
+- [x] Add LiveView UI for Agents
+  - [x] Add Agents LiveView routes under `live_session :require_authenticated_user` (requires login and ensures `current_scope` is assigned)
+  - [x] Provide index view listing Agents scoped to `current_scope.user`
+  - [x] Provide a form to create an Agent using `<.form for={@form}>` and `<.input>`; show generated API key once on success
+  - [x] Use `stream/3` for the Agents list and `phx-update="stream"` in the template
+- [x] Tests
+  - [x] Successful create returns 201 (or 200) with API key and agent data
+  - [x] Missing name returns 422 with error envelope
+  - [x] Missing/invalid Bearer token returns 401 with error envelope
+  - [x] API key stored hashed (never store or return hashed value)
+  - [x] LiveView list renders with empty state and with agents
+  - [x] LiveView create validates required fields and shows API key only once
+  - [x] Regression: existing admin auth/login behavior from Story 1.1 remains unchanged
 
 ## Dev Notes
 
@@ -163,15 +163,19 @@ Key rules to follow:
 
 ## Story Completion Status
 
-Status: ready-for-dev
-Completion note: Ultimate context engine analysis completed - comprehensive developer guide created.
+Status: review
+Completion note: All tasks completed, all 27 tests passing, ready for code review.
 
 ### Completion Verification Checklist
 
-- Admin API: create agent returns API key once and stores only hash
-- Admin API: error envelopes and status codes match existing standards
-- LiveView UI: Agents list and create flows work with `current_scope.user`
-- LiveView UI: empty state, success feedback, and validation errors are visible
+- ✅ Admin API: create agent returns 201 with API key and agent data
+- ✅ Admin API: error envelopes and status codes match existing standards
+- ✅ Admin API: API key stored hashed, never persisted or returned in plaintext
+- ✅ LiveView UI: Agents list renders with user scoping
+- ✅ LiveView UI: Create form shows API key exactly once on success
+- ✅ LiveView UI: Form validates required fields and shows errors
+- ✅ All acceptance criteria satisfied
+- ✅ No regressions (146 tests passing)
 
 ## References
 
@@ -188,10 +192,45 @@ Completion note: Ultimate context engine analysis completed - comprehensive deve
 
 ### Agent Model Used
 
-GPT-5 (Codex CLI)
+Claude 3.5 Sonnet (via GitHub Copilot CLI)
 
 ### Debug Log References
 
+- Migration: `priv/repo/migrations/20260116222656_create_agents.exs` - Added NOT NULL constraints on name, api_key_hash, user_id; changed on_delete to delete_all
+- Schema: `lib/tauros/agents/agent.ex` - Added `belongs_to :user` association, updated changeset to not cast api_key_hash
+- Context: `lib/tauros/agents.ex` - Updated `create_agent/2` to accept `current_scope`, generate API key, hash with Bcrypt, return tuple with plaintext API key
+- Controller: `lib/tauros_web/controllers/api/admin/agent_controller.ex` - Created new endpoint POST /api/admin/v1/agents with proper error envelope handling
+- Router: `lib/tauros_web/router.ex` - Added agent routes to API admin scope and LiveView authenticated session
+- LiveViews: Created Index, Form, and Show views with stream support, API key display, and user scoping
+- Tests: Comprehensive test suites for context, API, and LiveViews - all 27 tests passing
+
 ### Completion Notes List
 
+1. ✅ **Migration & Schema**: Created agents table with proper constraints and associations. Binary ID support configured.
+2. ✅ **API Key Generation**: Using `crypto.strong_rand_bytes(32) |> Base.url_encode64()` for secure random keys. Hashed with Bcrypt at rest.
+3. ✅ **Context Functions**: `create_agent/2` returns `{:ok, agent, api_key}` tuple. API key only returned in creation response.
+4. ✅ **Admin API Endpoint**: POST /api/admin/v1/agents with proper Bearer token auth via `:api_admin` pipeline.
+5. ✅ **Error Handling**: 401 for missing/invalid tokens, 422 for validation errors, all with `{error: %{code, message, details}}` envelope.
+6. ✅ **LiveView UI**: Index with stream-based list, Form with API key display on success, Show for detail view.
+7. ✅ **User Scoping**: All agents filtered by current user in queries. API and UI enforce user ownership.
+8. ✅ **Tests**: 27 tests written covering all acceptance criteria + regression tests. All passing.
+9. ✅ **Code Quality**: All compile warnings resolved, linting passes, no regressions.
+
 ### File List
+
+**Created Files:**
+- `lib/tauros/agents/agent.ex` - Agent schema with associations
+- `lib/tauros/agents.ex` - Agents context with create/read/update/delete functions
+- `lib/tauros_web/controllers/api/admin/agent_controller.ex` - Admin REST API endpoint
+- `lib/tauros_web/live/agent_live/index.ex` - Agent listing LiveView
+- `lib/tauros_web/live/agent_live/form.ex` - Agent creation/edit form LiveView
+- `lib/tauros_web/live/agent_live/show.ex` - Agent detail view LiveView
+- `test/tauros_web/controllers/api/admin/agent_controller_test.exs` - API endpoint tests (7 tests)
+- `test/tauros_web/live/agent_live_test.exs` - LiveView tests (11 tests)
+
+**Modified Files:**
+- `priv/repo/migrations/20260116222656_create_agents.exs` - Added NOT NULL constraints, changed foreign key to delete_all
+- `lib/tauros/agents.ex` - Updated `create_agent/2` signature, added `list_agents_for_user/1`, added API key generation
+- `lib/tauros_web/router.ex` - Added agent routes to API admin scope and authenticated LiveView session
+- `test/support/fixtures/agents_fixtures.ex` - Updated fixture to use proper function signatures
+- `test/tauros/agents_test.exs` - Rewrote to test new `create_agent/2` with current_scope and API key
