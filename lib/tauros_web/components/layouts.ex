@@ -26,8 +26,14 @@ defmodule TaurosWeb.Layouts do
               </div>
 
               <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                <.link navigate={~p"/"} data-path="/" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200">Dashboard</.link>
-                <.link navigate={~p"/agents"} data-path="/agents" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200">Agents</.link>
+                <.link navigate={~p"/"} data-path="/" class="relative inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200">
+                  <span class="flex items-center">Dashboard</span>
+                  <span data-underline class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200" aria-hidden="true"></span>
+                </.link>
+                <.link navigate={~p"/agents"} data-path="/agents" class="relative inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200">
+                  <span class="flex items-center">Agents</span>
+                  <span data-underline class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200" aria-hidden="true"></span>
+                </.link>
               </div>
             </div>
 
@@ -84,14 +90,17 @@ defmodule TaurosWeb.Layouts do
               if(!nav) return
               for (const a of nav.querySelectorAll('a[data-path]')) {
                 const href = a.getAttribute('data-path')
+                const underline = a.querySelector('[data-underline]')
                 if (href === path) {
                   a.setAttribute('aria-current', 'page')
                   a.classList.add('border-indigo-600', 'text-gray-900')
                   a.classList.remove('border-transparent', 'text-gray-500')
+                  if(underline) underline.classList.remove('scale-x-0'); underline && underline.classList.add('scale-x-100')
                 } else {
                   a.removeAttribute('aria-current')
                   a.classList.remove('border-indigo-600', 'text-gray-900')
                   a.classList.add('border-transparent', 'text-gray-500')
+                  if(underline) underline.classList.remove('scale-x-100'); underline && underline.classList.add('scale-x-0')
                 }
               }
             }
@@ -105,9 +114,15 @@ defmodule TaurosWeb.Layouts do
       </script>
 
       <div id="mobile-menu" class="hidden sm:hidden fixed inset-x-0 top-16 z-40 w-full bg-white dark:bg-gray-800/95 backdrop-blur-sm shadow-lg max-h-[calc(100vh-4rem)] overflow-auto">
-            <div class="space-y-1 pt-4 pb-3 px-4">
-              <.link navigate={~p"/"} data-path="/" class="block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200">Dashboard</.link>
-              <.link navigate={~p"/agents"} data-path="/agents" class="block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200">Agents</.link>
+          <div class="space-y-1 pt-4 pb-3 px-4">
+              <.link navigate={~p"/"} data-path="/" class="relative block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200">
+                <span class="flex items-center">Dashboard</span>
+                <span data-underline class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200" aria-hidden="true"></span>
+              </.link>
+              <.link navigate={~p"/agents"} data-path="/agents" class="relative block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200">
+                <span class="flex items-center">Agents</span>
+                <span data-underline class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200" aria-hidden="true"></span>
+              </.link>
             </div>
 
 
