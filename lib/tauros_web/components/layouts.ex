@@ -95,13 +95,21 @@ defmodule TaurosWeb.Layouts do
                   a.setAttribute('aria-current', 'page')
                   a.classList.add('border-indigo-600', 'text-gray-900')
                   a.classList.remove('border-transparent', 'text-gray-500')
-                  if(underline) underline.classList.remove('scale-x-0'); underline && underline.classList.add('scale-x-100')
+                  if (underline) { underline.classList.remove('scale-x-0'); underline.classList.add('scale-x-100') }
                 } else {
                   a.removeAttribute('aria-current')
                   a.classList.remove('border-indigo-600', 'text-gray-900')
                   a.classList.add('border-transparent', 'text-gray-500')
-                  if(underline) underline.classList.remove('scale-x-100'); underline && underline.classList.add('scale-x-0')
+                  if (underline) { underline.classList.remove('scale-x-100'); underline.classList.add('scale-x-0') }
                 }
+              }
+
+              // ensure mobile menu closes on navigation
+              const menu = document.getElementById('mobile-menu')
+              const toggle = document.querySelector('button[aria-controls="mobile-menu"]')
+              if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden')
+                if (toggle) toggle.setAttribute('aria-expanded', 'false')
               }
             }
 
@@ -109,6 +117,35 @@ defmodule TaurosWeb.Layouts do
             window.addEventListener('popstate', setActive)
             document.addEventListener('phx:page-loading-stop', setActive)
             document.addEventListener('click', () => setActive())
+
+            // close mobile menu when a nav link is clicked
+            const nav = document.querySelector('nav')
+            if (nav) {
+              for (const a of nav.querySelectorAll('a[data-path]')) {
+                a.addEventListener('click', () => {
+                  const menu = document.getElementById('mobile-menu')
+                  const toggle = document.querySelector('button[aria-controls="mobile-menu"]')
+                  if (menu) menu.classList.add('hidden')
+                  if (toggle) toggle.setAttribute('aria-expanded', 'false')
+                })
+              }
+            }
+          }
+        }
+      </script>
+
+      <script :type={Phoenix.LiveView.ColocatedHook} name=".MobileToggle">
+        export default {
+          mounted() {
+            const btn = document.querySelector('button[aria-controls="mobile-menu"]')
+            const menu = document.getElementById('mobile-menu')
+            if (!btn) return
+            const update = () => {
+              const open = menu && !menu.classList.contains('hidden')
+              btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+            }
+            btn.addEventListener('click', () => setTimeout(update, 0))
+            update()
           }
         }
       </script>
