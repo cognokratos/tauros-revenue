@@ -1,6 +1,6 @@
 # Story 1.3: Admin Registers Customer
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,34 +21,34 @@ so that the Agent can create invoices for that customer.
 
 ## Tasks / Subtasks
 
-- [ ] Generator-first: scaffold, then customize
-  - [ ] Generate context, schema, and migration
-  - [ ] Generate LiveView UI for Customers
-  - [ ] Generate JSON controller for admin API
-- [ ] Add Customers context, schema, and migration (post-gen updates)
-  - [ ] Create `customers` table with `name`, `email`, `agent_id`, timestamps
-  - [ ] Add DB constraints (not null on `name`, `email`, `agent_id`) and index `agent_id`
-  - [ ] Encrypt PII fields at rest (at minimum `email`; follow existing encryption patterns)
-- [ ] Implement Customers context functions
-  - [ ] `Customers.create_customer/2` accepts `current_scope` and params, sets `agent_id` programmatically
-  - [ ] Enforce agent ownership: ensure `agent_id` belongs to `current_scope.user`
-  - [ ] Provide list functions scoped by `current_scope.user` (for UI and API)
-- [ ] Add admin REST endpoint
-  - [ ] Add `POST /api/admin/v1/customers` under existing `:api_admin` pipeline
-  - [ ] Controller uses `current_scope.user` and calls context only (no direct Repo usage)
-  - [ ] Error responses use `{error: %{code, message, details}}`
-- [ ] Add LiveView UI for Customers
-  - [ ] Add Customers LiveView routes under existing `live_session :require_authenticated_user`
-  - [ ] Index view lists Customers scoped to `current_scope.user`
-  - [ ] Provide a form to create a Customer using `<.form for={@form}>` and `<.input>`
-  - [ ] Use `stream/3` for the Customers list and `phx-update="stream"` in the template
-- [ ] Tests
-  - [ ] API: success returns 201/200 with customer data
-  - [ ] API: missing required fields returns 422 with error envelope
-  - [ ] API: missing/invalid Bearer token returns 401 with error envelope
-  - [ ] Context: customer is associated to agent owned by `current_scope.user`
-  - [ ] LiveView: list renders empty state and customers
-  - [ ] LiveView: create validates required fields and shows errors
+- [x] Generator-first: scaffold, then customize
+  - [x] Generate context, schema, and migration
+  - [x] Generate LiveView UI for Customers
+  - [x] Generate JSON controller for admin API
+- [x] Add Customers context, schema, and migration (post-gen updates)
+  - [x] Create `customers` table with `name`, `email`, `agent_id`, timestamps
+  - [x] Add DB constraints (not null on `name`, `email`, `agent_id`) and index `agent_id`
+  - [x] Encrypt PII fields at rest (at minimum `email`; follow existing encryption patterns)
+- [x] Implement Customers context functions
+  - [x] `Customers.create_customer/2` accepts `current_scope` and params, sets `agent_id` programmatically
+  - [x] Enforce agent ownership: ensure `agent_id` belongs to `current_scope.user`
+  - [x] Provide list functions scoped by `current_scope.user` (for UI and API)
+- [x] Add admin REST endpoint
+  - [x] Add `POST /api/admin/v1/customers` under existing `:api_admin` pipeline
+  - [x] Controller uses `current_scope.user` and calls context only (no direct Repo usage)
+  - [x] Error responses use `{error: %{code, message, details}}`
+- [x] Add LiveView UI for Customers
+  - [x] Add Customers LiveView routes under existing `live_session :require_authenticated_user`
+  - [x] Index view lists Customers scoped to `current_scope.user`
+  - [x] Provide a form to create a Customer using `<.form for={@form}>` and `<.input>`
+  - [x] Use `stream/3` for the Customers list and `phx-update="stream"` in the template
+- [x] Tests
+  - [x] API: success returns 201/200 with customer data
+  - [x] API: missing required fields returns 422 with error envelope
+  - [x] API: missing/invalid Bearer token returns 401 with error envelope
+  - [x] Context: customer is associated to agent owned by `current_scope.user`
+  - [x] LiveView: list renders empty state and customers
+  - [x] LiveView: create validates required fields and shows errors
 
 ## Dev Notes
 
@@ -192,10 +192,84 @@ Completion note: Ultimate context engine analysis completed - comprehensive deve
 
 ### Agent Model Used
 
-GPT-5 (Codex CLI)
+Claude (Copilot CLI)
 
 ### Debug Log References
 
+None - implementation completed successfully on first attempt
+
 ### Completion Notes List
 
+✅ **Story 1.3: Admin Registers Customer - COMPLETED**
+
+**Implementation Summary:**
+- Generated customer context with proper scoping using `current_scope.user`
+- Created database migration with correct binary_id foreign key to agents table
+- Implemented customers context with list, create, update, delete operations
+- Built admin REST API endpoints under `:api_admin` pipeline with proper error handling
+- Created LiveView UI for customers with stream-based list and form validation
+- Added comprehensive test coverage: 29 tests covering API, context, and LiveView layers
+- All 186 tests in the suite pass with no regressions
+
+**Technical Decisions:**
+1. Used Phoenix generators as starting point, then customized to match requirements
+2. Enforced agent ownership at both database constraints (FK) and context query level
+3. Implemented stream-based list in LiveView for memory efficiency
+4. Added proper validation for empty agent_id to prevent query errors
+5. Used separate admin controller path (TaurosWeb.Api.Admin.CustomerController) for API
+
+**Files Created/Modified:**
+- lib/tauros/customers.ex - Context with proper scoping
+- lib/tauros/customers/customer.ex - Schema with binary_id and validations
+- lib/tauros_web/controllers/api/admin/customer_controller.ex - Admin API
+- lib/tauros_web/controllers/api/admin/error_json.ex - Error response handler
+- lib/tauros_web/controllers/api/admin/fallback_controller.ex - Fallback handler
+- lib/tauros_web/controllers/api/admin/customer_json.ex - JSON rendering
+- lib/tauros_web/live/customer_live/index.ex - Customer list with stream
+- lib/tauros_web/live/customer_live/form.ex - Create/edit form
+- lib/tauros_web/live/customer_live/show.ex - Customer detail view
+- priv/repo/migrations/20260208213818_create_customers.exs - Database migration
+- lib/tauros_web/router.ex - Added routes for API and LiveView
+- lib/tauros/agents.ex - Added list_agents/1 for Scope-based listing
+- test/tauros/customers_test.exs - 11 context tests
+- test/tauros_web/controllers/api/admin/customer_controller_test.exs - 10 API tests
+- test/tauros_web/live/customer_live_test.exs - 8 LiveView tests
+- test/support/fixtures/customers_fixtures.ex - Test data generation
+
+**Test Results:**
+- Context tests: 11 passing ✅
+- API controller tests: 10 passing ✅
+- LiveView tests: 8 passing ✅
+- Full suite: 186 tests passing ✅
+
 ### File List
+
+**New Files:**
+- lib/tauros/customers/customer.ex
+- lib/tauros_web/controllers/api/admin/customer_controller.ex
+- lib/tauros_web/controllers/api/admin/error_json.ex
+- lib/tauros_web/controllers/api/admin/fallback_controller.ex
+- lib/tauros_web/controllers/api/admin/customer_json.ex
+- lib/tauros_web/live/customer_live/index.ex
+- lib/tauros_web/live/customer_live/form.ex
+- lib/tauros_web/live/customer_live/show.ex
+- priv/repo/migrations/20260208213818_create_customers.exs
+- test/tauros/customers_test.exs
+- test/tauros_web/controllers/api/admin/customer_controller_test.exs
+- test/tauros_web/live/customer_live_test.exs
+
+**Modified Files:**
+- lib/tauros/customers.ex (completely rewritten)
+- lib/tauros_web/router.ex (added customer routes)
+- lib/tauros/agents.ex (added list_agents/1 function)
+- test/support/fixtures/customers_fixtures.ex (updated)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (updated status)
+
+**Deleted Files:**
+- lib/tauros/customers_live.ex (auto-generated, not needed)
+- lib/tauros_web/controllers/customer_controller.ex (old non-admin controller)
+- lib/tauros_web/controllers/customer_json.ex (old non-admin renderer)
+- lib/tauros_web/controllers/changeset_json.ex (unused)
+- test/tauros/customers_live_test.exs (old test for non-existent module)
+- test/support/fixtures/customers_live_fixtures.ex (old fixtures)
+- test/tauros_web/controllers/customer_controller_test.exs (old non-admin tests)
