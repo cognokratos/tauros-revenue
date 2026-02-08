@@ -41,8 +41,8 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   epic-1: in-progress
-  1-1-admin-authentication-for-admin-endpoints: review
-  1-2-admin-registers-agent: backlog
+  1-1-admin-authentication-for-admin-endpoints: done
+  1-2-admin-registers-agent: done
   1-3-admin-registers-customer: backlog
   1-4-enforce-customer-ownership-by-agent: backlog
   epic-1-retrospective: optional
