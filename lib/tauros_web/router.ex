@@ -27,12 +27,6 @@ defmodule TaurosWeb.Router do
     plug :require_admin_api_token
   end
 
-  scope "/", TaurosWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   scope "/api", TaurosWeb.Api.Agent do
     pipe_through :api_agent
 
@@ -76,6 +70,7 @@ defmodule TaurosWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{TaurosWeb.UserAuth, :require_authenticated}] do
+      live "/", DashboardLive, :index
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
       live "/agents", AgentLive.Index, :index
