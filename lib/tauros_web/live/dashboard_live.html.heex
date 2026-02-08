@@ -6,8 +6,8 @@
       </div>
 
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-lg border border-blue-200 bg-blue-50 p-6 hover:bg-blue-100 hover:shadow-lg transition-all">
-          <.link navigate={~p"/agents"} class="block">
+        <.card>
+          <.link navigate={~p"/agents"} class="block px-6 py-4 hover:bg-blue-50 transition-colors">
             <div class="flex justify-between items-start">
               <div>
                 <p class="text-sm font-medium text-gray-600">Agents</p>
@@ -16,10 +16,10 @@
               <.icon name="hero-user-group" class="w-8 h-8 text-blue-400" />
             </div>
           </.link>
-        </div>
+        </.card>
 
-        <div class="rounded-lg border border-green-200 bg-green-50 p-6 hover:bg-green-100 hover:shadow-lg transition-all">
-          <a href="#" class="block">
+        <.card>
+          <a href="#" class="block px-6 py-4 hover:bg-green-50 transition-colors">
             <div class="flex justify-between items-start">
               <div>
                 <p class="text-sm font-medium text-gray-600">Clients</p>
@@ -28,10 +28,10 @@
               <.icon name="hero-building-storefront" class="w-8 h-8 text-green-400" />
             </div>
           </a>
-        </div>
+        </.card>
 
-        <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-6 hover:bg-yellow-100 hover:shadow-lg transition-all">
-          <a href="#" class="block">
+        <.card>
+          <a href="#" class="block px-6 py-4 hover:bg-yellow-50 transition-colors">
             <div class="flex justify-between items-start">
               <div>
                 <p class="text-sm font-medium text-gray-600">Pending Invoices</p>
@@ -40,10 +40,10 @@
               <.icon name="hero-document-text" class="w-8 h-8 text-yellow-400" />
             </div>
           </a>
-        </div>
+        </.card>
 
-        <div class="rounded-lg border border-green-200 bg-green-50 p-6 hover:bg-green-100 hover:shadow-lg transition-all">
-          <a href="#" class="block">
+        <.card>
+          <a href="#" class="block px-6 py-4 hover:bg-green-50 transition-colors">
             <div class="flex justify-between items-start">
               <div>
                 <p class="text-sm font-medium text-gray-600">Approved Invoices</p>
@@ -52,7 +52,7 @@
               <.icon name="hero-check-circle" class="w-8 h-8 text-green-400" />
             </div>
           </a>
-        </div>
+        </.card>
       </div>
     </div>
   </div>

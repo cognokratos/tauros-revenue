@@ -12,25 +12,29 @@ defmodule TaurosWeb.AgentLive.Form do
         {@page_title}
       </.header>
 
-      <.form for={@form} id="agent-form" phx-submit="save" class="space-y-6">
-        <.input field={@form[:name]} type="text" label="Agent Name" required />
-        <.input
-          field={@form[:api_key]}
-          type="password"
-          label="API Key (from external service)"
-          required
-          autocomplete="off"
-          phx-debounce="blur"
-        />
-        <footer class="flex gap-2">
-          <.button phx-disable-with="Saving..." variant="primary">
-            {if @form.source.data.id, do: "Update", else: "Create"} Agent
-          </.button>
-          <.button navigate={~p"/agents"}>
-            Cancel
-          </.button>
-        </footer>
-      </.form>
+      <.card>
+        <div class="px-4 py-5 sm:p-6">
+          <.form for={@form} id="agent-form" phx-submit="save" class="space-y-6">
+            <.input field={@form[:name]} type="text" label="Agent Name" required />
+            <.input
+              field={@form[:api_key]}
+              type="password"
+              label="API Key (from external service)"
+              required
+              autocomplete="off"
+              phx-debounce="blur"
+            />
+            <footer class="flex gap-2">
+              <.button phx-disable-with="Saving..." variant="primary">
+                {if @form.source.data.id, do: "Update", else: "Create"} Agent
+              </.button>
+              <.button navigate={~p"/agents"}>
+                Cancel
+              </.button>
+            </footer>
+          </.form>
+        </div>
+      </.card>
     </Layouts.app>
     """
   end

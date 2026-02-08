@@ -16,52 +16,67 @@ defmodule TaurosWeb.UserLive.Settings do
         </.header>
       </div>
 
-      <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-        <.input
-          field={@email_form[:email]}
-          type="email"
-          label="Email"
-          autocomplete="username"
-          required
-        />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
-      </.form>
+      <div class="grid gap-6 max-w-2xl mx-auto">
+        <.card>
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-semibold mb-4">Email Settings</h3>
+            <.form
+              for={@email_form}
+              id="email_form"
+              phx-submit="update_email"
+              phx-change="validate_email"
+            >
+              <.input
+                field={@email_form[:email]}
+                type="email"
+                label="Email"
+                autocomplete="username"
+                required
+              />
+              <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+            </.form>
+          </div>
+        </.card>
 
-      <div class="divider" />
-
-      <.form
-        for={@password_form}
-        id="password_form"
-        action={~p"/users/update-password"}
-        method="post"
-        phx-change="validate_password"
-        phx-submit="update_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input
-          name={@password_form[:email].name}
-          type="hidden"
-          id="hidden_user_email"
-          autocomplete="username"
-          value={@current_email}
-        />
-        <.input
-          field={@password_form[:password]}
-          type="password"
-          label="New password"
-          autocomplete="new-password"
-          required
-        />
-        <.input
-          field={@password_form[:password_confirmation]}
-          type="password"
-          label="Confirm new password"
-          autocomplete="new-password"
-        />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
-        </.button>
-      </.form>
+        <.card>
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-semibold mb-4">Password Settings</h3>
+            <.form
+              for={@password_form}
+              id="password_form"
+              action={~p"/users/update-password"}
+              method="post"
+              phx-change="validate_password"
+              phx-submit="update_password"
+              phx-trigger-action={@trigger_submit}
+            >
+              <input
+                name={@password_form[:email].name}
+                type="hidden"
+                id="hidden_user_email"
+                autocomplete="username"
+                value={@current_email}
+              />
+              <.input
+                field={@password_form[:password]}
+                type="password"
+                label="New password"
+                autocomplete="new-password"
+                required
+              />
+              <.input
+                field={@password_form[:password_confirmation]}
+                type="password"
+                label="Confirm new password"
+                autocomplete="new-password"
+              />
+              <.button variant="primary" phx-disable-with="Saving...">
+                Save Password
+              </.button>
+            </.form>
+          </div>
+        </.card>
+      </div>
     </Layouts.app>
     """
   end

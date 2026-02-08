@@ -23,26 +23,31 @@ defmodule TaurosWeb.AgentLive.Index do
           </div>
         </div>
         <%= for {id, agent} <- @streams.agents do %>
-          <div id={id} class="border rounded-lg p-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="font-semibold text-lg">{agent.name}</h3>
-                <p class="text-gray-600 text-sm">ID: {agent.id}</p>
-              </div>
-              <div class="space-x-2">
-                <.link navigate={~p"/agents/#{agent}/edit"} class="text-blue-600 hover:text-blue-800">
-                  Edit
-                </.link>
-                <.link
-                  phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
-                  data-confirm="Are you sure?"
-                  class="text-red-600 hover:text-red-800"
-                >
-                  Delete
-                </.link>
+          <.card id={id}>
+            <div class="px-4 py-5 sm:px-6">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-semibold text-lg">{agent.name}</h3>
+                  <p class="text-gray-600 text-sm">ID: {agent.id}</p>
+                </div>
+                <div class="space-x-2">
+                  <.link
+                    navigate={~p"/agents/#{agent}/edit"}
+                    class="text-blue-600 hover:text-blue-800"
+                  >
+                    Edit
+                  </.link>
+                  <.link
+                    phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
+                    data-confirm="Are you sure?"
+                    class="text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </.link>
+                </div>
               </div>
             </div>
-          </div>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

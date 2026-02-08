@@ -269,7 +269,7 @@ defmodule TaurosWeb.Layouts do
 
       <div class="py-10">
         <main>
-          <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-black/90 rounded-lg">
+          <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-white/90 dark:bg-black/90 rounded-lg">
             {render_slot(@inner_block)}
           </div>
         </main>

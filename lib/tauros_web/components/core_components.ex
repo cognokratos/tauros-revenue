@@ -469,6 +469,35 @@ defmodule TaurosWeb.CoreComponents do
   end
 
   @doc """
+  Renders a card component.
+
+  ## Examples
+
+      <.card>
+        <div class="px-4 py-5 sm:px-6">
+          Content here
+        </div>
+      </.card>
+  """
+  attr :class, :any, default: nil
+  attr :rest, :global
+  slot :inner_block, required: true
+
+  def card(assigns) do
+    ~H"""
+    <div
+      class={[
+        "divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10",
+        @class
+      ]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do

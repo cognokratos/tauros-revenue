@@ -22,20 +22,24 @@ defmodule TaurosWeb.UserLive.Registration do
           </.header>
         </div>
 
-        <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
-          <.input
-            field={@form[:email]}
-            type="email"
-            label="Email"
-            autocomplete="username"
-            required
-            phx-mounted={JS.focus()}
-          />
+        <.card class="mt-6">
+          <div class="px-4 py-5 sm:p-6">
+            <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
+              <.input
+                field={@form[:email]}
+                type="email"
+                label="Email"
+                autocomplete="username"
+                required
+                phx-mounted={JS.focus()}
+              />
 
-          <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
-            Create an account
-          </.button>
-        </.form>
+              <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
+                Create an account
+              </.button>
+            </.form>
+          </div>
+        </.card>
       </div>
     </Layouts.app>
     """

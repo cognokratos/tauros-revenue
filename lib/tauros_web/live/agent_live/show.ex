@@ -19,11 +19,15 @@ defmodule TaurosWeb.AgentLive.Show do
         </:actions>
       </.header>
 
-      <.list>
-        <:item title="ID">{@agent.id}</:item>
-        <:item title="Name">{@agent.name}</:item>
-        <:item title="Created">{format_datetime(@agent.inserted_at)}</:item>
-      </.list>
+      <.card>
+        <div class="px-4 py-5 sm:px-6">
+          <.list>
+            <:item title="ID">{@agent.id}</:item>
+            <:item title="Name">{@agent.name}</:item>
+            <:item title="Created">{format_datetime(@agent.inserted_at)}</:item>
+          </.list>
+        </div>
+      </.card>
     </Layouts.app>
     """
   end
