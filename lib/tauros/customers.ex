@@ -94,6 +94,8 @@ defmodule Tauros.Customers do
   @doc """
   Updates a customer.
 
+  The `agent_id` cannot be reassigned and will be rejected if present in the update params.
+
   ## Examples
 
       iex> update_customer(scope, customer, %{field: new_value})
@@ -107,9 +109,17 @@ defmodule Tauros.Customers do
     # Ensure customer belongs to user's agent
     _customer = get_customer!(scope, customer.id)
 
-    customer
-    |> Customer.changeset(attrs)
-    |> Repo.update()
+    # Check if agent_id is in params and reject if present
+    has_agent_id_param = Map.has_key?(attrs, "agent_id") or Map.has_key?(attrs, :agent_id)
+
+    changeset = Customer.update_changeset(customer, attrs)
+
+    if has_agent_id_param do
+      # Add error for agent_id reassignment attempt
+      {:error, Ecto.Changeset.add_error(changeset, :agent_id, "cannot be reassigned")}
+    else
+      Repo.update(changeset)
+    end
   end
 
   @doc """

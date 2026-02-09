@@ -146,6 +146,45 @@ defmodule TaurosWeb.Api.Admin.CustomerControllerTest do
       response = json_response(conn, 200)
       assert response["data"]["name"] == "Updated Name"
     end
+
+    test "rejects agent_id reassignment with 422 error", %{conn: conn} do
+      user = user_fixture()
+      agent1 = agent_fixture(%{user_id: user.id})
+      agent2 = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent1.id})
+      token = generate_admin_token(user)
+
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> patch(~p"/api/admin/v1/customers/#{customer.id}", %{
+          "customer" => %{"agent_id" => agent2.id}
+        })
+
+      response = json_response(conn, 422)
+      assert response["error"]["code"] == "validation_error"
+    end
+
+    test "ignores agent_id in update params when present with other fields", %{conn: conn} do
+      user = user_fixture()
+      agent1 = agent_fixture(%{user_id: user.id})
+      agent2 = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent1.id})
+      token = generate_admin_token(user)
+
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> patch(~p"/api/admin/v1/customers/#{customer.id}", %{
+          "customer" => %{"name" => "New Name", "agent_id" => agent2.id}
+        })
+
+      response = json_response(conn, 422)
+      assert response["error"]["code"] == "validation_error"
+      # Verify agent_id was not changed
+      customer = Tauros.Customers.get_customer!(%Tauros.Accounts.Scope{user: user}, customer.id)
+      assert customer.agent_id == agent1.id
+    end
   end
 
   describe "DELETE /api/admin/v1/customers/:id" do

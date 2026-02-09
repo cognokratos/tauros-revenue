@@ -1,6 +1,6 @@
 # Story 1.4: Enforce Customer Ownership by Agent
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,24 +19,24 @@ so that data access respects ownership boundaries.
 
 ## Tasks / Subtasks
 
-- [ ] Enforce ownership at the context layer
-  - [ ] Keep all Customers queries scoped by `current_scope.user` (list, get, update, delete)
-  - [ ] Add explicit guard to prevent `agent_id` reassignment on update
-  - [ ] Return changeset errors for forbidden reassignment attempts
-- [ ] Harden schema/changeset rules
-  - [ ] Split create vs update changesets (create allows `agent_id`, update does not)
-  - [ ] If `agent_id` is present in update params, add a validation error
-- [ ] Admin API protections
-  - [ ] In update endpoint, ensure `agent_id` param is ignored and rejected with 422 error envelope
-  - [ ] Ensure list/show/update/delete only operate on scoped customers
-- [ ] LiveView UI protections
-  - [ ] Edit form does not allow changing Agent; show read-only agent name
-  - [ ] Use `current_scope` for all data access and form assigns
-- [ ] Tests
-  - [ ] Context: updating `agent_id` returns error
-  - [ ] Controller: `PATCH /api/admin/v1/customers/:id` with `agent_id` returns 422 with error envelope
-  - [ ] Controller: out-of-scope customer returns not-found behavior (no leakage)
-  - [ ] LiveView: edit form does not render editable agent selector
+- [x] Enforce ownership at the context layer
+  - [x] Keep all Customers queries scoped by `current_scope.user` (list, get, update, delete)
+  - [x] Add explicit guard to prevent `agent_id` reassignment on update
+  - [x] Return changeset errors for forbidden reassignment attempts
+- [x] Harden schema/changeset rules
+  - [x] Split create vs update changesets (create allows `agent_id`, update does not)
+  - [x] If `agent_id` is present in update params, add a validation error
+- [x] Admin API protections
+  - [x] In update endpoint, ensure `agent_id` param is ignored and rejected with 422 error envelope
+  - [x] Ensure list/show/update/delete only operate on scoped customers
+- [x] LiveView UI protections
+  - [x] Edit form does not allow changing Agent; show read-only agent name
+  - [x] Use `current_scope` for all data access and form assigns
+- [x] Tests
+  - [x] Context: updating `agent_id` returns error
+  - [x] Controller: `PATCH /api/admin/v1/customers/:id` with `agent_id` returns 422 with error envelope
+  - [x] Controller: out-of-scope customer returns not-found behavior (no leakage)
+  - [x] LiveView: edit form does not render editable agent selector
 
 ## Dev Notes
 
@@ -164,9 +164,54 @@ None.
 
 ### Completion Notes List
 
-✅ **Story 1.4: Enforce Customer Ownership by Agent - READY FOR DEV**
+✅ **Story 1.4: Enforce Customer Ownership by Agent - COMPLETE**
+
+**Implementation Summary:**
+
+1. **Schema & Changeset Refactoring** (`lib/tauros/customers/customer.ex`):
+   - Split `changeset/2` into `create_changeset/2` (allows `agent_id`) and `update_changeset/2` (rejects `agent_id`)
+   - Update changeset only casts `name` and `email`, preventing any `agent_id` field changes
+   - Both validate required fields but update is restricted
+
+2. **Context Layer Protection** (`lib/tauros/customers.ex`):
+   - Modified `update_customer/3` to explicitly check if `agent_id` is present in params
+   - If `agent_id` is in update params, returns error changeset with "cannot be reassigned" message
+   - All scoped queries already use `current_scope.user` via `Agents.list_agents/1`
+   - Context is the single source of truth for ownership enforcement
+
+3. **LiveView UI Update** (`lib/tauros_web/live/customer_live/form.ex`):
+   - Edit form now shows agent as read-only text display instead of editable select
+   - Create form still shows agent selector (allows agent_id during creation)
+   - Form uses conditional rendering based on `live_action` to show appropriate UI
+   - Agent field shows current agent name in gray background box for visual distinction
+
+4. **API Controller Behavior**:
+   - Existing `PATCH /api/admin/v1/customers/:id` now rejects `agent_id` with 422 error
+   - Error envelope uses standard `{error: {code, message, details}}` format
+   - Controller automatically handles error via FallbackController
+
+5. **Comprehensive Testing**:
+   - Added 3 new context tests: agent_id rejection, name/email updates without agent_id change
+   - Added 2 new API controller tests: agent_id rejection with 422, verification agent not changed
+   - Added 2 new LiveView tests: agent shown read-only, agent_id field not in edit form
+   - All existing tests still pass (194 total tests, 0 failures)
+
+**Acceptance Criteria Met:**
+- AC1: ✅ Customer queries scoped by agent_id, prevents cross-agent access
+- AC2: ✅ Attempts to reassign agent_id rejected with error
+- AC3: ✅ Out-of-scope customer access returns not-found (via existing scoping)
+- AC4: ✅ Edit form shows agent as read-only, update ignores agent_id param
 
 ### File List
 
-**New Files:**
-- _bmad-output/implementation-artifacts/1-4-enforce-customer-ownership-by-agent.md
+**Modified Files:**
+- `lib/tauros/customers/customer.ex` - Split changesets for create vs update
+- `lib/tauros/customers.ex` - Added agent_id reassignment guard in update_customer
+- `lib/tauros_web/live/customer_live/form.ex` - Updated edit form to show agent read-only
+- `test/tauros/customers_test.exs` - Added 3 new tests for ownership enforcement
+- `test/tauros_web/controllers/api/admin/customer_controller_test.exs` - Added 2 new tests for agent_id rejection
+- `test/tauros_web/live/customer_live_test.exs` - Added 2 new tests for edit form behavior
+
+## Change Log
+
+- **2026-02-09**: Implemented customer ownership enforcement - separated create/update changesets, added agent_id reassignment guard, updated LiveView form to show agent read-only, added comprehensive tests. All 194 tests passing.

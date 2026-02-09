@@ -25,4 +25,16 @@ defmodule Tauros.Customers.Customer do
       end
     end)
   end
+
+  @doc false
+  def create_changeset(customer, attrs) do
+    changeset(customer, attrs)
+  end
+
+  @doc false
+  def update_changeset(customer, attrs) do
+    customer
+    |> cast(attrs, [:name, :email])
+    |> validate_required([:name, :email])
+  end
 end
