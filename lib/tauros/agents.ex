@@ -24,6 +24,19 @@ defmodule Tauros.Agents do
   end
 
   @doc """
+  Returns the list of agents for the current scope user.
+
+  ## Examples
+
+      iex> list_agents(%Scope{user: user})
+      [%Agent{}, ...]
+
+  """
+  def list_agents(%Scope{user: user}) do
+    list_agents_for_user(user.id)
+  end
+
+  @doc """
   Gets a single agent.
 
   Raises `Ecto.NoResultsError` if the Agent does not exist.

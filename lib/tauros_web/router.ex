@@ -44,6 +44,11 @@ defmodule TaurosWeb.Router do
 
     get "/v1/test", TestController, :show
     post "/v1/agents", AgentController, :create
+    post "/v1/customers", CustomerController, :create
+    get "/v1/customers", CustomerController, :list
+    get "/v1/customers/:id", CustomerController, :show
+    patch "/v1/customers/:id", CustomerController, :update
+    delete "/v1/customers/:id", CustomerController, :delete
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -77,6 +82,10 @@ defmodule TaurosWeb.Router do
       live "/agents/new", AgentLive.Form, :new
       live "/agents/:id", AgentLive.Show, :show
       live "/agents/:id/edit", AgentLive.Form, :edit
+      live "/customers", CustomerLive.Index, :index
+      live "/customers/new", CustomerLive.Form, :new
+      live "/customers/:id", CustomerLive.Show, :show
+      live "/customers/:id/edit", CustomerLive.Form, :edit
     end
 
     post "/users/update-password", UserSessionController, :update_password

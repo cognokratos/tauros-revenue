@@ -55,6 +55,19 @@ defmodule TaurosWeb.Layouts do
                   >
                   </span>
                 </.link>
+                <.link
+                  navigate={~p"/customers"}
+                  data-path="/customers"
+                  class="relative inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+                >
+                  <span class="flex items-center">Customers</span>
+                  <span
+                    data-underline
+                    class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200"
+                    aria-hidden="true"
+                  >
+                  </span>
+                </.link>
               </div>
             </div>
 
@@ -226,6 +239,19 @@ defmodule TaurosWeb.Layouts do
             class="relative block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200"
           >
             <span class="flex items-center">Agents</span>
+            <span
+              data-underline
+              class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200"
+              aria-hidden="true"
+            >
+            </span>
+          </.link>
+          <.link
+            navigate={~p"/customers"}
+            data-path="/customers"
+            class="relative block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-200"
+          >
+            <span class="flex items-center">Customers</span>
             <span
               data-underline
               class="absolute left-0 -bottom-1 h-0.5 w-full bg-indigo-600 transform scale-x-0 origin-left transition-transform duration-200"
