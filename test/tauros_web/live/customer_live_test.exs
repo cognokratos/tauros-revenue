@@ -105,6 +105,59 @@ defmodule TaurosWeb.CustomerLiveTest do
     end
   end
 
+  describe "Edit customer form" do
+    test "shows form fields including readonly agent", %{conn: conn} do
+      user = user_fixture()
+      agent = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent.id})
+
+      conn = log_in_user(conn, user)
+      {:ok, view, html} = live(conn, ~p"/customers/#{customer.id}/edit")
+
+      assert html =~ "Edit Customer"
+      assert has_element?(view, "#customer-form")
+      assert has_element?(view, "input[name='customer[name]']")
+      assert has_element?(view, "input[name='customer[email]']")
+      # Agent should be displayed but not editable
+      assert html =~ agent.name
+    end
+
+    test "does not allow changing agent_id in edit", %{conn: conn} do
+      user = user_fixture()
+      agent1 = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent1.id})
+
+      conn = log_in_user(conn, user)
+      {:ok, _view, html} = live(conn, ~p"/customers/#{customer.id}/edit")
+
+      # Verify agent is shown read-only in the edit form
+      assert html =~ agent1.name
+      # Verify agent_id input is disabled
+      assert html =~ ~r/<select[^>]*name="customer\[agent_id\]"[^>]*disabled/
+    end
+
+    test "updates customer name and email without agent change", %{conn: conn} do
+      user = user_fixture()
+      agent = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent.id})
+
+      conn = log_in_user(conn, user)
+      {:ok, view, _html} = live(conn, ~p"/customers/#{customer.id}/edit")
+
+      view
+      |> form("#customer-form", %{
+        "customer" => %{
+          "name" => "Updated Name",
+          "email" => "newemail@example.com"
+        }
+      })
+      |> render_submit()
+
+      # Should redirect to customers list
+      assert_redirected(view, ~p"/customers")
+    end
+  end
+
   describe "Authentication" do
     test "requires login to view customers", %{conn: conn} do
       assert {:error, {:redirect, %{to: path}}} = live(conn, ~p"/customers")

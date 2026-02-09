@@ -28,7 +28,8 @@ defmodule TaurosWeb.CustomerLive.Form do
                 type="select"
                 label="Agent"
                 options={[{"Select an agent...", ""}] ++ Enum.map(@agents, &{&1.name, &1.id})}
-                required
+                required={@live_action == :new}
+                disabled={@live_action == :edit}
               />
               <div class="flex gap-4">
                 <.button phx-disable-with="Saving..." variant="primary">Save Customer</.button>

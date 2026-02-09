@@ -160,4 +160,51 @@ defmodule Tauros.CustomersTest do
       end
     end
   end
+
+  describe "update_customer/3 - ownership enforcement" do
+    test "rejects agent_id reassignment on update" do
+      user = user_fixture()
+      agent1 = agent_fixture(%{user_id: user.id})
+      agent2 = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent1.id})
+      scope = %Scope{user: user}
+
+      assert {:error, changeset} =
+               Customers.update_customer(scope, customer, %{
+                 "agent_id" => agent2.id
+               })
+
+      assert :agent_id in Keyword.keys(changeset.errors)
+    end
+
+    test "allows update of name without agent_id" do
+      user = user_fixture()
+      agent = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent.id})
+      scope = %Scope{user: user}
+
+      assert {:ok, updated} =
+               Customers.update_customer(scope, customer, %{
+                 "name" => "New Name"
+               })
+
+      assert updated.name == "New Name"
+      assert updated.agent_id == agent.id
+    end
+
+    test "allows email update without agent_id" do
+      user = user_fixture()
+      agent = agent_fixture(%{user_id: user.id})
+      customer = customer_fixture(%{"agent_id" => agent.id})
+      scope = %Scope{user: user}
+
+      assert {:ok, updated} =
+               Customers.update_customer(scope, customer, %{
+                 "email" => "newemail@example.com"
+               })
+
+      assert updated.email == "newemail@example.com"
+      assert updated.agent_id == agent.id
+    end
+  end
 end
