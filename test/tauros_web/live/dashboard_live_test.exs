@@ -10,7 +10,7 @@ defmodule TaurosWeb.DashboardLiveTest do
 
       assert html =~ "Dashboard"
       assert html =~ "Agents"
-      assert html =~ "Clients"
+      assert html =~ "Customers"
       assert html =~ "Pending Invoices"
       assert html =~ "Approved Invoices"
     end

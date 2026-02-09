@@ -1,6 +1,6 @@
 # Story 1.3: Admin Registers Customer
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -273,3 +273,7 @@ None - implementation completed successfully on first attempt
 - test/tauros/customers_live_test.exs (old test for non-existent module)
 - test/support/fixtures/customers_live_fixtures.ex (old fixtures)
 - test/tauros_web/controllers/customer_controller_test.exs (old non-admin tests)
+
+## Change Log
+
+- **2026-02-09**: Updated customer LiveView components to use `.card` component for consistent UI styling with AgentLive pattern (refactor, no functional changes)

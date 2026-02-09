@@ -13,11 +13,12 @@ defmodule Tauros.CustomersTest do
       agent = agent_fixture(%{user_id: user.id})
       scope = %Scope{user: user}
 
-      assert {:ok, customer} = Customers.create_customer(scope, %{
-        "name" => "ACME Inc",
-        "email" => "contact@acme.com",
-        "agent_id" => agent.id
-      })
+      assert {:ok, customer} =
+               Customers.create_customer(scope, %{
+                 "name" => "ACME Inc",
+                 "email" => "contact@acme.com",
+                 "agent_id" => agent.id
+               })
 
       assert customer.name == "ACME Inc"
       assert customer.email == "contact@acme.com"
@@ -29,10 +30,11 @@ defmodule Tauros.CustomersTest do
       agent = agent_fixture(%{user_id: user.id})
       scope = %Scope{user: user}
 
-      assert {:error, changeset} = Customers.create_customer(scope, %{
-        "name" => "ACME Inc",
-        "agent_id" => agent.id
-      })
+      assert {:error, changeset} =
+               Customers.create_customer(scope, %{
+                 "name" => "ACME Inc",
+                 "agent_id" => agent.id
+               })
 
       assert :email in Keyword.keys(changeset.errors)
     end
@@ -43,11 +45,12 @@ defmodule Tauros.CustomersTest do
       agent = agent_fixture(%{user_id: user2.id})
       scope = %Scope{user: user1}
 
-      assert {:error, msg} = Customers.create_customer(scope, %{
-        "name" => "ACME Inc",
-        "email" => "contact@acme.com",
-        "agent_id" => agent.id
-      })
+      assert {:error, msg} =
+               Customers.create_customer(scope, %{
+                 "name" => "ACME Inc",
+                 "email" => "contact@acme.com",
+                 "agent_id" => agent.id
+               })
 
       assert is_binary(msg)
     end
@@ -110,9 +113,10 @@ defmodule Tauros.CustomersTest do
       customer = customer_fixture(%{"agent_id" => agent.id})
       scope = %Scope{user: user}
 
-      assert {:ok, updated} = Customers.update_customer(scope, customer, %{
-        "name" => "Updated Name"
-      })
+      assert {:ok, updated} =
+               Customers.update_customer(scope, customer, %{
+                 "name" => "Updated Name"
+               })
 
       assert updated.name == "Updated Name"
     end
@@ -138,6 +142,7 @@ defmodule Tauros.CustomersTest do
       scope = %Scope{user: user}
 
       assert {:ok, _} = Customers.delete_customer(scope, customer)
+
       assert_raise Ecto.NoResultsError, fn ->
         Customers.get_customer!(scope, customer.id)
       end

@@ -10,23 +10,33 @@ defmodule TaurosWeb.CustomerLive.Form do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="mx-auto max-w-2xl">
-        <h1 class="text-2xl font-bold mb-6">{@page_title}</h1>
+        <.header>{@page_title}</.header>
 
-        <.form for={@form} id="customer-form" phx-change="validate" phx-submit="save" class="space-y-6">
-          <.input field={@form[:name]} type="text" label="Name" required />
-          <.input field={@form[:email]} type="email" label="Email" required />
-          <.input
-            field={@form[:agent_id]}
-            type="select"
-            label="Agent"
-            options={[{"Select an agent...", ""}] ++ Enum.map(@agents, &{&1.name, &1.id})}
-            required
-          />
-          <div class="flex gap-4">
-            <.button phx-disable-with="Saving..." variant="primary">Save Customer</.button>
-            <.button navigate={return_path(@customer)} type="button">Cancel</.button>
+        <.card>
+          <div class="px-4 py-5 sm:p-6">
+            <.form
+              for={@form}
+              id="customer-form"
+              phx-change="validate"
+              phx-submit="save"
+              class="space-y-6"
+            >
+              <.input field={@form[:name]} type="text" label="Name" required />
+              <.input field={@form[:email]} type="email" label="Email" required />
+              <.input
+                field={@form[:agent_id]}
+                type="select"
+                label="Agent"
+                options={[{"Select an agent...", ""}] ++ Enum.map(@agents, &{&1.name, &1.id})}
+                required
+              />
+              <div class="flex gap-4">
+                <.button phx-disable-with="Saving..." variant="primary">Save Customer</.button>
+                <.button navigate={return_path(@customer)} type="button">Cancel</.button>
+              </div>
+            </.form>
           </div>
-        </.form>
+        </.card>
       </div>
     </Layouts.app>
     """
@@ -69,8 +79,12 @@ defmodule TaurosWeb.CustomerLive.Form do
   end
 
   defp save_customer(socket, :edit, customer_params) do
-    case Customers.update_customer(socket.assigns.current_scope, socket.assigns.customer, customer_params) do
-      {:ok, customer} ->
+    case Customers.update_customer(
+           socket.assigns.current_scope,
+           socket.assigns.customer,
+           customer_params
+         ) do
+      {:ok, _customer} ->
         {:noreply,
          socket
          |> put_flash(:info, "Customer updated successfully")

@@ -11,7 +11,8 @@ defmodule TaurosWeb.Api.Admin.CustomerController do
   Create a new customer.
   """
   def create(conn, %{"customer" => customer_params}) do
-    with {:ok, %Customer{} = customer} <- Customers.create_customer(conn.assigns.current_scope, customer_params) do
+    with {:ok, %Customer{} = customer} <-
+           Customers.create_customer(conn.assigns.current_scope, customer_params) do
       conn
       |> put_status(:created)
       |> render(:show, customer: customer)
@@ -43,7 +44,8 @@ defmodule TaurosWeb.Api.Admin.CustomerController do
   def update(conn, %{"id" => id, "customer" => customer_params}) do
     customer = Customers.get_customer!(conn.assigns.current_scope, id)
 
-    with {:ok, %Customer{} = customer} <- Customers.update_customer(conn.assigns.current_scope, customer, customer_params) do
+    with {:ok, %Customer{} = customer} <-
+           Customers.update_customer(conn.assigns.current_scope, customer, customer_params) do
       render(conn, :show, customer: customer)
     end
   end

@@ -78,7 +78,8 @@ defmodule Tauros.Customers do
     changeset = %Customer{} |> Customer.changeset(attrs)
 
     # Check if changeset is valid
-    if changeset.valid? and agent_id && agent_id != "" && agent_belongs_to_user?(scope, agent_id) do
+    if (changeset.valid? and agent_id) && agent_id != "" &&
+         agent_belongs_to_user?(scope, agent_id) do
       Repo.insert(changeset)
     else
       # Return changeset errors or custom error

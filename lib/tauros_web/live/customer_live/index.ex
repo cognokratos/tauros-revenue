@@ -7,28 +7,35 @@ defmodule TaurosWeb.CustomerLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-4xl">
-        <div class="flex justify-between items-center mb-8">
-          <h1 class="text-3xl font-bold">Customers</h1>
+      <.header>
+        Customers
+        <:actions>
           <.button variant="primary" navigate={~p"/customers/new"}>
             <.icon name="hero-plus" /> New Customer
           </.button>
-        </div>
+        </:actions>
+      </.header>
 
-        <div id="customers" phx-update="stream" class="space-y-4">
-          <div id="empty-state" class="hidden only:block text-center text-gray-500 py-8">
+      <div id="customers" phx-update="stream" class="space-y-4">
+        <div id="empty-state" style="display: none">
+          <div class="text-center py-8 text-gray-500">
             No customers yet. Create one to get started.
           </div>
-          <%= for {{id, customer}} <- @streams.customers do %>
-            <div id={id} class="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
+        </div>
+        <%= for {id, customer} <- @streams.customers do %>
+          <.card id={id}>
+            <div class="px-4 py-5 sm:px-6">
+              <div class="flex items-start justify-between">
+                <div>
                   <h3 class="font-semibold text-lg">{customer.name}</h3>
-                  <p class="text-gray-600">{customer.email}</p>
-                  <p class="text-sm text-gray-500 mt-2">Agent: {customer.agent.name}</p>
+                  <p class="text-gray-600 text-sm">{customer.email}</p>
+                  <p class="text-gray-500 text-sm mt-2">Agent: {customer.agent.name}</p>
                 </div>
-                <div class="flex gap-2">
-                  <.link navigate={~p"/customers/#{customer}/edit"} class="text-blue-600 hover:text-blue-800">
+                <div class="space-x-2">
+                  <.link
+                    navigate={~p"/customers/#{customer}/edit"}
+                    class="text-blue-600 hover:text-blue-800"
+                  >
                     Edit
                   </.link>
                   <.link
@@ -41,8 +48,8 @@ defmodule TaurosWeb.CustomerLive.Index do
                 </div>
               </div>
             </div>
-          <% end %>
-        </div>
+          </.card>
+        <% end %>
       </div>
     </Layouts.app>
     """

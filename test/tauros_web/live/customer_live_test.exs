@@ -10,7 +10,7 @@ defmodule TaurosWeb.CustomerLiveTest do
     test "displays customer page for authenticated user", %{conn: conn} do
       user = user_fixture()
       agent = agent_fixture(%{user_id: user.id})
-      customer = customer_fixture(%{"agent_id" => agent.id})
+      _customer = customer_fixture(%{"agent_id" => agent.id})
 
       conn = log_in_user(conn, user)
       {:ok, view, html} = live(conn, ~p"/customers")
@@ -18,7 +18,7 @@ defmodule TaurosWeb.CustomerLiveTest do
       # Check that the page title and header are present
       assert html =~ "Customers"
       assert html =~ "New Customer"
-      
+
       # Verify the LiveView is working
       assert has_element?(view, "#customers")
     end
@@ -40,7 +40,8 @@ defmodule TaurosWeb.CustomerLiveTest do
       conn = log_in_user(conn, user)
       {:ok, view, _html} = live(conn, ~p"/customers")
 
-      {:ok, _form_view, form_html} = view
+      {:ok, _form_view, form_html} =
+        view
         |> element("a", "New Customer")
         |> render_click()
         |> follow_redirect(conn)
@@ -71,14 +72,14 @@ defmodule TaurosWeb.CustomerLiveTest do
       {:ok, view, _html} = live(conn, ~p"/customers/new")
 
       view
-        |> form("#customer-form", %{
-          "customer" => %{
-            "name" => "New Customer",
-            "email" => "new@example.com",
-            "agent_id" => agent.id
-          }
-        })
-        |> render_submit()
+      |> form("#customer-form", %{
+        "customer" => %{
+          "name" => "New Customer",
+          "email" => "new@example.com",
+          "agent_id" => agent.id
+        }
+      })
+      |> render_submit()
 
       # Should redirect to customers list
       assert_redirected(view, ~p"/customers")
@@ -92,7 +93,8 @@ defmodule TaurosWeb.CustomerLiveTest do
       {:ok, view, _html} = live(conn, ~p"/customers/new")
 
       # Try to submit with missing fields
-      _result = view
+      _result =
+        view
         |> form("#customer-form", %{"customer" => %{"name" => "Test"}})
         |> render_submit()
 

@@ -17,9 +17,8 @@ defmodule Tauros.CustomersFixtures do
         "agent_id" => agent_id
       })
 
-    {:ok, customer} = Tauros.Repo.insert(
-      Tauros.Customers.Customer.changeset(%Tauros.Customers.Customer{}, attrs)
-    )
+    {:ok, customer} =
+      Tauros.Repo.insert(Tauros.Customers.Customer.changeset(%Tauros.Customers.Customer{}, attrs))
 
     customer
   end

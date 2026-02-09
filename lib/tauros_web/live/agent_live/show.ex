@@ -17,15 +17,17 @@ defmodule TaurosWeb.AgentLive.Show do
             <.icon name="hero-pencil-square" /> Edit
           </.button>
         </:actions>
+        <:subtitle>
+          {@agent.id}
+        </:subtitle>
       </.header>
 
       <.card>
-        <div class="px-4 py-5 sm:px-6">
-          <.list>
-            <:item title="ID">{@agent.id}</:item>
-            <:item title="Name">{@agent.name}</:item>
-            <:item title="Created">{format_datetime(@agent.inserted_at)}</:item>
-          </.list>
+        <div class="px-4 py-5 sm:px-6 space-y-4">
+          <div>
+            <p class="text-sm text-gray-600">Created</p>
+            <p class="text-lg">{Calendar.strftime(@agent.inserted_at, "%Y-%m-%d %H:%M")}</p>
+          </div>
         </div>
       </.card>
     </Layouts.app>
@@ -40,11 +42,5 @@ defmodule TaurosWeb.AgentLive.Show do
      socket
      |> assign(:page_title, "Agent Details")
      |> assign(:agent, agent)}
-  end
-
-  defp format_datetime(datetime) do
-    datetime
-    |> DateTime.truncate(:second)
-    |> to_string()
   end
 end

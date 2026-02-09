@@ -8,33 +8,39 @@ defmodule TaurosWeb.AgentLive.Form do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <.header>
-        {@page_title}
-      </.header>
+      <div class="mx-auto max-w-2xl">
+        <.header>{@page_title}</.header>
 
-      <.card>
-        <div class="px-4 py-5 sm:p-6">
-          <.form for={@form} id="agent-form" phx-submit="save" class="space-y-6">
-            <.input field={@form[:name]} type="text" label="Agent Name" required />
-            <.input
-              field={@form[:api_key]}
-              type="password"
-              label="API Key (from external service)"
-              required
-              autocomplete="off"
-              phx-debounce="blur"
-            />
-            <footer class="flex gap-2">
-              <.button phx-disable-with="Saving..." variant="primary">
-                {if @form.source.data.id, do: "Update", else: "Create"} Agent
-              </.button>
-              <.button navigate={~p"/agents"}>
-                Cancel
-              </.button>
-            </footer>
-          </.form>
-        </div>
-      </.card>
+        <.card>
+          <div class="px-4 py-5 sm:p-6">
+            <.form
+              for={@form}
+              id="agent-form"
+              phx-change="validate"
+              phx-submit="save"
+              class="space-y-6"
+            >
+              <.input field={@form[:name]} type="text" label="Agent Name" required />
+              <.input
+                field={@form[:api_key]}
+                type="password"
+                label="API Key"
+                required
+                autocomplete="off"
+                phx-debounce="blur"
+              />
+              <footer class="flex gap-2">
+                <.button phx-disable-with="Saving..." variant="primary">
+                  {if @form.source.data.id, do: "Update", else: "Create"} Agent
+                </.button>
+                <.button navigate={~p"/agents"}>
+                  Cancel
+                </.button>
+              </footer>
+            </.form>
+          </div>
+        </.card>
+      </div>
     </Layouts.app>
     """
   end
@@ -58,6 +64,12 @@ defmodule TaurosWeb.AgentLive.Form do
     |> assign(:page_title, "Edit Agent")
     |> assign(:agent, agent)
     |> assign(:form, to_form(Agents.change_agent(agent)))
+  end
+
+  @impl true
+  def handle_event("validate", %{"agent" => agent_params}, socket) do
+    changeset = Agents.change_agent(socket.assigns.agent, agent_params)
+    {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   @impl true

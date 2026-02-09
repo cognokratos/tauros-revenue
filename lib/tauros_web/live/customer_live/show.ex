@@ -7,34 +7,37 @@ defmodule TaurosWeb.CustomerLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-2xl">
-        <div class="flex justify-between items-center mb-6">
-          <h1 class="text-3xl font-bold">{@customer.name}</h1>
-          <div class="flex gap-2">
-            <.link navigate={~p"/customers/#{@customer}/edit"} class="text-blue-600 hover:text-blue-800">
-              Edit
-            </.link>
-            <.link navigate={~p"/customers"} class="text-gray-600 hover:text-gray-800">
-              Back
-            </.link>
-          </div>
-        </div>
+      <.header>
+        {@customer.name}
+        <:actions>
+          <.button navigate={~p"/customers"}>
+            <.icon name="hero-arrow-left" />
+          </.button>
+          <.button variant="primary" navigate={~p"/customers/#{@customer}/edit"}>
+            <.icon name="hero-pencil-square" /> Edit
+          </.button>
+        </:actions>
+        <:subtitle>
+          {@customer.id}
+        </:subtitle>
+      </.header>
 
-        <div class="bg-white border rounded-lg p-6 space-y-4">
+      <.card>
+        <div class="px-4 py-5 sm:px-6 space-y-4">
           <div>
             <p class="text-sm text-gray-600">Email</p>
-            <p class="text-lg">{@customer.email}</p>
+            <p class="text-lg font-medium">{@customer.email}</p>
           </div>
           <div>
             <p class="text-sm text-gray-600">Agent</p>
-            <p class="text-lg">{@customer.agent.name}</p>
+            <p class="text-lg font-medium">{@customer.agent.name}</p>
           </div>
           <div>
             <p class="text-sm text-gray-600">Created</p>
             <p class="text-lg">{Calendar.strftime(@customer.inserted_at, "%Y-%m-%d %H:%M")}</p>
           </div>
         </div>
-      </div>
+      </.card>
     </Layouts.app>
     """
   end
