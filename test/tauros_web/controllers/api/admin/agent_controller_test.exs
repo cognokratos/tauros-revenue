@@ -9,7 +9,8 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
     test "creates an agent with valid token and parameters", %{conn: conn, user: user} do
       api_key = "external_service_api_key_12345"
 
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "Test Agent", api_key: api_key})
+      conn =
+        post(conn, ~p"/api/admin/v1/agents", %{agent: %{name: "Test Agent", api_key: api_key}})
 
       assert conn.status == 201
 
@@ -22,7 +23,7 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
 
     test "returns 401 with missing bearer token", %{conn: conn} do
       conn = Plug.Conn.delete_req_header(conn, "authorization")
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "Test Agent", api_key: "key"})
+      conn = post(conn, ~p"/api/admin/v1/agents", %{agent: %{name: "Test Agent", api_key: "key"}})
 
       assert conn.status == 401
       response = json_response(conn, 401)
@@ -36,7 +37,7 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
         |> Plug.Conn.delete_req_header("authorization")
         |> Plug.Conn.put_req_header("authorization", "Bearer invalid_token")
 
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "Test Agent", api_key: "key"})
+      conn = post(conn, ~p"/api/admin/v1/agents", %{agent: %{name: "Test Agent", api_key: "key"}})
 
       assert conn.status == 401
       response = json_response(conn, 401)
@@ -53,15 +54,15 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
     end
 
     test "returns 422 when name is missing", %{conn: conn} do
-      conn = post(conn, ~p"/api/admin/v1/agents", %{api_key: "some_key"})
+      conn = post(conn, ~p"/api/admin/v1/agents", %{agent: %{api_key: "some_key"}})
 
       assert conn.status == 422
       response = json_response(conn, 422)
-      assert response["error"]["code"] == "missing_required_fields"
+      assert response["error"]["code"] == "validation_error"
     end
 
     test "returns 422 when api_key is missing", %{conn: conn} do
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "Test Agent"})
+      conn = post(conn, ~p"/api/admin/v1/agents", %{agent: %{name: "Test Agent"}})
 
       assert conn.status == 422
       response = json_response(conn, 422)
@@ -70,7 +71,7 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
     end
 
     test "returns 422 with validation error when name is empty", %{conn: conn} do
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "", api_key: "key"})
+      conn = post(conn, ~p"/api/admin/v1/agents", %{agent: %{name: "", api_key: "key"}})
 
       assert conn.status == 422
       response = json_response(conn, 422)
@@ -83,7 +84,11 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
     test "API key is hashed in database", %{conn: conn} do
       plaintext_key = "plaintext_api_key_from_external_service"
 
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "Secure Agent", api_key: plaintext_key})
+      conn =
+        post(conn, ~p"/api/admin/v1/agents", %{
+          agent: %{name: "Secure Agent", api_key: plaintext_key}
+        })
+
       _response = json_response(conn, 201)
 
       agent = Tauros.Repo.get_by(Tauros.Agents.Agent, name: "Secure Agent")
@@ -95,7 +100,9 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
 
     test "created agent is scoped to authenticated user", %{conn: conn, user: user} do
       conn =
-        post(conn, ~p"/api/admin/v1/agents", %{name: "User Agent", api_key: "external_key"})
+        post(conn, ~p"/api/admin/v1/agents", %{
+          agent: %{name: "User Agent", api_key: "external_key"}
+        })
 
       _response = json_response(conn, 201)
 
@@ -104,7 +111,11 @@ defmodule TaurosWeb.Api.Admin.AgentControllerTest do
     end
 
     test "API response does not include plaintext API key", %{conn: conn} do
-      conn = post(conn, ~p"/api/admin/v1/agents", %{name: "No Key Agent", api_key: "secret_key"})
+      conn =
+        post(conn, ~p"/api/admin/v1/agents", %{
+          agent: %{name: "No Key Agent", api_key: "secret_key"}
+        })
+
       response = json_response(conn, 201)
 
       refute Map.has_key?(response, "api_key")
