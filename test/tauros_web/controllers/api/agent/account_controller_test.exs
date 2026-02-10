@@ -12,9 +12,11 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         conn
         |> put_req_header("x-api-key", api_key)
         |> post("/api/v1/accounts", %{
-          wallet_name: "My Wallet",
-          public_address: "0x1234567890123456789012345678901234567890",
-          currency: "USD"
+          account: %{
+            wallet_name: "My Wallet",
+            public_address: "0x1234567890123456789012345678901234567890",
+            currency: "ETH"
+          }
         })
 
       assert %{
@@ -22,7 +24,7 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
                  "id" => account_id,
                  "wallet_name" => "My Wallet",
                  "public_address" => "0x1234567890123456789012345678901234567890",
-                 "currency" => "USD",
+                 "currency" => "ETH",
                  "agent_id" => agent_id
                }
              } = json_response(conn, 201)
@@ -39,8 +41,10 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         conn
         |> put_req_header("x-api-key", api_key)
         |> post("/api/v1/accounts", %{
-          public_address: "0x1234567890123456789012345678901234567890",
-          currency: "USD"
+          account: %{
+            public_address: "0x1234567890123456789012345678901234567890",
+            currency: "ETH"
+          }
         })
 
       assert response(conn, 422)
@@ -56,8 +60,10 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         conn
         |> put_req_header("x-api-key", api_key)
         |> post("/api/v1/accounts", %{
-          wallet_name: "My Wallet",
-          currency: "USD"
+          account: %{
+            wallet_name: "My Wallet",
+            currency: "ETH"
+          }
         })
 
       assert response(conn, 422)
@@ -73,8 +79,10 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         conn
         |> put_req_header("x-api-key", api_key)
         |> post("/api/v1/accounts", %{
-          wallet_name: "My Wallet",
-          public_address: "0x1234567890123456789012345678901234567890"
+          account: %{
+            wallet_name: "My Wallet",
+            public_address: "0x1234567890123456789012345678901234567890"
+          }
         })
 
       assert response(conn, 422)
@@ -87,7 +95,7 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         post(conn, "/api/v1/accounts", %{
           wallet_name: "My Wallet",
           public_address: "0x1234567890123456789012345678901234567890",
-          currency: "USD"
+          currency: "ETH"
         })
 
       assert response(conn, 401)
@@ -99,9 +107,11 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         conn
         |> put_req_header("x-api-key", "invalid_key_12345")
         |> post("/api/v1/accounts", %{
-          wallet_name: "My Wallet",
-          public_address: "0x1234567890123456789012345678901234567890",
-          currency: "USD"
+          account: %{
+            wallet_name: "My Wallet",
+            public_address: "0x1234567890123456789012345678901234567890",
+            currency: "ETH"
+          }
         })
 
       assert response(conn, 401)
@@ -118,9 +128,11 @@ defmodule TaurosWeb.Api.Agent.AccountControllerTest do
         conn
         |> put_req_header("x-api-key", api_key1)
         |> post("/api/v1/accounts", %{
-          wallet_name: "Agent 1 Wallet",
-          public_address: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-          currency: "USD"
+          account: %{
+            wallet_name: "Agent 1 Wallet",
+            public_address: "0x1234567890123456789012345678901234567890",
+            currency: "ETH"
+          }
         })
 
       assert %{"data" => %{"agent_id" => created_agent_id}} = json_response(conn, 201)

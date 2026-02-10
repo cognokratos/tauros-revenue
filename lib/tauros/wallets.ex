@@ -9,6 +9,7 @@ defmodule Tauros.Wallets do
   alias Tauros.Repo
   alias Tauros.Wallets.Account
   alias Tauros.Agents.Agent
+  alias Tauros.Accounts.Scope
 
   @doc """
   Creates an account for a given agent.
@@ -71,5 +72,43 @@ defmodule Tauros.Wallets do
   """
   def change_account(%Account{} = account, attrs \\ %{}) do
     Account.changeset(account, attrs)
+  end
+
+  @doc """
+  Subscribes to scoped notifications about any account changes.
+
+  The broadcasted messages match the pattern:
+
+    * {:created, %Account{}}
+    * {:updated, %Account{}}
+    * {:deleted, %Account{}}
+
+  """
+  def subscribe_accounts(%Scope{} = scope) do
+    key = scope.user.id
+    Phoenix.PubSub.subscribe(Tauros.PubSub, "user:#{key}:accounts")
+  end
+
+  @doc """
+  Returns all accounts for a given scope (admin view).
+
+  Lists all accounts belonging to agents owned by the scope's user.
+  Preloads :agent association for display.
+
+  ## Examples
+
+      iex> list_accounts_for_scope(scope)
+      [%Account{}, ...]
+
+  """
+  def list_accounts_for_scope(%Scope{} = scope) do
+    from(a in Account,
+      join: ag in Agent,
+      on: a.agent_id == ag.id,
+      where: ag.user_id == ^scope.user.id,
+      preload: :agent,
+      order_by: [desc: a.inserted_at]
+    )
+    |> Repo.all()
   end
 end
