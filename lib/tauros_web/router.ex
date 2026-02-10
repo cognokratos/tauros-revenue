@@ -31,6 +31,7 @@ defmodule TaurosWeb.Router do
     pipe_through :api_agent
 
     get "/v1/test", TestController, :show
+    post "/v1/accounts", AccountController, :create
   end
 
   scope "/api/admin", TaurosWeb.Api.Admin do

@@ -8,6 +8,8 @@ defmodule Tauros.AgentsFixtures do
 
   @doc """
   Generate an agent with a provided API key.
+
+  Returns the agent with the plaintext api_key stored as a field for testing.
   """
   def agent_fixture(attrs \\ []) do
     attrs = if is_list(attrs), do: Enum.into(attrs, %{}), else: attrs
@@ -22,6 +24,7 @@ defmodule Tauros.AgentsFixtures do
         %{"name" => name, "api_key" => api_key}
       )
 
-    agent
+    # Store plaintext api_key in the agent struct for test access
+    %{agent | api_key: api_key}
   end
 end
