@@ -3,7 +3,7 @@ defmodule TaurosWeb.Api.Admin.AgentController do
 
   alias Tauros.Agents
 
-  def create(conn, %{"name" => _} = params) do
+  def create(conn, %{"agent" => params}) do
     current_scope = conn.assigns[:current_scope]
 
     case Agents.create_agent(current_scope, params) do

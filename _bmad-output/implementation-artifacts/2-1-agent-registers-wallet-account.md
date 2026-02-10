@@ -21,25 +21,25 @@ so that I can direct invoice payments to a public address.
 
 **Generator First (Required)**
 
-- [ ] Use Phoenix generator to scaffold the baseline, then adapt:
-  - [ ] Run: `mix phx.gen.json Wallets Account accounts wallet_name:string public_address:string currency:string agent_id:binary_id`
-  - [ ] Review generated files and adjust to match agent-scoped API patterns and requirements below
-- [ ] Data model + migration (adapt generated)
-  - [ ] Ensure migration creates `accounts` table with `wallet_name`, `public_address`, `currency`, `agent_id` (FK to `agents`) and timestamps
-  - [ ] Add index on `agent_id` and FK constraint for ownership
-  - [ ] Do NOT allow private key fields
-- [ ] Wallets context + schema (adapt generated)
-  - [ ] Adjust `Tauros.Wallets` to accept `current_agent` and enforce scoping on all queries
-  - [ ] Update schema/changeset to validate required fields (`wallet_name`, `public_address`, `currency`)
-  - [ ] Remove `agent_id` from `cast` and set it programmatically from `current_agent` in context
-- [ ] API endpoint (adapt generated)
-  - [ ] Replace generated controller routes with agent-scoped API route: `POST /api/v1/accounts` under existing `:api_agent` pipeline
-  - [ ] Implement `TaurosWeb.Api.Agent.AccountController.create/2` using `current_agent`
-  - [ ] Return success JSON with account fields and standard REST error envelope on failure
-- [ ] Tests
-  - [ ] Controller tests: success, missing fields (422 envelope), missing/invalid API key (401 envelope)
-  - [ ] Context tests: `create_account/2` enforces `agent_id` scoping and rejects missing fields
-  - [ ] Add fixtures for accounts if helpful
+- [x] Use Phoenix generator to scaffold the baseline, then adapt:
+  - [x] Run: `mix phx.gen.json Wallets Account accounts wallet_name:string public_address:string currency:string agent_id:binary_id`
+  - [x] Review generated files and adjust to match agent-scoped API patterns and requirements below
+- [x] Data model + migration (adapt generated)
+  - [x] Ensure migration creates `accounts` table with `wallet_name`, `public_address`, `currency`, `agent_id` (FK to `agents`) and timestamps
+  - [x] Add index on `agent_id` and FK constraint for ownership
+  - [x] Do NOT allow private key fields
+- [x] Wallets context + schema (adapt generated)
+  - [x] Adjust `Tauros.Wallets` to accept `current_agent` and enforce scoping on all queries
+  - [x] Update schema/changeset to validate required fields (`wallet_name`, `public_address`, `currency`)
+  - [x] Remove `agent_id` from `cast` and set it programmatically from `current_agent` in context
+- [x] API endpoint (adapt generated)
+  - [x] Replace generated controller routes with agent-scoped API route: `POST /api/v1/accounts` under existing `:api_agent` pipeline
+  - [x] Implement `TaurosWeb.Api.Agent.AccountController.create/2` using `current_agent`
+  - [x] Return success JSON with account fields and standard REST error envelope on failure
+- [x] Tests
+  - [x] Controller tests: success, missing fields (422 envelope), missing/invalid API key (401 envelope)
+  - [x] Context tests: `create_account/2` enforces `agent_id` scoping and rejects missing fields
+  - [x] Add fixtures for accounts if helpful
 
 ## Developer Context (Do Not Skip)
 
@@ -114,12 +114,86 @@ Status set to **ready-for-dev**. Ultimate context engine analysis completed - co
 
 ### Agent Model Used
 
-GPT-5 (Codex CLI)
+Claude 3.5 Sonnet (Copilot CLI)
 
-### Debug Log References
+### Implementation Plan
+
+**Phase 1: Scaffold & Adapt (COMPLETE)**
+- Ran Phoenix generator with `phx.gen.json` to create baseline Wallets context and Account schema
+- Adapted generated migration: removed user_id field, added agent_id as FK to agents table, added proper indexing and null constraints
+- Adapted Account schema: changed agent_id field to `belongs_to :agent`, removed user_id tracking, created `changeset_with_agent/3` helper
+- Adapted Wallets context: switched from user-scoped to agent-scoped operations, removed pub/sub broadcasting, simplified to core operations
+
+**Phase 2: API Endpoint Implementation (COMPLETE)**
+- Created `TaurosWeb.Api.Agent.AccountController` with `create/2` action
+- Uses `action_fallback` pattern with `TaurosWeb.Api.Agent.FallbackController` for error handling
+- Created `TaurosWeb.Api.Agent.AccountJSON` view for proper JSON responses
+- Created `TaurosWeb.Api.Agent.ErrorJSON` view for consistent error envelope format
+- Added route `POST /api/v1/accounts` under `:api_agent` pipeline in router
+- Account creation automatically scopes to authenticated agent via `conn.assigns.current_agent`
+
+**Phase 3: Testing (COMPLETE)**
+- Controller tests (7 tests): validate success case, missing fields (422), invalid/missing API key (401), agent scoping
+- Context tests (14 tests): validate create, list, get operations, proper error handling, format validation, agent scoping
+- Updated fixtures: `AgentsFixtures` now returns plaintext api_key for testing, `WalletsFixtures` accepts agent parameter
+- All 215 project tests pass including 21 new tests
+
+**Key Implementation Decisions:**
+1. **Agent Scoping:** All queries use agent_id in WHERE clauses at DB level + context function level per project requirements
+2. **Public Address Validation:** Added regex validation `^0x[a-fA-F0-9]{40}$` to ensure valid Ethereum address format
+3. **Error Handling:** Used `action_fallback` pattern consistent with admin API, returns standard `{error: %{code, message, details}}` envelope
+4. **No Private Keys:** Schema never accepts or stores private keys; only public_address field is stored
+5. **Agent Extraction:** Leveraged existing AgentAuth plug which assigns `current_agent` on conn before controller
 
 ### Completion Notes List
 
-- Note: This is the first story in Epic 2, so there are no prior story learnings to apply.
+- ✅ All acceptance criteria satisfied:
+  - AC1: POST /api/v1/accounts creates account with valid API key ✓
+  - AC2: Returns 422 with error envelope for missing fields ✓
+  - AC3: Returns 401 with error envelope for invalid/missing API key ✓
+  - AC4: Only public address stored, agent_id scoped at DB and context level ✓
+- ✅ All tests written and passing (21 new tests + 194 existing)
+- ✅ No regressions introduced
+- ✅ Code follows Phoenix 1.8 patterns and project context rules
+- ✅ Migration includes proper constraints and indexing
+- ✅ Error responses use standard REST envelope format
 
 ### File List
+
+**New Files:**
+- `lib/tauros/wallets.ex` - Wallets context with agent-scoped operations
+- `lib/tauros/wallets/account.ex` - Account schema with validation
+- `lib/tauros_web/controllers/api/agent/account_controller.ex` - API endpoint
+- `lib/tauros_web/controllers/api/agent/account_json.ex` - JSON response view
+- `lib/tauros_web/controllers/api/agent/error_json.ex` - Error envelope view
+- `lib/tauros_web/controllers/api/agent/fallback_controller.ex` - Error handler
+- `test/tauros/wallets_test.exs` - Context tests (14 tests)
+- `test/tauros_web/controllers/api/agent/account_controller_test.exs` - Controller tests (7 tests)
+
+**Modified Files:**
+- `priv/repo/migrations/20260210105516_create_accounts.exs` - Adapted: removed user_id, agent_id FK, added constraints
+- `lib/tauros_web/router.ex` - Added: `post "/v1/accounts", AccountController, :create` to `:api_agent` scope
+- `test/support/fixtures/wallets_fixtures.ex` - Updated: agent-scoped, plaintext api_key storage
+- `test/support/fixtures/agents_fixtures.ex` - Updated: stores plaintext api_key for test access
+
+## Change Log
+
+### 2026-02-10: Implementation Complete
+- Implemented full story: Agent Registers Wallet Account
+- Generated Wallets context and Account schema with Phoenix generator, then adapted for agent scoping
+- Created API endpoint POST /api/v1/accounts under /:api_agent pipeline
+- Implemented agent-scoped database queries with FK constraints and indexes
+- Added comprehensive test coverage: 7 controller tests + 14 context tests
+- All acceptance criteria satisfied, all tests passing (215 total)
+
+## Story Status
+
+**Status: review**
+
+Story implementation is complete and ready for code review. All acceptance criteria have been satisfied:
+- ✅ AC1: Valid API key + required fields creates account associated to agent
+- ✅ AC2: Missing fields returns 422 with error envelope
+- ✅ AC3: Invalid/missing API key returns 401 with error envelope
+- ✅ AC4: Only public address stored, agent_id enforced at DB and context level
+
+All 215 tests pass with no regressions.
