@@ -87,6 +87,7 @@ defmodule TaurosWeb.Router do
       live "/customers/new", CustomerLive.Form, :new
       live "/customers/:id", CustomerLive.Show, :show
       live "/customers/:id/edit", CustomerLive.Form, :edit
+      live "/accounts", AccountLive.Index, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password

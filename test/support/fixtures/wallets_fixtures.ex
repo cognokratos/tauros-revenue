@@ -14,7 +14,7 @@ defmodule Tauros.WalletsFixtures do
 
     attrs =
       Enum.into(attrs, %{
-        "currency" => "USD",
+        "currency" => "ETH",
         "public_address" => "0x1234567890123456789012345678901234567890",
         "wallet_name" => "Test Wallet"
       })

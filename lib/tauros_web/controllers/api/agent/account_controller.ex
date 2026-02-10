@@ -17,10 +17,13 @@ defmodule TaurosWeb.Api.Agent.AccountController do
     - 401 Unauthorized if API key is missing or invalid
     - 422 Unprocessable Entity if validation fails
   """
-  def create(conn, %{"account" => params}) do
+  def create(conn, params) do
     agent = conn.assigns.current_agent
 
-    case Wallets.create_account(agent, params) do
+    # Handle both flat params and nested {"account" => params} format
+    account_params = params["account"] || params
+
+    case Wallets.create_account(agent, account_params) do
       {:ok, account} ->
         conn
         |> put_status(:created)

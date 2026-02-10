@@ -13,14 +13,14 @@ defmodule Tauros.WalletsTest do
 
       attrs = %{
         "wallet_name" => "My Wallet",
-        "public_address" => "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "currency" => "USD"
+        "public_address" => "0x1234567890123456789012345678901234567890",
+        "currency" => "ETH"
       }
 
       assert {:ok, %Account{} = account} = Wallets.create_account(agent, attrs)
       assert account.wallet_name == "My Wallet"
-      assert account.public_address == "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      assert account.currency == "USD"
+      assert account.public_address == "0x1234567890123456789012345678901234567890"
+      assert account.currency == "ETH"
       assert account.agent_id == agent.id
     end
 
@@ -28,8 +28,8 @@ defmodule Tauros.WalletsTest do
       agent = agent_fixture()
 
       attrs = %{
-        "public_address" => "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "currency" => "USD"
+        "public_address" => "0x1234567890123456789012345678901234567890",
+        "currency" => "ETH"
       }
 
       assert {:error, changeset} = Wallets.create_account(agent, attrs)
@@ -41,7 +41,7 @@ defmodule Tauros.WalletsTest do
 
       attrs = %{
         "wallet_name" => "My Wallet",
-        "currency" => "USD"
+        "currency" => "ETH"
       }
 
       assert {:error, changeset} = Wallets.create_account(agent, attrs)
@@ -53,20 +53,20 @@ defmodule Tauros.WalletsTest do
 
       attrs = %{
         "wallet_name" => "My Wallet",
-        "public_address" => "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "public_address" => "0x1234567890123456789012345678901234567890"
       }
 
       assert {:error, changeset} = Wallets.create_account(agent, attrs)
       assert :currency in Enum.map(changeset.errors, &elem(&1, 0))
     end
 
-    test "validates public_address format" do
+    test "validates public_address format by currency" do
       agent = agent_fixture()
 
       attrs = %{
         "wallet_name" => "My Wallet",
         "public_address" => "invalid_address",
-        "currency" => "USD"
+        "currency" => "ETH"
       }
 
       assert {:error, changeset} = Wallets.create_account(agent, attrs)
@@ -78,8 +78,8 @@ defmodule Tauros.WalletsTest do
 
       attrs = %{
         "wallet_name" => "My Wallet",
-        "public_address" => "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "currency" => "USD"
+        "public_address" => "0x1234567890123456789012345678901234567890",
+        "currency" => "ETH"
       }
 
       {:ok, account} = Wallets.create_account(agent, attrs)
