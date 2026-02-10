@@ -50,7 +50,7 @@ development_status:
   epic-2: done
   2-1-agent-registers-wallet-account: done
   2-2-admin-views-accounts-in-ui: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   epic-3: backlog
   3-1-agent-creates-invoice-via-mcp: backlog
