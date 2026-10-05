@@ -48,10 +48,11 @@ defmodule Tauros.Revenue do
     end
   end
 
-  # The reviewed AI capability surface (Epic 4), served at /mcp to agents only,
-  # listed in `Tauros.Authority.mcp_tools/0`. There is deliberately no tool for
-  # approve, reject, request_changes or cancel; the Invoice policies would
-  # refuse an agent anyway.
+  # The reviewed AI capability surface (Epic 4), served at /mcp to agents only.
+  # Exactly these eight tools, and no others: `Tauros.Authority.mcp_tools/0`
+  # lists the same set.
+  # There is deliberately no tool for approve, reject, request_changes or
+  # cancel; the Invoice policies would refuse an agent anyway.
   tools do
     tool :list_customers, Customer, :read do
       description """
@@ -117,6 +118,59 @@ defmodule Tauros.Revenue do
            ]
 
       load_strict? true
+    end
+
+    tool :create_invoice_draft, Invoice, :create_draft do
+      description """
+      Creates an invoice PROPOSAL owned by the authenticated agent, in state
+      draft. It does not approve, issue, send or pay anything. Requires an
+      idempotency_key you choose: repeating the call with the same key and the
+      same financial payload returns the original invoice; the same key with a
+      different payload is refused. Amounts are decimal strings (e.g. "1200.50"),
+      never floating-point numbers, and must fit the currency's decimal places.
+      customer_id and payment_destination_id must come from list_customers and
+      list_payment_destinations, and currency must equal the destination's.
+      """
+
+      # Write tools return the invoice's own fields only: AshAI 1.1 applies
+      # `load` non-strictly to writes, which would return whole revisions.
+      # Call get_invoice for the content and payload hash.
+      select [:id, :state, :idempotency_key]
+    end
+
+    tool :revise_invoice, Invoice, :revise do
+      description """
+      Proposes new content for one of the agent's draft or pending invoices.
+      Omitted fields keep their current values; reasoning is required. Appends a
+      new immutable revision with a new payload hash and returns the invoice to
+      draft: a pending invoice must be submitted again, and any human looking at
+      the old revision can no longer approve it. Cannot change an approved,
+      rejected or cancelled invoice.
+      """
+
+      select [:id, :state]
+    end
+
+    tool :submit_invoice, Invoice, :submit_for_approval do
+      description """
+      Submits the current immutable revision of one of the agent's draft
+      invoices for human review (state pending_approval). This does NOT approve
+      the invoice: a human approver decides. Retry-safe. Refused if a human
+      already decided on this revision (revise first) or its destination was
+      retired.
+      """
+
+      select [:id, :state]
+    end
+
+    tool :withdraw_invoice, Invoice, :withdraw do
+      description """
+      Withdraws one of the agent's undecided proposals (draft or
+      pending_approval); it becomes cancelled and stays on record. It cannot
+      undo a human approval. Retry-safe.
+      """
+
+      select [:id, :state]
     end
   end
 

@@ -36,3 +36,14 @@ defimpl AshJsonApi.ToJsonApiError, for: AshStateMachine.Errors.NoMatchingTransit
     }
   end
 end
+
+# What an AI client reads when an MCP tool call fails (AshAI tool errors).
+defimpl AshAi.ToToolError, for: Tauros.Revenue.Errors.Conflict do
+  def to_tool_error(error), do: "#{error.message} (#{error.code})"
+end
+
+defimpl AshAi.ToToolError, for: AshStateMachine.Errors.NoMatchingTransition do
+  def to_tool_error(error),
+    do:
+      "#{error.action} is not allowed while the invoice is #{error.old_state} (invalid_transition)"
+end

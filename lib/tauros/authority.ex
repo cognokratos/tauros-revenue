@@ -78,7 +78,11 @@ defmodule Tauros.Authority do
     list_customers: {Customer, :read},
     list_payment_destinations: {PaymentDestination, :active},
     list_invoices: {Invoice, :read},
-    get_invoice: {Invoice, :read}
+    get_invoice: {Invoice, :read},
+    create_invoice_draft: {Invoice, :create_draft},
+    revise_invoice: {Invoice, :revise},
+    submit_invoice: {Invoice, :submit_for_approval},
+    withdraw_invoice: {Invoice, :withdraw}
   ]
 
   @doc "Actions an agent may run on its own records. Candidates for AI tools."
