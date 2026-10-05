@@ -13,7 +13,7 @@ defmodule TaurosWeb.PaymentDestinationLiveTest do
         label: "Cold storage",
         currency: :BTC,
         network: :bitcoin,
-        address: "bc1pxy2kgdygjrsqtzq2n0yrf2493p3xcn65v4ezuqpf9eajsuu4k4uqjc37h0"
+        address: "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr"
       })
 
     foreign = payment_destination(agent(user()))

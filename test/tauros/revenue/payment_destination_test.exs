@@ -5,7 +5,7 @@ defmodule Tauros.Revenue.PaymentDestinationTest do
   alias Tauros.Revenue.Network
 
   @evm "0x1234567890123456789012345678901234567890"
-  @taproot "bc1pxy2kgdygjrsqtzq2n0yrf2493p3xcn65v4ezuqpf9eajsuu4k4uqjc37h0"
+  @taproot "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr"
   @iban "CH9300762011623852957"
 
   setup do
@@ -104,6 +104,38 @@ defmodule Tauros.Revenue.PaymentDestinationTest do
     test "bank transfers require an IBAN", %{agent: agent} do
       assert error_fields(create(agent, %{currency: "EUR", network: "iban", address: @evm})) ==
                [:address]
+    end
+  end
+
+  describe "checksums catch typos that the format alone would accept" do
+    test "a Taproot address with one wrong character is rejected", %{agent: agent} do
+      typo = String.replace_suffix(@taproot, "r", "s")
+      assert typo =~ ~r/^bc1p[a-z0-9]{58}$/
+
+      assert error_fields(create(agent, %{currency: "BTC", network: "bitcoin", address: typo})) ==
+               [:address]
+    end
+
+    test "only Taproot (witness v1, 32 bytes) is accepted on Bitcoin", %{agent: agent} do
+      segwit_v0 = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
+
+      assert error_fields(
+               create(agent, %{currency: "BTC", network: "bitcoin", address: segwit_v0})
+             ) == [:address]
+    end
+
+    test "an IBAN with one wrong digit is rejected", %{agent: agent} do
+      typo = "CH9300762011623852958"
+
+      assert error_fields(create(agent, %{currency: "CHF", network: "iban", address: typo})) ==
+               [:address]
+    end
+
+    test "EVM addresses are format-checked only: EIP-55 casing is not verified", %{agent: agent} do
+      # A deliberately documented limit (see Tauros.Revenue.Address): verifying
+      # EIP-55 needs Keccak-256, which core Erlang does not provide.
+      wrongly_cased = "0x1234567890ABCDEF1234567890abcdef12345678"
+      assert {:ok, _} = create(agent, %{address: wrongly_cased})
     end
   end
 
