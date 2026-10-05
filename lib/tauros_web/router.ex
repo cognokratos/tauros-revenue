@@ -52,6 +52,8 @@ defmodule TaurosWeb.Router do
       live "/customers/:id/edit", CustomerLive.Form, :edit
       live "/customers/:id", CustomerLive.Show, :show
 
+      live "/invite", InviteLive, :new
+
       live "/destinations", PaymentDestinationLive.Index, :index
       live "/destinations/:id", PaymentDestinationLive.Show, :show
     end
@@ -77,9 +79,9 @@ defmodule TaurosWeb.Router do
     sign_out_route AuthController, "/sign-out",
       overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
 
-    # Remove these if you'd like to use your own authentication views
-    sign_in_route register_path: "/register",
-                  reset_path: "/reset",
+    # Registration is closed: humans are invited by an approver, so there is no
+    # register_path. (Generated with one; removed on purpose.)
+    sign_in_route reset_path: "/reset",
                   auth_routes_prefix: "/auth",
                   on_mount: [{TaurosWeb.LiveUserAuth, :live_no_user}],
                   overrides: [

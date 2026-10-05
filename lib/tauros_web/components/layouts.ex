@@ -48,8 +48,15 @@ defmodule TaurosWeb.Layouts do
         <div class="flex flex-none items-center gap-2 sm:gap-4">
           <.theme_toggle />
           <span :if={@current_user} class="hidden text-sm opacity-70 lg:block">
-            {@current_user.email}
+            {@current_user.email} · {@current_user.role}
           </span>
+          <.link
+            :if={@current_user && @current_user.role == :approver}
+            navigate={~p"/invite"}
+            class="btn btn-ghost btn-sm hidden md:inline-flex"
+          >
+            Invite
+          </.link>
           <.link
             :if={@current_user}
             href={~p"/sign-out"}

@@ -12,14 +12,22 @@ if Ash.read_one!(Ash.Query.for_read(Accounts.User, :get_by_email, %{email: email
    ) do
   IO.puts("Seed data already present for #{email}")
 else
+  # Registration is closed. The first approver is designated through the
+  # same action an operator would run from a console on a fresh install.
+  human = Accounts.bootstrap_approver!(email)
+
+  # Give the demo approver a known password through the real reset flow.
+  strategy = AshAuthentication.Info.strategy!(Accounts.User, :password)
+  {:ok, reset_token} = AshAuthentication.Strategy.Password.reset_token_for(strategy, human)
+
   human =
-    Accounts.User
-    |> Ash.Changeset.for_create(:register_with_password, %{
-      email: email,
+    human
+    |> Ash.Changeset.for_update(:reset_password_with_token, %{
+      reset_token: reset_token,
       password: password,
       password_confirmation: password
     })
-    |> Ash.create!(authorize?: false)
+    |> Ash.update!(authorize?: false)
 
   agent = Accounts.create_agent!("Billing agent", actor: human)
 
@@ -39,7 +47,7 @@ else
   )
 
   IO.puts("""
-  Signed-in human: #{email} / #{password}
+  Demo approver: #{email} / #{password}
   Agent API key (shown once): #{agent.__metadata__.plaintext_api_key}
   """)
 end

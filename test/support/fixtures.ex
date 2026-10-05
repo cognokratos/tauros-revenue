@@ -9,16 +9,34 @@ defmodule Tauros.Fixtures do
 
   def valid_password, do: "correct horse battery staple"
 
+  @doc """
+  An invited human (an operator unless `role: :approver`) who has set a password,
+  through the same invite and password-reset actions a real invitee uses.
+  """
   def user(attrs \\ %{}) do
-    attrs = Enum.into(attrs, %{email: unique_email(), password: valid_password()})
+    attrs =
+      Enum.into(attrs, %{email: unique_email(), password: valid_password(), role: :operator})
 
     Accounts.User
-    |> Ash.Changeset.for_create(:register_with_password, %{
-      email: attrs.email,
-      password: attrs.password,
-      password_confirmation: attrs.password
-    })
+    |> Ash.Changeset.for_create(:invite, Map.take(attrs, [:email, :role]))
     |> Ash.create!(authorize?: false)
+    |> set_password(attrs.password)
+  end
+
+  @doc "A human with approval authority."
+  def approver(attrs \\ %{}), do: attrs |> Enum.into(%{}) |> Map.put(:role, :approver) |> user()
+
+  defp set_password(user, password) do
+    strategy = AshAuthentication.Info.strategy!(Accounts.User, :password)
+    {:ok, reset_token} = AshAuthentication.Strategy.Password.reset_token_for(strategy, user)
+
+    user
+    |> Ash.Changeset.for_update(:reset_password_with_token, %{
+      reset_token: reset_token,
+      password: password,
+      password_confirmation: password
+    })
+    |> Ash.update!(authorize?: false)
   end
 
   @doc "Returns the user with a session token in its metadata, as after signing in."

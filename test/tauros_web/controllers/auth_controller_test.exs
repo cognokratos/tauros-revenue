@@ -12,4 +12,12 @@ defmodule TaurosWeb.AuthControllerTest do
     assert Phoenix.Flash.get(conn.assigns.flash, :info) == "You are now signed out"
     assert {:error, {:redirect, %{to: "/sign-in"}}} = live(recycle(conn), ~p"/")
   end
+
+  test "there is no registration page" do
+    assert build_conn() |> get("/register") |> response(404)
+
+    {:ok, view, _html} = live(build_conn(), ~p"/sign-in")
+    refute has_element?(view, "a[href='/register']")
+    refute has_element?(view, "#user-password-register-with-password-wrapper")
+  end
 end
