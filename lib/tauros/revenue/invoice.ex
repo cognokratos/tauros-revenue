@@ -54,6 +54,12 @@ defmodule Tauros.Revenue.Invoice do
   actions do
     defaults [:read]
 
+    read :awaiting_approval do
+      description "Invoices waiting for a human decision, oldest first."
+      filter expr(state == :pending_approval)
+      prepare build(sort: [updated_at: :asc])
+    end
+
     create :create_draft do
       description """
       Propose an invoice as the calling agent. Retry-safe: the same

@@ -53,6 +53,12 @@ defmodule TaurosWeb.Router do
       live "/customers/:id/edit", CustomerLive.Form, :edit
       live "/customers/:id", CustomerLive.Show, :show
 
+      live "/approvals", ApprovalLive, :index
+      live "/approvals/:id", ApprovalLive, :show
+
+      live "/invoices", InvoiceLive.Index, :index
+      live "/invoices/:id", InvoiceLive.Show, :show
+
       live "/invite", InviteLive, :new
 
       live "/destinations", PaymentDestinationLive.Index, :index

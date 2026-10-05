@@ -74,6 +74,7 @@ defmodule Tauros.Revenue do
         default_options: [query: [sort: [updated_at: :desc]]]
 
       define :get_invoice, action: :read, get_by: :id
+      define :list_invoices_awaiting_approval, action: :awaiting_approval
       define :create_invoice_draft, action: :create_draft
       define :revise_invoice, action: :revise
       define :submit_invoice, action: :submit_for_approval

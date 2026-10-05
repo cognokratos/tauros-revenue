@@ -113,6 +113,8 @@ defmodule TaurosWeb.Layouts do
   defp nav_links do
     [
       {"Dashboard", ~p"/"},
+      {"Approvals", ~p"/approvals"},
+      {"Invoices", ~p"/invoices"},
       {"Agents", ~p"/agents"},
       {"Customers", ~p"/customers"},
       {"Destinations", ~p"/destinations"}

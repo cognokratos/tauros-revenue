@@ -10,6 +10,20 @@ defmodule TaurosWeb.DashboardLive do
         <:subtitle>What you and your agents are responsible for.</:subtitle>
       </.header>
 
+      <.link
+        :if={@counts.awaiting_approval > 0}
+        id="awaiting-approval"
+        navigate={~p"/approvals"}
+        class="alert alert-info"
+      >
+        <.icon name="hero-inbox" class="size-5" />
+        <span>
+          {@counts.awaiting_approval} {if @counts.awaiting_approval == 1,
+            do: "proposal is",
+            else: "proposals are"} waiting for a decision.
+        </span>
+      </.link>
+
       <div id="metrics" class="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <.metric
           id="agents-metric"
@@ -68,7 +82,11 @@ defmodule TaurosWeb.DashboardLive do
     counts = %{
       agents: Ash.count!(Tauros.Accounts.Agent, actor: actor),
       customers: Ash.count!(Tauros.Revenue.Customer, actor: actor),
-      destinations: Ash.count!(Tauros.Revenue.PaymentDestination, actor: actor)
+      destinations: Ash.count!(Tauros.Revenue.PaymentDestination, actor: actor),
+      awaiting_approval:
+        Tauros.Revenue.Invoice
+        |> Ash.Query.for_read(:awaiting_approval, %{}, actor: actor)
+        |> Ash.count!()
     }
 
     {:ok, assign(socket, page_title: "Dashboard", counts: counts)}

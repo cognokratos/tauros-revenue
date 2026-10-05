@@ -267,6 +267,11 @@ defmodule Tauros.Accounts.User do
       authorize_if always()
     end
 
+    policy action(:read) do
+      description "A human may read their own record (e.g. as the approver of a decision)"
+      authorize_if expr(id == ^actor(:id))
+    end
+
     policy action(:change_password) do
       description "Users may change only their own password"
       authorize_if expr(id == ^actor(:id))
