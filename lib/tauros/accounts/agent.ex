@@ -123,5 +123,6 @@ defmodule Tauros.Accounts.Agent do
 
     has_many :customers, Tauros.Revenue.Customer
     has_many :payment_destinations, Tauros.Revenue.PaymentDestination
+    has_many :invoices, Tauros.Revenue.Invoice
   end
 end

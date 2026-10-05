@@ -11,7 +11,7 @@ defmodule Tauros.Revenue.Customer do
     authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer
 
-  alias Tauros.Accounts.Checks.HumanActor
+  alias Tauros.Accounts.Checks.{AgentActor, HumanActor}
 
   json_api do
     type "customer"
@@ -41,9 +41,19 @@ defmodule Tauros.Revenue.Customer do
   end
 
   policies do
-    policy always() do
+    policy [action_type(:read), AgentActor] do
+      description "Agents read their own customers, to address proposals to them"
+      authorize_if relates_to_actor_via(:agent)
+    end
+
+    policy action_type([:create, :update, :destroy]) do
       description "Customers are managed by the human who owns the customer's agent"
       forbid_unless HumanActor
+      authorize_if relates_to_actor_via([:agent, :user])
+    end
+
+    policy [action_type(:read), HumanActor] do
+      description "Humans read the customers of the agents they own"
       authorize_if relates_to_actor_via([:agent, :user])
     end
   end

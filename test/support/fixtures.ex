@@ -74,4 +74,34 @@ defmodule Tauros.Fixtures do
 
     Revenue.create_payment_destination!(attrs, actor: agent)
   end
+
+  @doc """
+  The fields of a valid `create_invoice_draft` call for `agent`: one of its
+  customers, one of its destinations and two lines totalling 1,200.
+  """
+  def draft_input(agent, attrs \\ %{}) do
+    attrs = Enum.into(attrs, %{})
+    customer = Map.get_lazy(attrs, :customer, fn -> customer(agent) end)
+    destination = Map.get_lazy(attrs, :destination, fn -> payment_destination(agent) end)
+
+    Map.merge(
+      %{
+        idempotency_key: "inv-#{System.unique_integer([:positive])}",
+        customer_id: customer.id,
+        payment_destination_id: destination.id,
+        currency: destination.currency,
+        due_date: Date.add(Date.utc_today(), 30),
+        lines: [
+          %{description: "Discovery workshop", quantity: "1", unit_amount: "400"},
+          %{description: "Implementation days", quantity: "2", unit_amount: "400"}
+        ],
+        reasoning: "Monthly retainer agreed in the signed statement of work."
+      },
+      Map.drop(attrs, [:customer, :destination])
+    )
+  end
+
+  @doc "A draft invoice proposed by `agent`."
+  def invoice_draft(agent, attrs \\ %{}),
+    do: agent |> draft_input(attrs) |> Revenue.create_invoice_draft!(actor: agent)
 end
