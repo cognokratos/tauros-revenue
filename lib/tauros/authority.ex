@@ -26,6 +26,9 @@ defmodule Tauros.Authority do
 
   `test/tauros/authority_test.exs` fails if an action of a business resource
   is not classified, or if a policy disagrees with this list.
+  `test/tauros/mcp_tools_test.exs` fails if the declared or served MCP tools
+  differ from `mcp_tools/0` in any way, or if a tool maps to anything but an
+  agent-safe action.
   """
 
   alias Tauros.Accounts.{Agent, User}

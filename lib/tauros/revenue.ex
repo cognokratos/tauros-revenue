@@ -50,7 +50,7 @@ defmodule Tauros.Revenue do
 
   # The reviewed AI capability surface (Epic 4), served at /mcp to agents only.
   # Exactly these eight tools, and no others: `Tauros.Authority.mcp_tools/0`
-  # lists the same set.
+  # lists the same set and `test/tauros/mcp_tools_test.exs` fails on any drift.
   # There is deliberately no tool for approve, reject, request_changes or
   # cancel; the Invoice policies would refuse an agent anyway.
   tools do
