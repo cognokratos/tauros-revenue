@@ -28,11 +28,13 @@ defmodule Tauros.Revenue.Invoice do
   end
 
   state_machine do
-    initial_states([:draft])
-    default_initial_state(:draft)
+    initial_states [:draft]
+    default_initial_state :draft
 
     transitions do
-      transition(:revise, from: [:draft, :pending_approval], to: :draft)
+      transition :revise, from: [:draft, :pending_approval], to: :draft
+      transition :submit_for_approval, from: :draft, to: :pending_approval
+      transition :withdraw, from: [:draft, :pending_approval], to: :cancelled
     end
   end
 
@@ -120,6 +122,29 @@ defmodule Tauros.Revenue.Invoice do
       change {Transition, to: :draft}
       change ProposeRevision
     end
+
+    update :submit_for_approval do
+      description """
+      Ask a human approver to decide on the current revision. Retry-safe:
+      submitting an invoice that is already pending changes nothing.
+      """
+
+      accept []
+      require_atomic? false
+      change {Transition, to: :pending_approval, idempotent?: true}
+      validate Tauros.Revenue.Invoice.Validations.Submittable, before_action?: true
+    end
+
+    update :withdraw do
+      description """
+      Withdraw a proposal nobody has approved: the invoice is kept, cancelled.
+      Retry-safe.
+      """
+
+      accept []
+      require_atomic? false
+      change {Transition, to: :cancelled, idempotent?: true}
+    end
   end
 
   policies do
@@ -138,10 +163,20 @@ defmodule Tauros.Revenue.Invoice do
       authorize_if AgentActor
     end
 
-    policy action(:revise) do
-      description "An agent revises only its own proposals"
+    policy action([:revise, :submit_for_approval]) do
+      description "An agent revises and submits only its own proposals"
       forbid_unless AgentActor
       authorize_if relates_to_actor_via(:agent)
+    end
+
+    policy [action(:withdraw), AgentActor] do
+      description "An agent may withdraw its own undecided proposal"
+      authorize_if relates_to_actor_via(:agent)
+    end
+
+    policy [action(:withdraw), HumanActor] do
+      description "The owning human, approver or not, may withdraw an undecided proposal"
+      authorize_if relates_to_actor_via([:agent, :user])
     end
   end
 

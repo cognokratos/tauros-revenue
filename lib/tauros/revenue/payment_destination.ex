@@ -33,12 +33,12 @@ defmodule Tauros.Revenue.PaymentDestination do
   end
 
   state_machine do
-    initial_states([:active])
-    default_initial_state(:active)
+    initial_states [:active]
+    default_initial_state :active
 
     transitions do
-      transition(:deactivate, from: :active, to: :deactivated)
-      transition(:supersede, from: :active, to: :superseded)
+      transition :deactivate, from: :active, to: :deactivated
+      transition :supersede, from: :active, to: :superseded
     end
   end
 

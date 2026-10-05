@@ -34,6 +34,8 @@ defmodule Tauros.Revenue do
         end
 
         patch :revise, route: "/:id/revise"
+        patch :submit_for_approval, route: "/:id/submit"
+        patch :withdraw, route: "/:id/withdraw"
       end
     end
   end
@@ -68,6 +70,8 @@ defmodule Tauros.Revenue do
       define :get_invoice, action: :read, get_by: :id
       define :create_invoice_draft, action: :create_draft
       define :revise_invoice, action: :revise
+      define :submit_invoice, action: :submit_for_approval
+      define :withdraw_invoice, action: :withdraw
     end
 
     resource Tauros.Revenue.InvoiceRevision
