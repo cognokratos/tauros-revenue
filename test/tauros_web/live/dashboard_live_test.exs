@@ -1,37 +1,37 @@
 defmodule TaurosWeb.DashboardLiveTest do
-  use TaurosWeb.ConnCase
+  use TaurosWeb.ConnCase, async: true
+
   import Phoenix.LiveViewTest
 
   setup :register_and_log_in_user
 
-  describe "dashboard" do
-    test "renders dashboard with metrics", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/")
+  test "counts only what the signed-in human owns", %{conn: conn, user: user} do
+    agent = agent(user)
+    customer(agent)
+    customer(agent)
+    wallet_account(agent)
+    agent(user()) |> customer()
 
-      assert html =~ "Dashboard"
-      assert html =~ "Agents"
-      assert html =~ "Customers"
-      assert html =~ "Pending Invoices"
-      assert html =~ "Approved Invoices"
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    assert has_element?(view, "#agents-metric", "1")
+    assert has_element?(view, "#customers-metric", "2")
+    assert has_element?(view, "#wallet-accounts-metric", "1")
+    assert has_element?(view, "#agents-metric[href='/agents']")
+  end
+
+  test "offers every section in the mobile menu, including sign-out", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    for path <- ["/", "/agents", "/customers", "/wallet-accounts"] do
+      assert has_element?(view, "#mobile-menu a[href='#{path}']")
     end
 
-    test "agents metric displays count", %{conn: conn, user: user} do
-      {:ok, _agent} =
-        Tauros.Agents.create_agent(
-          %Tauros.Accounts.Scope{user: user},
-          %{"name" => "Test Agent", "api_key" => "test_key_123"}
-        )
+    assert has_element?(view, "#mobile-menu a[href='/sign-out'][data-method='delete']")
+    assert has_element?(view, "#mobile-menu-button[aria-controls='mobile-menu']")
+  end
 
-      {:ok, view, _html} = live(conn, ~p"/")
-
-      # Should show 1 agent
-      assert has_element?(view, "a[href='#{~p"/agents"}']")
-    end
-
-    test "agents link navigates to agents page", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/")
-
-      assert has_element?(view, "a[href='#{~p"/agents"}']")
-    end
+  test "redirects anonymous visitors to sign in" do
+    assert {:error, {:redirect, %{to: "/sign-in"}}} = live(build_conn(), ~p"/")
   end
 end

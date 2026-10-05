@@ -28,6 +28,7 @@ defmodule TaurosWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import TaurosWeb.ConnCase
+      import Tauros.Fixtures
     end
   end
 
@@ -37,43 +38,27 @@ defmodule TaurosWeb.ConnCase do
   end
 
   @doc """
-  Setup helper that registers and logs in users.
+  Setup helper that registers and signs in a human user.
 
       setup :register_and_log_in_user
-
-  It stores an updated connection and a registered user in the
-  test context.
   """
-  def register_and_log_in_user(%{conn: conn} = context) do
-    user = Tauros.AccountsFixtures.user_fixture()
-    scope = Tauros.Accounts.Scope.for_user(user)
-
-    opts =
-      context
-      |> Map.take([:token_authenticated_at])
-      |> Enum.into([])
-
-    %{conn: log_in_user(conn, user, opts), user: user, scope: scope}
+  def register_and_log_in_user(%{conn: conn}) do
+    user = Tauros.Fixtures.user()
+    %{conn: log_in_user(conn, user), user: user}
   end
 
-  @doc """
-  Logs the given `user` into the `conn`.
-
-  It returns an updated `conn`.
-  """
-  def log_in_user(conn, user, opts \\ []) do
-    token = Tauros.Accounts.generate_user_session_token(user)
-
-    maybe_set_token_authenticated_at(token, opts[:token_authenticated_at])
-
+  @doc "Stores a session token for `user` in the connection."
+  def log_in_user(conn, user) do
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
-    |> Plug.Conn.put_session(:user_token, token)
+    |> AshAuthentication.Plug.Helpers.store_in_session(Tauros.Fixtures.with_token(user))
   end
 
-  defp maybe_set_token_authenticated_at(_token, nil), do: nil
-
-  defp maybe_set_token_authenticated_at(token, authenticated_at) do
-    Tauros.AccountsFixtures.override_token_authenticated_at(token, authenticated_at)
+  @doc "Adds an `Authorization: Bearer` header carrying `credential`."
+  def authorize(conn, credential) do
+    conn
+    |> Plug.Conn.put_req_header("authorization", "Bearer " <> credential)
+    |> Plug.Conn.put_req_header("accept", "application/vnd.api+json")
+    |> Plug.Conn.put_req_header("content-type", "application/vnd.api+json")
   end
 end

@@ -1,7 +1,10 @@
 defmodule TaurosWeb.Router do
   use TaurosWeb, :router
 
-  import TaurosWeb.UserAuth
+  use AshAuthentication.Phoenix.Router
+
+  import AshAuthentication.Plug.Helpers
+  import TaurosWeb.ApiAuth, only: [require_actor: 2]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -9,48 +12,101 @@ defmodule TaurosWeb.Router do
     plug :fetch_live_flash
     plug :put_root_layout, html: {TaurosWeb.Layouts, :root}
     plug :protect_from_forgery
-    plug :put_secure_browser_headers
-    plug :fetch_current_scope_for_user
+
+    # 'unsafe-inline' scripts are needed for the generated theme switcher in root.html.heex
+    plug :put_secure_browser_headers, %{
+      "content-security-policy" =>
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none'; base-uri 'self'"
+    }
+
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
+    plug :set_actor, :user
+
+    plug AshAuthentication.Strategy.ApiKey.Plug,
+      resource: Tauros.Accounts.Agent,
+      required?: false,
+      on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
+
+    plug :require_actor
   end
 
-  pipeline :api_agent do
-    plug :accepts, ["json"]
-    plug TaurosWeb.AgentAuth
+  scope "/", TaurosWeb do
+    pipe_through :browser
+
+    ash_authentication_live_session :authenticated_routes,
+      on_mount: {TaurosWeb.LiveUserAuth, :live_user_required} do
+      live "/", DashboardLive, :index
+
+      live "/agents", AgentLive.Index, :index
+      live "/agents/new", AgentLive.Form, :new
+      live "/agents/:id/edit", AgentLive.Form, :edit
+      live "/agents/:id", AgentLive.Show, :show
+
+      live "/customers", CustomerLive.Index, :index
+      live "/customers/new", CustomerLive.Form, :new
+      live "/customers/:id/edit", CustomerLive.Form, :edit
+      live "/customers/:id", CustomerLive.Show, :show
+
+      live "/wallet-accounts", WalletAccountLive.Index, :index
+      live "/wallet-accounts/:id", WalletAccountLive.Show, :show
+    end
   end
 
-  pipeline :api_admin do
-    plug :accepts, ["json"]
-    plug :require_admin_api_token
+  scope "/api" do
+    forward "/swaggerui", OpenApiSpex.Plug.SwaggerUI,
+      path: "/api/v1/open_api",
+      default_model_expand_depth: 4
   end
 
-  scope "/api", TaurosWeb.Api.Agent do
-    pipe_through :api_agent
+  scope "/api/v1" do
+    pipe_through [:api]
 
-    get "/v1/test", TestController, :show
-    post "/v1/accounts", AccountController, :create
+    forward "/", TaurosWeb.AshJsonApiRouter
   end
 
-  scope "/api/admin", TaurosWeb.Api.Admin do
-    pipe_through :api
+  scope "/", TaurosWeb do
+    pipe_through :browser
 
-    post "/v1/login", LoginController, :create
+    auth_routes AuthController, Tauros.Accounts.User, path: "/auth"
+
+    sign_out_route AuthController, "/sign-out",
+      overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Remove these if you'd like to use your own authentication views
+    sign_in_route register_path: "/register",
+                  reset_path: "/reset",
+                  auth_routes_prefix: "/auth",
+                  on_mount: [{TaurosWeb.LiveUserAuth, :live_no_user}],
+                  overrides: [
+                    TaurosWeb.AuthOverrides,
+                    AshAuthentication.Phoenix.Overrides.Default
+                  ]
+
+    # Remove this if you do not want to use the reset password feature
+    reset_route auth_routes_prefix: "/auth",
+                overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Remove this if you do not use the confirmation strategy
+    confirm_route Tauros.Accounts.User, :confirm_new_user,
+      auth_routes_prefix: "/auth",
+      overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Remove this if you do not use the magic link strategy.
+    magic_sign_in_route(Tauros.Accounts.User, :magic_link,
+      auth_routes_prefix: "/auth",
+      overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
   end
 
-  scope "/api/admin", TaurosWeb.Api.Admin do
-    pipe_through :api_admin
-
-    get "/v1/test", TestController, :show
-    post "/v1/agents", AgentController, :create
-    post "/v1/customers", CustomerController, :create
-    get "/v1/customers", CustomerController, :list
-    get "/v1/customers/:id", CustomerController, :show
-    patch "/v1/customers/:id", CustomerController, :update
-    delete "/v1/customers/:id", CustomerController, :delete
-  end
+  # Other scopes may use custom stacks.
+  # scope "/api", TaurosWeb do
+  #   pipe_through :api
+  # end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:tauros, :dev_routes) do
@@ -67,43 +123,5 @@ defmodule TaurosWeb.Router do
       live_dashboard "/dashboard", metrics: TaurosWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
-  end
-
-  ## Authentication routes
-
-  scope "/", TaurosWeb do
-    pipe_through [:browser, :require_authenticated_user]
-
-    live_session :require_authenticated_user,
-      on_mount: [{TaurosWeb.UserAuth, :require_authenticated}] do
-      live "/", DashboardLive, :index
-      live "/users/settings", UserLive.Settings, :edit
-      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
-      live "/agents", AgentLive.Index, :index
-      live "/agents/new", AgentLive.Form, :new
-      live "/agents/:id", AgentLive.Show, :show
-      live "/agents/:id/edit", AgentLive.Form, :edit
-      live "/customers", CustomerLive.Index, :index
-      live "/customers/new", CustomerLive.Form, :new
-      live "/customers/:id", CustomerLive.Show, :show
-      live "/customers/:id/edit", CustomerLive.Form, :edit
-      live "/accounts", AccountLive.Index, :index
-    end
-
-    post "/users/update-password", UserSessionController, :update_password
-  end
-
-  scope "/", TaurosWeb do
-    pipe_through [:browser]
-
-    live_session :current_user,
-      on_mount: [{TaurosWeb.UserAuth, :mount_current_scope}] do
-      live "/users/register", UserLive.Registration, :new
-      live "/users/log-in", UserLive.Login, :new
-      live "/users/log-in/:token", UserLive.Confirmation, :new
-    end
-
-    post "/users/log-in", UserSessionController, :create
-    delete "/users/log-out", UserSessionController, :delete
   end
 end

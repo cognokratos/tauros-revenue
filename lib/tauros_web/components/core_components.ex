@@ -21,7 +21,7 @@ defmodule TaurosWeb.CoreComponents do
 
     * [Heroicons](https://heroicons.com) - see `icon/1` for usage.
 
-    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) -
+    * [Phoenix.Component](https://phoenix-live-view.hexdocs.pm/Phoenix.Component.html) -
       the component system used by Phoenix. Some components, such as `<.link>`
       and `<.form>`, are defined there.
 
@@ -37,7 +37,14 @@ defmodule TaurosWeb.CoreComponents do
   ## Examples
 
       <.flash kind={:info} flash={@flash} />
-      <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
+      <.flash
+        id="welcome-back"
+        kind={:info}
+        phx-mounted={show("#welcome-back") |> JS.remove_attribute("hidden")}
+        hidden
+      >
+        Welcome Back!
+      </.flash>
   """
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
@@ -154,7 +161,7 @@ defmodule TaurosWeb.CoreComponents do
   ```
 
   For more information on what kind of data can be passed to `options` see
-  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2).
+  [`options_for_select`](https://phoenix-html.hexdocs.pm/Phoenix.HTML.Form.html#options_for_select/2).
   """
   attr :id, :any, default: nil
   attr :name, :any
@@ -206,7 +213,7 @@ defmodule TaurosWeb.CoreComponents do
 
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <input
           type="hidden"
           name={@name}
@@ -234,7 +241,7 @@ defmodule TaurosWeb.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <select
           id={@id}
@@ -255,7 +262,7 @@ defmodule TaurosWeb.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
           id={@id}
@@ -276,7 +283,7 @@ defmodule TaurosWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
           type={@type}
@@ -314,16 +321,20 @@ defmodule TaurosWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
-      <div>
-        <h1 class="text-lg font-semibold leading-8">
+    <header class={[
+      @actions != [] &&
+        "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+      "pb-4"
+    ]}>
+      <div class="min-w-0">
+        <h1 class="text-lg font-semibold leading-8 wrap-anywhere">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+        <p :if={@subtitle != []} class="text-sm text-base-content/70 wrap-anywhere">
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div class="flex flex-none flex-wrap gap-2">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -349,6 +360,7 @@ defmodule TaurosWeb.CoreComponents do
 
   slot :col, required: true do
     attr :label, :string
+    attr :class, :any, doc: "extra classes for the column, e.g. `hidden sm:table-cell`"
   end
 
   slot :action, doc: "the slot for showing user actions in the last table column"
@@ -360,34 +372,36 @@ defmodule TaurosWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td
-            :for={col <- @col}
-            phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
-          >
-            {render_slot(col, @row_item.(row))}
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th :for={col <- @col} class={col[:class]}>{col[:label]}</th>
+            <th :if={@action != []}>
+              <span class="sr-only">{gettext("Actions")}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
+            <td
+              :for={col <- @col}
+              phx-click={@row_click && @row_click.(row)}
+              class={[col[:class], @row_click && "hover:cursor-pointer"]}
+            >
+              {render_slot(col, @row_item.(row))}
+            </td>
+            <td :if={@action != []} class="w-0 font-semibold">
+              <div class="flex gap-4">
+                <%= for action <- @action do %>
+                  {render_slot(action, @row_item.(row))}
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     """
   end
 
@@ -411,7 +425,7 @@ defmodule TaurosWeb.CoreComponents do
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
+          <div class="wrap-anywhere">{render_slot(item)}</div>
         </div>
       </li>
     </ul>
@@ -469,35 +483,6 @@ defmodule TaurosWeb.CoreComponents do
   end
 
   @doc """
-  Renders a card component.
-
-  ## Examples
-
-      <.card>
-        <div class="px-4 py-5 sm:px-6">
-          Content here
-        </div>
-      </.card>
-  """
-  attr :class, :any, default: nil
-  attr :rest, :global
-  slot :inner_block, required: true
-
-  def card(assigns) do
-    ~H"""
-    <div
-      class={[
-        "divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10",
-        @class
-      ]}
-      {@rest}
-    >
-      {render_slot(@inner_block)}
-    </div>
-    """
-  end
-
-  @doc """
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
@@ -516,6 +501,38 @@ defmodule TaurosWeb.CoreComponents do
     else
       Gettext.dgettext(TaurosWeb.Gettext, "errors", msg, opts)
     end
+  end
+
+  @doc """
+  Shows a freshly issued agent API key. Tauros stores only its hash,
+  so this is the only time the key can be read.
+  """
+  attr :api_key, :string, required: true
+  slot :inner_block
+
+  def api_key_notice(assigns) do
+    ~H"""
+    <div
+      id="api-key-notice"
+      role="alert"
+      class="flex flex-col items-start gap-3 rounded-box border border-warning bg-warning/10 p-4"
+    >
+      <p class="font-semibold">
+        <.icon name="hero-exclamation-triangle" class="size-5 text-warning" />
+        Copy this API key now. It will not be shown again.
+      </p>
+      <code
+        id="api-key"
+        class="w-full select-all break-all rounded bg-base-100 p-3 font-mono text-sm"
+      >
+        {@api_key}
+      </code>
+      <p class="text-sm">
+        The agent sends it as <code class="font-mono">Authorization: Bearer &lt;key&gt;</code>.
+      </p>
+      {render_slot(@inner_block)}
+    </div>
+    """
   end
 
   @doc """

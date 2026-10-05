@@ -1,105 +1,100 @@
 defmodule TaurosWeb.AgentLive.Form do
   use TaurosWeb, :live_view
 
-  alias Tauros.Agents
-  alias Tauros.Agents.Agent
-
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-2xl">
-        <.header>{@page_title}</.header>
+    <Layouts.app flash={@flash} current_user={@current_user}>
+      <.header>
+        {@page_title}
+        <:subtitle>An agent acts on your behalf with its own API key.</:subtitle>
+      </.header>
 
-        <.card>
-          <div class="px-4 py-5 sm:p-6">
-            <.form
-              for={@form}
-              id="agent-form"
-              phx-change="validate"
-              phx-submit="save"
-              class="space-y-6"
-            >
-              <.input field={@form[:name]} type="text" label="Agent Name" required />
-              <.input
-                field={@form[:api_key]}
-                type="password"
-                label="API Key"
-                required
-                autocomplete="off"
-                phx-debounce="blur"
-              />
-              <footer class="flex gap-2">
-                <.button phx-disable-with="Saving..." variant="primary">
-                  {if @form.source.data.id, do: "Update", else: "Create"} Agent
-                </.button>
-                <.button navigate={~p"/agents"}>
-                  Cancel
-                </.button>
-              </footer>
-            </.form>
-          </div>
-        </.card>
-      </div>
+      <.api_key_notice :if={@api_key} api_key={@api_key}>
+        <.button navigate={~p"/agents/#{@agent}"} variant="primary">Done</.button>
+      </.api_key_notice>
+
+      <.form
+        :if={!@api_key}
+        for={@form}
+        id="agent-form"
+        phx-change="validate"
+        phx-submit="save"
+      >
+        <.input field={@form[:name]} type="text" label="Name" />
+
+        <.button phx-disable-with="Saving..." variant="primary">Save Agent</.button>
+        <.button navigate={return_path(@return_to, @agent)}>Cancel</.button>
+      </.form>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(params, _session, socket) do
-    {:ok, apply_action(socket, socket.assigns.live_action, params)}
+    agent =
+      case params["id"] do
+        nil -> nil
+        id -> Tauros.Accounts.get_agent!(id, actor: socket.assigns.current_user)
+      end
+
+    action = if is_nil(agent), do: "New", else: "Edit"
+    page_title = action <> " " <> "Agent"
+
+    {:ok,
+     socket
+     |> assign(:return_to, return_to(params["return_to"]))
+     |> assign(agent: agent, api_key: nil)
+     |> assign(:page_title, page_title)
+     |> assign_form()}
   end
 
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "Register New Agent")
-    |> assign(:agent, %Agent{})
-    |> assign(:form, to_form(Agents.change_agent(%Agent{})))
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    agent = Agents.get_agent!(id)
-
-    socket
-    |> assign(:page_title, "Edit Agent")
-    |> assign(:agent, agent)
-    |> assign(:form, to_form(Agents.change_agent(agent)))
-  end
+  defp return_to("show"), do: "show"
+  defp return_to(_), do: "index"
 
   @impl true
   def handle_event("validate", %{"agent" => agent_params}, socket) do
-    changeset = Agents.change_agent(socket.assigns.agent, agent_params)
-    {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, agent_params))}
   end
 
-  @impl true
   def handle_event("save", %{"agent" => agent_params}, socket) do
-    current_scope = socket.assigns.current_scope
+    case AshPhoenix.Form.submit(socket.assigns.form, params: agent_params) do
+      {:ok, %{__metadata__: %{plaintext_api_key: api_key}} = agent} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Agent created successfully")
+         |> assign(agent: agent, api_key: api_key)}
 
-    case socket.assigns.live_action do
-      :new ->
-        case Agents.create_agent(current_scope, agent_params) do
-          {:ok, _agent} ->
-            {:noreply,
-             socket
-             |> put_flash(:info, "Agent registered successfully")
-             |> push_navigate(to: ~p"/agents")}
+      {:ok, agent} ->
+        socket =
+          socket
+          |> put_flash(:info, "Agent #{socket.assigns.form.source.type}d successfully")
+          |> push_navigate(to: return_path(socket.assigns.return_to, agent))
 
-          {:error, changeset} ->
-            {:noreply, assign(socket, form: to_form(changeset))}
-        end
+        {:noreply, socket}
 
-      :edit ->
-        case Agents.update_agent(socket.assigns.agent, agent_params) do
-          {:ok, _agent} ->
-            {:noreply,
-             socket
-             |> put_flash(:info, "Agent updated successfully")
-             |> push_navigate(to: ~p"/agents")}
-
-          {:error, changeset} ->
-            {:noreply, assign(socket, form: to_form(changeset))}
-        end
+      {:error, form} ->
+        {:noreply, assign(socket, form: form)}
     end
   end
+
+  defp assign_form(%{assigns: %{agent: agent}} = socket) do
+    form =
+      if agent do
+        AshPhoenix.Form.for_update(agent, :update,
+          as: "agent",
+          actor: socket.assigns.current_user
+        )
+      else
+        AshPhoenix.Form.for_create(Tauros.Accounts.Agent, :create,
+          as: "agent",
+          actor: socket.assigns.current_user
+        )
+      end
+
+    assign(socket, form: to_form(form))
+  end
+
+  defp return_path("index", _agent), do: ~p"/agents"
+  defp return_path("show", agent), do: ~p"/agents/#{agent.id}"
 end

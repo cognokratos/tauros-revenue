@@ -1,7 +1,7 @@
 import Config
-
-# Only in tests, remove the complexity from the password hashing algorithm
-config :bcrypt_elixir, :log_rounds, 1
+config :tauros, token_signing_secret: "7CFBudzcHa+MEFUkR3HBI9VO6Du7LYKW"
+config :argon2_elixir, t_cost: 1, m_cost: 8
+config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Configure your database
 #
@@ -20,7 +20,7 @@ config :tauros, Tauros.Repo,
 # you can enable the server option below.
 config :tauros, TaurosWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "d66OCNhzSWBQe/TJFMI+xeBSAbMTBBpnuj44UhCv4rfGHD9lXpC47LAwOQWRuL53",
+  secret_key_base: "/bfo4t8RgmaYxB8UR6j72E+Mvh9h7JLn7DoabybjTiQr/Q0rK/x/JYBiQPeHyeDg",
   server: false
 
 # In test we don't send emails

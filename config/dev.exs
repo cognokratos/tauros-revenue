@@ -1,4 +1,5 @@
 import Config
+config :ash, policies: [show_policy_breakdowns?: true]
 
 # Configure your database
 config :tauros, Tauros.Repo,
@@ -23,7 +24,7 @@ config :tauros, TaurosWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "C/ABXovMygvAITekc4xqQ/ihDBAwETFCK9j5XPb2fUieB/H8pde89vKE0Vyz+7FE",
+  secret_key_base: "4w2ikeCxhkXioxQ9Na+Q80T3z+RMKBCMqyAcOmVNRB3GoH70OSJnMd2ep4axIKIS",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:tauros, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:tauros, ~w(--watch)]}
@@ -52,23 +53,8 @@ config :tauros, TaurosWeb.Endpoint,
 # configured to run both http and https servers on
 # different ports.
 
-# Reload browser tabs when matching files change.
-config :tauros, TaurosWeb.Endpoint,
-  live_reload: [
-    web_console_logger: true,
-    patterns: [
-      # Static assets, except user uploads
-      ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"E,
-      # Gettext translations
-      ~r"priv/gettext/.*\.po$"E,
-      # Router, Controllers, LiveViews and LiveComponents
-      ~r"lib/tauros_web/router\.ex$"E,
-      ~r"lib/tauros_web/(controllers|live|components)/.*\.(ex|heex)$"E
-    ]
-  ]
-
 # Enable dev routes for dashboard and mailbox
-config :tauros, dev_routes: true
+config :tauros, dev_routes: true, token_signing_secret: "NMEbY4rAcuyGMhb0VCD5u8JFtbCElIG9"
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

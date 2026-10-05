@@ -1,12 +1,10 @@
 defmodule TaurosWeb.AgentLive.Index do
   use TaurosWeb, :live_view
 
-  alias Tauros.Agents
-
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <.header>
         Agents
         <:actions>
@@ -16,59 +14,76 @@ defmodule TaurosWeb.AgentLive.Index do
         </:actions>
       </.header>
 
-      <div id="agents" phx-update="stream" class="space-y-4">
-        <div id="empty-state" style="display: none">
-          <div class="text-center py-8 text-gray-500">
-            No agents yet. Create one to get started.
+      <.table
+        id="agents"
+        rows={@streams.agents}
+        row_click={fn {_id, agent} -> JS.navigate(~p"/agents/#{agent}") end}
+      >
+        <:col :let={{_id, agent}} label="Name">{agent.name}</:col>
+
+        <:col :let={{_id, agent}} label="Id" class="hidden sm:table-cell">{agent.id}</:col>
+
+        <:col :let={{_id, agent}} label="Created at" class="hidden sm:table-cell">
+          {agent.inserted_at}
+        </:col>
+
+        <:action :let={{_id, agent}}>
+          <div class="sr-only">
+            <.link navigate={~p"/agents/#{agent}"}>Show</.link>
           </div>
-        </div>
-        <%= for {id, agent} <- @streams.agents do %>
-          <.card id={id}>
-            <div class="px-4 py-5 sm:px-6">
-              <div class="flex items-start justify-between">
-                <div>
-                  <h3 class="font-semibold text-lg">{agent.name}</h3>
-                  <p class="text-gray-600 text-sm">ID: {agent.id}</p>
-                </div>
-                <div class="space-x-2">
-                  <.link
-                    navigate={~p"/agents/#{agent}/edit"}
-                    class="text-blue-600 hover:text-blue-800"
-                  >
-                    Edit
-                  </.link>
-                  <.link
-                    phx-click={JS.push("delete", value: %{id: agent.id}) |> hide("##{id}")}
-                    data-confirm="Are you sure?"
-                    class="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </.link>
-                </div>
-              </div>
-            </div>
-          </.card>
-        <% end %>
-      </div>
+
+          <.link navigate={~p"/agents/#{agent}/edit"}>Edit</.link>
+        </:action>
+
+        <:action :let={{_id, agent}}>
+          <.link
+            phx-click={JS.push("delete", value: %{id: agent.id})}
+            data-confirm="Are you sure?"
+          >
+            Delete
+          </.link>
+        </:action>
+      </.table>
+
+      <p :if={@empty?} id="empty-state" class="py-8 text-center opacity-70">
+        No agents yet. Create one to get started.
+      </p>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    current_scope = socket.assigns[:current_scope]
-
     {:ok,
      socket
      |> assign(:page_title, "Agents")
-     |> stream(:agents, Agents.list_agents_for_user(current_scope.user.id))}
+     |> assign_new(:current_user, fn -> nil end)
+     |> stream_agents()}
+  end
+
+  defp stream_agents(socket) do
+    agents = Tauros.Accounts.list_agents!(actor: socket.assigns.current_user)
+
+    socket
+    |> assign(:empty?, agents == [])
+    |> stream(:agents, agents, reset: true)
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    agent = Agents.get_agent!(id)
-    {:ok, _} = Agents.delete_agent(agent)
+    actor = socket.assigns.current_user
 
-    {:noreply, stream_delete(socket, :agents, agent)}
+    with {:ok, agent} <- Tauros.Accounts.get_agent(id, actor: actor),
+         {:destroy, :ok} <- {:destroy, Tauros.Accounts.destroy_agent(agent, actor: actor)} do
+      {:noreply, stream_agents(socket)}
+    else
+      # Destroying only fails validation when the agent still owns records.
+      {:destroy, {:error, %Ash.Error.Invalid{}}} ->
+        {:noreply,
+         put_flash(socket, :error, "An agent with customers or wallet accounts cannot be deleted")}
+
+      _error ->
+        {:noreply, put_flash(socket, :error, "The agent could not be deleted")}
+    end
   end
 end

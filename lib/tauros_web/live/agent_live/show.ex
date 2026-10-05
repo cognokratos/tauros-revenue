@@ -1,46 +1,62 @@
 defmodule TaurosWeb.AgentLive.Show do
   use TaurosWeb, :live_view
 
-  alias Tauros.Agents
-
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <.header>
         {@agent.name}
+        <:subtitle>Agent {@agent.id}</:subtitle>
+
         <:actions>
           <.button navigate={~p"/agents"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <.button variant="primary" navigate={~p"/agents/#{@agent}/edit"}>
-            <.icon name="hero-pencil-square" /> Edit
+          <.button
+            id="rotate-api-key"
+            phx-click="rotate_api_key"
+            data-confirm="The current key stops working immediately. Continue?"
+          >
+            <.icon name="hero-key" /> Rotate API key
+          </.button>
+          <.button variant="primary" navigate={~p"/agents/#{@agent}/edit?return_to=show"}>
+            <.icon name="hero-pencil-square" /> Edit Agent
           </.button>
         </:actions>
-        <:subtitle>
-          {@agent.id}
-        </:subtitle>
       </.header>
 
-      <.card>
-        <div class="px-4 py-5 sm:px-6 space-y-4">
-          <div>
-            <p class="text-sm text-gray-600">Created</p>
-            <p class="text-lg">{Calendar.strftime(@agent.inserted_at, "%Y-%m-%d %H:%M")}</p>
-          </div>
-        </div>
-      </.card>
+      <.api_key_notice :if={@api_key} api_key={@api_key} />
+
+      <.list>
+        <:item title="Id">{@agent.id}</:item>
+
+        <:item title="Name">{@agent.name}</:item>
+
+        <:item title="Created at">{@agent.inserted_at}</:item>
+
+        <:item title="Updated at">{@agent.updated_at}</:item>
+      </.list>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    agent = Agents.get_agent!(id)
-
     {:ok,
      socket
-     |> assign(:page_title, "Agent Details")
-     |> assign(:agent, agent)}
+     |> assign(:page_title, "Show Agent")
+     |> assign(:api_key, nil)
+     |> assign(:agent, Tauros.Accounts.get_agent!(id, actor: socket.assigns.current_user))}
+  end
+
+  @impl true
+  def handle_event("rotate_api_key", _params, socket) do
+    agent =
+      Tauros.Accounts.rotate_agent_api_key!(socket.assigns.agent,
+        actor: socket.assigns.current_user
+      )
+
+    {:noreply, assign(socket, agent: agent, api_key: agent.__metadata__.plaintext_api_key)}
   end
 end
