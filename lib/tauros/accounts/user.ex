@@ -4,7 +4,7 @@ defmodule Tauros.Accounts.User do
     domain: Tauros.Accounts,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication]
+    extensions: [AshJsonApi.Resource, AshAuthentication]
 
   authentication do
     add_ons do
@@ -54,6 +54,10 @@ defmodule Tauros.Accounts.User do
         end
       end
     end
+  end
+
+  json_api do
+    type "user"
   end
 
   postgres do
@@ -272,6 +276,11 @@ defmodule Tauros.Accounts.User do
     bypass AshAuthentication.Checks.AshAuthenticationInteraction do
       authorize_if always()
     end
+
+    policy action(:sign_in_with_password) do
+      description "Anyone may attempt to sign in through the JSON API"
+      authorize_if always()
+    end
   end
 
   attributes do
@@ -287,6 +296,10 @@ defmodule Tauros.Accounts.User do
     end
 
     attribute :confirmed_at, :utc_datetime_usec
+  end
+
+  relationships do
+    has_many :agents, Tauros.Accounts.Agent
   end
 
   identities do

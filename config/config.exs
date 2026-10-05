@@ -71,7 +71,7 @@ config :spark,
 config :tauros,
   ecto_repos: [Tauros.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true],
-  ash_domains: [Tauros.Accounts],
+  ash_domains: [Tauros.Revenue, Tauros.Accounts],
   ash_authentication: [return_error_on_invalid_magic_link_token?: true]
 
 # Configure the endpoint

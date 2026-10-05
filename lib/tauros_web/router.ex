@@ -19,6 +19,11 @@ defmodule TaurosWeb.Router do
     plug :accepts, ["json"]
     plug :load_from_bearer
     plug :set_actor, :user
+
+    plug AshAuthentication.Strategy.ApiKey.Plug,
+      resource: Tauros.Accounts.Agent,
+      # if you want to require an api key to be supplied, set `required?` to true
+      required?: false
   end
 
   scope "/", TaurosWeb do
