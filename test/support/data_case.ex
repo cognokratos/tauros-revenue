@@ -24,6 +24,7 @@ defmodule Tauros.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Tauros.DataCase
+      import Tauros.Fixtures
     end
   end
 
