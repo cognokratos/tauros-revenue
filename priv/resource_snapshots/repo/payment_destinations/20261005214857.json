@@ -21,19 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "wallet_name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "public_address",
+      "source": "label",
       "type": "text"
     },
     {
@@ -46,6 +34,30 @@
       "scale": null,
       "size": null,
       "source": "currency",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "network",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "address",
       "type": "text"
     },
     {
@@ -93,7 +105,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "wallet_accounts_agent_id_fkey",
+        "name": "payment_destinations_agent_id_fkey",
         "on_delete": "restrict",
         "on_update": null,
         "primary_key?": true,
@@ -112,7 +124,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "34F87FA486BF2F7C2C12A6126BCCBC5BE74572C891DD9849A5D2BE326F094176",
+  "hash": "8CF4B61F7D55E62BB4756EAE6E5C897819C6AF2DAED176A6E41E4C849F5B69A3",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -121,6 +133,6 @@
   },
   "repo": "Elixir.Tauros.Repo",
   "schema": null,
-  "table": "wallet_accounts",
+  "table": "payment_destinations",
   "temporal": null
 }

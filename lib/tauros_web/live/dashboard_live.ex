@@ -26,10 +26,10 @@ defmodule TaurosWeb.DashboardLive do
           icon="hero-building-storefront"
         />
         <.metric
-          id="wallet-accounts-metric"
-          navigate={~p"/wallet-accounts"}
-          label="Wallet accounts"
-          count={@counts.wallet_accounts}
+          id="destinations-metric"
+          navigate={~p"/destinations"}
+          label="Payment destinations"
+          count={@counts.destinations}
           icon="hero-wallet"
         />
       </div>
@@ -68,7 +68,7 @@ defmodule TaurosWeb.DashboardLive do
     counts = %{
       agents: Ash.count!(Tauros.Accounts.Agent, actor: actor),
       customers: Ash.count!(Tauros.Revenue.Customer, actor: actor),
-      wallet_accounts: Ash.count!(Tauros.Revenue.WalletAccount, actor: actor)
+      destinations: Ash.count!(Tauros.Revenue.PaymentDestination, actor: actor)
     }
 
     {:ok, assign(socket, page_title: "Dashboard", counts: counts)}

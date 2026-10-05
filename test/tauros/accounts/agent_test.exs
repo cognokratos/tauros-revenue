@@ -121,13 +121,13 @@ defmodule Tauros.Accounts.AgentTest do
       assert {:error, %Ash.Error.Invalid{}} = Accounts.destroy_agent(agent, actor: owner)
     end
 
-    test "is refused while the agent owns wallet accounts" do
+    test "is refused while the agent owns payment destinations" do
       owner = user()
       agent = agent(owner)
-      wallet_account(agent)
+      payment_destination(agent)
 
       assert {:error, %Ash.Error.Invalid{}} = Accounts.destroy_agent(agent, actor: owner)
-      assert [_] = Revenue.list_wallet_accounts!(actor: owner)
+      assert [_] = Revenue.list_payment_destinations!(actor: owner)
     end
   end
 end

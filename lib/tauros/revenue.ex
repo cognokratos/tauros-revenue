@@ -1,7 +1,7 @@
 defmodule Tauros.Revenue do
   @moduledoc """
   The financial core: who Tauros bills (`Customer`) and where payments are
-  received (`WalletAccount`). Invoices, approvals and settlement will live here.
+  received (`PaymentDestination`). Invoices, approvals and settlement will live here.
   """
   use Ash.Domain, otp_app: :tauros, extensions: [AshJsonApi.Domain]
 
@@ -15,7 +15,7 @@ defmodule Tauros.Revenue do
         delete :destroy
       end
 
-      base_route "/wallet-accounts", Tauros.Revenue.WalletAccount do
+      base_route "/payment-destinations", Tauros.Revenue.PaymentDestination do
         index :read
         get :read
         post :create
@@ -35,13 +35,13 @@ defmodule Tauros.Revenue do
       define :destroy_customer, action: :destroy
     end
 
-    resource Tauros.Revenue.WalletAccount do
-      define :list_wallet_accounts,
+    resource Tauros.Revenue.PaymentDestination do
+      define :list_payment_destinations,
         action: :read,
         default_options: [query: [sort: [inserted_at: :desc]]]
 
-      define :get_wallet_account, action: :read, get_by: :id
-      define :create_wallet_account, action: :create
+      define :get_payment_destination, action: :read, get_by: :id
+      define :create_payment_destination, action: :create
     end
   end
 end

@@ -108,7 +108,7 @@ defmodule TaurosWeb.Layouts do
       {"Dashboard", ~p"/"},
       {"Agents", ~p"/agents"},
       {"Customers", ~p"/customers"},
-      {"Wallet accounts", ~p"/wallet-accounts"}
+      {"Destinations", ~p"/destinations"}
     ]
   end
 

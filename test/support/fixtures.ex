@@ -45,14 +45,15 @@ defmodule Tauros.Fixtures do
     Revenue.create_customer!(attrs, actor: owner)
   end
 
-  def wallet_account(agent, attrs \\ %{}) do
+  def payment_destination(agent, attrs \\ %{}) do
     attrs =
       Enum.into(attrs, %{
-        wallet_name: "Wallet #{System.unique_integer([:positive])}",
-        public_address: "0x1234567890123456789012345678901234567890",
-        currency: :ETH
+        label: "Destination #{System.unique_integer([:positive])}",
+        currency: :USDC,
+        network: :ethereum,
+        address: "0x1234567890123456789012345678901234567890"
       })
 
-    Revenue.create_wallet_account!(attrs, actor: agent)
+    Revenue.create_payment_destination!(attrs, actor: agent)
   end
 end

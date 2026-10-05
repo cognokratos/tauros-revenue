@@ -52,8 +52,8 @@ defmodule TaurosWeb.Router do
       live "/customers/:id/edit", CustomerLive.Form, :edit
       live "/customers/:id", CustomerLive.Show, :show
 
-      live "/wallet-accounts", WalletAccountLive.Index, :index
-      live "/wallet-accounts/:id", WalletAccountLive.Show, :show
+      live "/destinations", PaymentDestinationLive.Index, :index
+      live "/destinations/:id", PaymentDestinationLive.Show, :show
     end
   end
 

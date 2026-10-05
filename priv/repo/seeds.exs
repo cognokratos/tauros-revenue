@@ -28,8 +28,13 @@ else
     actor: human
   )
 
-  Revenue.create_wallet_account!(
-    %{wallet_name: "Acme EUR", public_address: "DE89370400440532013000", currency: :EUR},
+  Revenue.create_payment_destination!(
+    %{
+      label: "Operating account",
+      currency: :EUR,
+      network: :iban,
+      address: "DE89370400440532013000"
+    },
     actor: agent
   )
 

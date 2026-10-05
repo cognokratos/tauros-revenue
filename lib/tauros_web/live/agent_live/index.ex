@@ -80,7 +80,11 @@ defmodule TaurosWeb.AgentLive.Index do
       # Destroying only fails validation when the agent still owns records.
       {:destroy, {:error, %Ash.Error.Invalid{}}} ->
         {:noreply,
-         put_flash(socket, :error, "An agent with customers or wallet accounts cannot be deleted")}
+         put_flash(
+           socket,
+           :error,
+           "An agent with customers or payment destinations cannot be deleted"
+         )}
 
       _error ->
         {:noreply, put_flash(socket, :error, "The agent could not be deleted")}
