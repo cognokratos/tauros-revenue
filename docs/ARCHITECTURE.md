@@ -136,7 +136,15 @@ code needed manual edits in the following places:
   above). The generated wallet-account form was deleted because humans don't
   register wallet accounts.
 - **Layout:** the generated Phoenix marketing header was replaced with the app
-  navigation. The root layout got Tauros branding and a Content-Security-Policy.
+  navigation, which collapses into a menu button below the `md` breakpoint. The
+  root layout got Tauros branding and a Content-Security-Policy.
+- **Core components:** `header` stacks its actions on small screens, `table` scrolls
+  inside its own container and takes an optional per-column `class` (used to hide
+  secondary columns on phones), and `list` wraps long values such as UUIDs and
+  addresses.
+- **Agent tokens:** `Agent` declares the shared `Token` resource with tokens disabled.
+  AshAuthentication's sign-out helpers look up a token resource for every
+  authenticated resource, so without it signing out crashed.
 - **Senders:** the generated `from` placeholders now read `config :tauros, :mail_sender`.
 - **Test config:** the auth installer configured fast `bcrypt_elixir` rounds for
   tests, but `add_strategy password --hash-provider argon2` didn't do the same

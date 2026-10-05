@@ -23,11 +23,13 @@ defmodule TaurosWeb.WalletAccountLive.Index do
 
         <:col :let={{_id, wallet_account}} label="Currency">{wallet_account.currency}</:col>
 
-        <:col :let={{_id, wallet_account}} label="Public address">
+        <:col :let={{_id, wallet_account}} label="Public address" class="hidden sm:table-cell">
           <span class="break-all font-mono text-xs">{wallet_account.public_address}</span>
         </:col>
 
-        <:col :let={{_id, wallet_account}} label="Agent">{wallet_account.agent.name}</:col>
+        <:col :let={{_id, wallet_account}} label="Agent" class="hidden sm:table-cell">
+          {wallet_account.agent.name}
+        </:col>
 
         <:action :let={{_id, wallet_account}}>
           <div class="sr-only">

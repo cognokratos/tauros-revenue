@@ -17,6 +17,14 @@ defmodule Tauros.Accounts.Agent do
   alias Tauros.Accounts.Checks.HumanActor
 
   authentication do
+    # Agents never receive tokens (they authenticate per request with an API key),
+    # but AshAuthentication's sign-out helpers look up a token resource for every
+    # authenticated resource.
+    tokens do
+      enabled? false
+      token_resource Tauros.Accounts.Token
+    end
+
     strategies do
       api_key :api_key do
         api_key_relationship :valid_api_keys

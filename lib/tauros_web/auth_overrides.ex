@@ -15,6 +15,8 @@ defmodule TaurosWeb.AuthOverrides do
   override AshAuthentication.Phoenix.Components.Banner do
     set :image_url, "/images/logo.png"
     set :dark_image_url, "/images/logo.png"
+    set :image_class, "block h-20 w-auto dark:hidden"
+    set :dark_image_class, "hidden h-20 w-auto dark:block"
   end
 
   # override AshAuthentication.Phoenix.Components.SignIn do

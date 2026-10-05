@@ -16,13 +16,20 @@ defmodule TaurosWeb.AgentLiveTest do
       refute has_element?(view, "#agents-#{theirs.id}")
     end
 
+    test "shows an empty state", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/agents")
+      assert has_element?(view, "#empty-state", "No agents yet")
+    end
+
     test "deletes an agent", %{conn: conn, user: user} do
       agent = agent(user)
       {:ok, view, _html} = live(conn, ~p"/agents")
+      refute has_element?(view, "#empty-state")
 
       view |> element("#agents-#{agent.id} a", "Delete") |> render_click()
 
       refute has_element?(view, "#agents-#{agent.id}")
+      assert has_element?(view, "#empty-state")
     end
 
     test "refuses to delete an agent that owns customers", %{conn: conn, user: user} do

@@ -21,11 +21,15 @@ defmodule TaurosWeb.CustomerLive.Index do
       >
         <:col :let={{_id, customer}} label="Name">{customer.name}</:col>
 
-        <:col :let={{_id, customer}} label="Email">{customer.email}</:col>
+        <:col :let={{_id, customer}} label="Email" class="hidden sm:table-cell">
+          {customer.email}
+        </:col>
 
         <:col :let={{_id, customer}} label="Agent">{customer.agent.name}</:col>
 
-        <:col :let={{_id, customer}} label="Created at">{customer.inserted_at}</:col>
+        <:col :let={{_id, customer}} label="Created at" class="hidden sm:table-cell">
+          {customer.inserted_at}
+        </:col>
 
         <:action :let={{_id, customer}}>
           <div class="sr-only">

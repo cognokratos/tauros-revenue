@@ -20,6 +20,17 @@ defmodule TaurosWeb.DashboardLiveTest do
     assert has_element?(view, "#agents-metric[href='/agents']")
   end
 
+  test "offers every section in the mobile menu, including sign-out", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    for path <- ["/", "/agents", "/customers", "/wallet-accounts"] do
+      assert has_element?(view, "#mobile-menu a[href='#{path}']")
+    end
+
+    assert has_element?(view, "#mobile-menu a[href='/sign-out'][data-method='delete']")
+    assert has_element?(view, "#mobile-menu-button[aria-controls='mobile-menu']")
+  end
+
   test "redirects anonymous visitors to sign in" do
     assert {:error, {:redirect, %{to: "/sign-in"}}} = live(build_conn(), ~p"/")
   end

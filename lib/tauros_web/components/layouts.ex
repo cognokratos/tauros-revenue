@@ -33,34 +33,67 @@ defmodule TaurosWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar border-b border-base-300 bg-base-100 px-4 sm:px-6 lg:px-8">
-      <div class="flex-1 items-center gap-6">
-        <.link navigate={~p"/"} class="flex items-center gap-2">
-          <img src={~p"/images/logo.png"} alt="Tauros" class="h-8 w-auto" />
-        </.link>
-        <nav :if={@current_user} aria-label="Main navigation" class="hidden gap-1 sm:flex">
-          <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Dashboard</.link>
-          <.link navigate={~p"/agents"} class="btn btn-ghost btn-sm">Agents</.link>
-          <.link navigate={~p"/customers"} class="btn btn-ghost btn-sm">Customers</.link>
-          <.link navigate={~p"/wallet-accounts"} class="btn btn-ghost btn-sm">Wallet accounts</.link>
-        </nav>
-      </div>
-      <div class="flex-none">
-        <ul class="flex items-center gap-4 px-1">
-          <li>
-            <.theme_toggle />
-          </li>
-          <li :if={@current_user} class="hidden text-sm opacity-70 sm:block">
+    <header class="border-b border-base-300 bg-base-100">
+      <div class="navbar px-4 sm:px-6 lg:px-8">
+        <div class="flex-1 items-center gap-6">
+          <.link navigate={~p"/"} class="flex items-center gap-2">
+            <img src={~p"/images/logo.png"} alt="Tauros" class="h-8 w-auto" />
+          </.link>
+          <nav :if={@current_user} aria-label="Main navigation" class="hidden gap-1 md:flex">
+            <.link :for={{label, path} <- nav_links()} navigate={path} class="btn btn-ghost btn-sm">
+              {label}
+            </.link>
+          </nav>
+        </div>
+        <div class="flex flex-none items-center gap-2 sm:gap-4">
+          <.theme_toggle />
+          <span :if={@current_user} class="hidden text-sm opacity-70 lg:block">
             {@current_user.email}
-          </li>
-          <li :if={@current_user}>
-            <.link href={~p"/sign-out"} class="btn btn-ghost btn-sm">Sign out</.link>
+          </span>
+          <.link
+            :if={@current_user}
+            href={~p"/sign-out"}
+            method="delete"
+            class="btn btn-ghost btn-sm hidden md:inline-flex"
+          >
+            Sign out
+          </.link>
+          <button
+            :if={@current_user}
+            id="mobile-menu-button"
+            type="button"
+            class="btn btn-ghost btn-square md:hidden"
+            aria-label="Open main menu"
+            aria-controls="mobile-menu"
+            phx-click={
+              JS.toggle(to: "#mobile-menu") |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+            }
+            aria-expanded="false"
+          >
+            <.icon name="hero-bars-3" class="size-6" />
+          </button>
+        </div>
+      </div>
+
+      <nav
+        :if={@current_user}
+        id="mobile-menu"
+        aria-label="Mobile navigation"
+        class="hidden border-t border-base-300 px-4 pb-4 md:hidden"
+      >
+        <ul class="menu w-full gap-1 px-0">
+          <li :for={{label, path} <- nav_links()}>
+            <.link navigate={path} class="min-h-11 text-base">{label}</.link>
           </li>
         </ul>
-      </div>
+        <div class="mt-2 flex items-center justify-between gap-2 border-t border-base-300 pt-3">
+          <span class="truncate text-sm opacity-70">{@current_user.email}</span>
+          <.link href={~p"/sign-out"} method="delete" class="btn btn-ghost btn-sm">Sign out</.link>
+        </div>
+      </nav>
     </header>
 
-    <main class="px-4 py-12 sm:px-6 lg:px-8">
+    <main class="px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div class="mx-auto max-w-5xl space-y-4">
         {render_slot(@inner_block)}
       </div>
@@ -68,6 +101,15 @@ defmodule TaurosWeb.Layouts do
 
     <.flash_group flash={@flash} />
     """
+  end
+
+  defp nav_links do
+    [
+      {"Dashboard", ~p"/"},
+      {"Agents", ~p"/agents"},
+      {"Customers", ~p"/customers"},
+      {"Wallet accounts", ~p"/wallet-accounts"}
+    ]
   end
 
   @doc """

@@ -321,16 +321,20 @@ defmodule TaurosWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
-      <div>
-        <h1 class="text-lg font-semibold leading-8">
+    <header class={[
+      @actions != [] &&
+        "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+      "pb-4"
+    ]}>
+      <div class="min-w-0">
+        <h1 class="text-lg font-semibold leading-8 wrap-anywhere">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+        <p :if={@subtitle != []} class="text-sm text-base-content/70 wrap-anywhere">
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div class="flex flex-none flex-wrap gap-2">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -356,6 +360,7 @@ defmodule TaurosWeb.CoreComponents do
 
   slot :col, required: true do
     attr :label, :string
+    attr :class, :any, doc: "extra classes for the column, e.g. `hidden sm:table-cell`"
   end
 
   slot :action, doc: "the slot for showing user actions in the last table column"
@@ -367,34 +372,36 @@ defmodule TaurosWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td
-            :for={col <- @col}
-            phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
-          >
-            {render_slot(col, @row_item.(row))}
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th :for={col <- @col} class={col[:class]}>{col[:label]}</th>
+            <th :if={@action != []}>
+              <span class="sr-only">{gettext("Actions")}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
+            <td
+              :for={col <- @col}
+              phx-click={@row_click && @row_click.(row)}
+              class={[col[:class], @row_click && "hover:cursor-pointer"]}
+            >
+              {render_slot(col, @row_item.(row))}
+            </td>
+            <td :if={@action != []} class="w-0 font-semibold">
+              <div class="flex gap-4">
+                <%= for action <- @action do %>
+                  {render_slot(action, @row_item.(row))}
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     """
   end
 
@@ -418,7 +425,7 @@ defmodule TaurosWeb.CoreComponents do
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
+          <div class="wrap-anywhere">{render_slot(item)}</div>
         </div>
       </li>
     </ul>
@@ -505,9 +512,19 @@ defmodule TaurosWeb.CoreComponents do
 
   def api_key_notice(assigns) do
     ~H"""
-    <div id="api-key-notice" role="alert" class="alert alert-warning flex-col items-start gap-3">
-      <p class="font-semibold">Copy this API key now. It will not be shown again.</p>
-      <code id="api-key" class="w-full select-all break-all rounded bg-base-100 p-3 font-mono text-sm">
+    <div
+      id="api-key-notice"
+      role="alert"
+      class="flex flex-col items-start gap-3 rounded-box border border-warning bg-warning/10 p-4"
+    >
+      <p class="font-semibold">
+        <.icon name="hero-exclamation-triangle" class="size-5 text-warning" />
+        Copy this API key now. It will not be shown again.
+      </p>
+      <code
+        id="api-key"
+        class="w-full select-all break-all rounded bg-base-100 p-3 font-mono text-sm"
+      >
         {@api_key}
       </code>
       <p class="text-sm">

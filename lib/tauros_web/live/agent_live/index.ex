@@ -21,9 +21,11 @@ defmodule TaurosWeb.AgentLive.Index do
       >
         <:col :let={{_id, agent}} label="Name">{agent.name}</:col>
 
-        <:col :let={{_id, agent}} label="Id">{agent.id}</:col>
+        <:col :let={{_id, agent}} label="Id" class="hidden sm:table-cell">{agent.id}</:col>
 
-        <:col :let={{_id, agent}} label="Created at">{agent.inserted_at}</:col>
+        <:col :let={{_id, agent}} label="Created at" class="hidden sm:table-cell">
+          {agent.inserted_at}
+        </:col>
 
         <:action :let={{_id, agent}}>
           <div class="sr-only">
@@ -42,6 +44,10 @@ defmodule TaurosWeb.AgentLive.Index do
           </.link>
         </:action>
       </.table>
+
+      <p :if={@empty?} id="empty-state" class="py-8 text-center opacity-70">
+        No agents yet. Create one to get started.
+      </p>
     </Layouts.app>
     """
   end
@@ -52,7 +58,15 @@ defmodule TaurosWeb.AgentLive.Index do
      socket
      |> assign(:page_title, "Agents")
      |> assign_new(:current_user, fn -> nil end)
-     |> stream(:agents, Tauros.Accounts.list_agents!(actor: socket.assigns[:current_user]))}
+     |> stream_agents()}
+  end
+
+  defp stream_agents(socket) do
+    agents = Tauros.Accounts.list_agents!(actor: socket.assigns.current_user)
+
+    socket
+    |> assign(:empty?, agents == [])
+    |> stream(:agents, agents, reset: true)
   end
 
   @impl true
@@ -61,7 +75,7 @@ defmodule TaurosWeb.AgentLive.Index do
 
     with {:ok, agent} <- Tauros.Accounts.get_agent(id, actor: actor),
          {:destroy, :ok} <- {:destroy, Tauros.Accounts.destroy_agent(agent, actor: actor)} do
-      {:noreply, stream_delete(socket, :agents, agent)}
+      {:noreply, stream_agents(socket)}
     else
       # Destroying only fails validation when the agent still owns records.
       {:destroy, {:error, %Ash.Error.Invalid{}}} ->
