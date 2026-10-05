@@ -149,7 +149,8 @@ No check proves that anyone controls an address. That is why destinations are
 shown to humans, and why approval re-checks that the destination is active.
 
 **Lifecycle.** Only `active` destinations can be used by a new invoice
-revision, submitted, or approved. A deactivated or superseded destination stays
+revision, submitted, or approved. The `active` read action lists exactly those
+(the MCP tool `list_payment_destinations` uses it). A deactivated or superseded destination stays
 readable, because past invoices refer to it. The agent or its owning human
 may deactivate; nobody can call `supersede` directly.
 
@@ -257,7 +258,7 @@ A human decision about one exact revision: `decision` (`approved`,
 
 One row per invoice command that changed something, written in the same
 transaction: action, from and to state, actor id and kind, interface (`ui`,
-`api`, `console`), revision and payload hash, the agent's reasoning or the
+`api`, `mcp`, `console`), revision and payload hash, the agent's reasoning or the
 human's reason, and the idempotency key on create. Replays and failed commands
 write nothing. No actor can create, change or delete events.
 

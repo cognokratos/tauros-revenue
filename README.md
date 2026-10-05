@@ -12,8 +12,8 @@ reconciliation. AI agents do the operational work. Humans keep the authority.
 ![](docs/bg.png)
 
 Tauros answers with architecture rather than prompts. Every interface (the
-LiveView UI, the REST API and, next, AI tools through AshAI) calls the **same
-Ash actions**. The same **policies** and **state machines** decide what may
+LiveView UI, the REST API and AI tools over MCP through AshAI) calls the
+**same Ash actions**. The same **policies** and **state machines** decide what may
 happen, whoever is asking. An agent with a valid API key can read, draft and
 propose; it can't approve, issue, mark paid or change who owns what.
 
@@ -35,7 +35,7 @@ then try to break it with the [exercises](docs/EXERCISES.md).
 | --- | --- |
 | Understand why Tauros exists | [Vision](docs/VISION.md) · [AI capability is not authority](docs/AI-AUTHORITY.md) |
 | See how it is built | [Architecture](docs/ARCHITECTURE.md) · [Domain model](docs/DOMAIN_MODEL.md) |
-| Call the API | [REST API](docs/API.md) |
+| Call the API | [REST API](docs/API.md) · [MCP for AI clients](docs/MCP.md) |
 | Learn the concepts | [Learning path](docs/LEARNING-PATH.md) · [Exercises](docs/EXERCISES.md) · [concepts/](docs/concepts) |
 | Know what's next | [Roadmap](docs/ROADMAP.md) · [Workflows](docs/WORKFLOWS.md) |
 | Contribute | [Development](docs/DEVELOPMENT.md) · [Security](docs/SECURITY.md) |
@@ -79,9 +79,9 @@ is a few hundred lines of DSL.
 ## Architecture
 
 ```text
- Human browser            Services / agents            AI clients (planned)
+ Human browser            Services / agents            AI clients (agents only)
       │                          │                            │
- LiveView + AshPhoenix     AshJsonApi (/api/v1)        AshAI MCP (allowlist)
+ LiveView + AshPhoenix     AshJsonApi (/api/v1)        AshAI MCP (/mcp, 8 reviewed tools)
       └──────────────┬───────────┴────────────────────────────┘
                      ▼
      Tauros.Accounts                 Tauros.Revenue
@@ -98,6 +98,9 @@ is a few hundred lines of DSL.
   **operator** manages agents and customers; an **approver** also decides.
 - **Agents** are AI or service principals. They authenticate with a generated API
   key (shown once, stored hashed, rotatable) and act only within their policies.
+  Over MCP an AI client is offered eight reviewed tools to read its records and
+  draft, revise, submit or withdraw invoices; there is no approval tool, and the
+  policies would refuse one anyway.
 - **Ownership** (human → agent → customer, destination, invoice) is enforced by
   Ash policies, including on creates, and cannot be reassigned.
 - **Financial intent is immutable.** An invoice's content lives in revisions
@@ -112,7 +115,7 @@ is a few hundred lines of DSL.
 | Epic 2 | Agents register payment destinations; humans review them | ✅ rebuilt on Ash |
 | Learning phase | Currency ≠ network ≠ rail; IBAN and Taproot checksums; destination lifecycle | ✅ |
 | Epic 3 | Approver role and closed registration; idempotent invoice drafts; immutable revisions with payload hashes; AshStateMachine lifecycle; exact-payload approvals; the approval inbox; audit envelope; authority classification and adversarial tests | ✅ |
-| Epic 4 | AshAI tools with an explicit allowlist | planned |
+| Epic 4 | AshAI MCP endpoint for agents; eight reviewed read and proposal tools; exact allowlist test; MCP attack and prompt-injection tests | ✅ |
 | Epics 5–9 | Audit, payments and reconciliation, data protection, semantic search, optional Arktos adapter | planned |
 
 The original Phoenix-contexts implementation of Epics 1–2 is in the git history.
@@ -143,11 +146,9 @@ CI also runs dependency audits and checks that migrations match the resources
 
 ## What comes next
 
-Epic 4 exposes the agent-safe part of the domain to AI clients through AshAI,
-the same actions under the same policies, with a test that every tool is in
-`Tauros.Authority.agent_safe/0`. Epic 5 turns the audit envelope into full,
-database-enforced history; Epic 6 issues approved invoices and reconciles
-payments. See the [roadmap](docs/ROADMAP.md).
+Epic 5 turns the audit envelope into full, database-enforced history (AshPaperTrail);
+Epic 6 issues approved invoices and reconciles payments. See the
+[roadmap](docs/ROADMAP.md).
 
 ---
 

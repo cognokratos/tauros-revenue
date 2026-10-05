@@ -1,7 +1,7 @@
 # Workflows
 
 What each actor can do, step by step. Every step names the Ash action that
-implements it; the UI, the API and (later) AI tools all call that action.
+implements it; the UI, the REST API and the MCP tools all call that action.
 
 ## 1. A first approver sets up Tauros
 
@@ -44,16 +44,21 @@ approved ──cancel(reason) (human approver)       ──▶ cancelled
 draft | pending ──withdraw (agent or owner)      ──▶ cancelled
 ```
 
-| Step | Agent (API) | Human (UI) | Action |
-| --- | --- | --- | --- |
-| Find its customers and destinations | `GET /customers`, `GET /payment-destinations` | — | `read` |
-| Propose (retry-safe) | `POST /invoices` with `idempotency_key` | — | `Invoice.create_draft` |
-| Change the proposal | `PATCH /invoices/:id/revise` | — | `Invoice.revise` |
-| Ask for a decision | `PATCH /invoices/:id/submit` | — | `Invoice.submit_for_approval` |
-| Review | `GET /invoices/:id?include=current_revision,approvals,events` | `/approvals/:id` | `read` |
-| Decide | **refused (403)** | Approve / Request changes / Reject | `approve`, `request_changes`, `reject` |
-| Learn why it was sent back | `GET /invoices/:id?include=approvals` | — | `Approval.read` |
-| Withdraw | `PATCH /invoices/:id/withdraw` | — | `Invoice.withdraw` |
+| Step | AI agent (MCP tool) | Agent (REST) | Human (UI) | Action |
+| --- | --- | --- | --- | --- |
+| Find its customers and destinations | `list_customers`, `list_payment_destinations` | `GET /customers`, `GET /payment-destinations` | — | `Customer.read`, `PaymentDestination.active` / `read` |
+| Propose (retry-safe) | `create_invoice_draft` | `POST /invoices` | — | `Invoice.create_draft` |
+| Check it | `get_invoice` | `GET /invoices/:id?include=current_revision` | — | `Invoice.read` |
+| Change the proposal | `revise_invoice` | `PATCH /invoices/:id/revise` | — | `Invoice.revise` |
+| Ask for a decision | `submit_invoice` | `PATCH /invoices/:id/submit` | — | `Invoice.submit_for_approval` |
+| Review | — | — | `/approvals/:id` | `Invoice.read` |
+| **Decide** | **no such tool** | **refused (403)** | Approve / Request changes / Reject | `approve`, `request_changes`, `reject` |
+| Learn why it was sent back | `get_invoice` (the decision on the current revision) | `GET /invoices/:id?include=approvals` | — | `Approval.read` |
+| Withdraw | `withdraw_invoice` | `PATCH /invoices/:id/withdraw` | — | `Invoice.withdraw` |
+
+The MCP walkthrough (`docs/examples/mcp_walkthrough.sh`, explained in
+[MCP.md](MCP.md)) performs the agent's side of this table and stops at the
+human boundary.
 
 **Day-to-day use** (the "five-minute check-in" from the product brief). Agents
 prepare proposals all day. The human opens `/approvals` (the dashboard shows

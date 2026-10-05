@@ -6,8 +6,8 @@ proves it. Keep one question in mind throughout:
 
 > **What exact line stops an agent with a valid key from doing this?**
 
-By the end you should be able to answer it for approving an invoice without
-looking (the answer is in [AI-AUTHORITY.md](AI-AUTHORITY.md#what-exactly-stops-an-agent-from-approving-an-invoice)).
+By the end you should be able to answer it for approving an invoice, through
+the UI, REST or an AI tool, without looking (the answer is in [AI-AUTHORITY.md](AI-AUTHORITY.md#what-exactly-stops-an-agent-from-approving-an-invoice)).
 
 ## 1. Capability vs authority
 
@@ -102,13 +102,41 @@ authorization.
 including breaking the policy on purpose, and the bonus
 [tampering exercise](EXERCISES.md#6-tamper-behind-tauross-back-bonus).
 
-## 11. Later: AshAI exposure
+## 11. AI exposure with AshAI (Epic 4)
 
-Epic 4 ([ROADMAP.md](ROADMAP.md#epic-4-ai-capabilities-with-ashai-fr18fr23))
-exposes a reviewed subset of `Tauros.Authority.agent_safe/0` as AshAI tools.
-Nothing below them changes: the tools call the same actions, the same
-policies refuse the same things, and one more test checks that every tool is
-agent-safe.
+The domain came first; the AI surface is a thin layer on top. Read
+[MCP.md](MCP.md), then follow these ideas in order:
+
+1. **Domain rules first.** Nothing in this stop adds a business rule. Every
+   tool runs an action you have already read, under the same policies.
+2. **Actor identity.** `/mcp` accepts only an agent API key (the `:mcp`
+   pipeline in `lib/tauros_web/router.ex`, `ApiAuth.require_agent/2`). The
+   agent is the actor; a human's token is refused.
+   (`test/tauros_web/mcp/authentication_test.exs`)
+3. **A reviewed capability surface.** `Tauros.Authority.mcp_tools/0` names
+   eight tools, narrower than everything an agent may do.
+4. **Tool schemas are generated.** Read the `tools` block in
+   `lib/tauros/revenue.ex`, then the schema AshAI generates from the action
+   arguments (`tools/list`). Money is a decimal string, never a JSON number.
+   (`test/tauros/mcp_tools_test.exs`, "schema contract")
+5. **Model-visible tools are an allowlist,** and it is exact: the test compares
+   Authority, the domain, the router and a live `tools/list` for equality.
+6. **Ash policies remain the real authority boundary.** The MCP layer
+   authenticates, selects, shapes and formats; it never decides.
+7. **The AI never receives an approval tool**, and if it guessed one, the
+   policy would still refuse it ("Layer 1 / Layer 2" in
+   `test/tauros_web/mcp/attacks_test.exs`).
+8. **Prompt injection cannot manufacture authority.** Read the test of that
+   name: a fully obedient client still has no path.
+9. **The same actions behave identically through REST and MCP**: idempotency,
+   cross-tenant errors and the state machine are the same; only the offered
+   set differs. (`test/tauros_web/mcp/tools_test.exs`)
+10. **MCP actions are auditable as MCP**: `interface: :mcp` in the invoice
+    history, metadata that no policy reads.
+
+*Try:* exercises 7–11 in [EXERCISES.md](EXERCISES.md#exercises-for-ai-clients-mcp)
+(discover tools, create a proposal, try to approve, replay a draft,
+cross-tenant request), or run `docs/examples/mcp_walkthrough.sh`.
 
 ## Further concepts
 

@@ -60,8 +60,13 @@ first. Typical generators: `ash.gen.resource`, `ash.gen.change`,
   Authenticated LiveViews go in the existing `ash_authentication_live_session :authenticated_routes`.
 - **REST:** add JSON:API routes in the domain's `json_api do routes ... end`.
   Do not write controllers for resources.
-- **AI (planned, AshAI):** expose tools one by one in the domain. Never expose
-  an authority-bearing action. Each tool needs a test in the allowlist test.
+- **AI (AshAI MCP at `/mcp`, agents only):** tools are declared one by one in the
+  `tools` block of `Tauros.Revenue` on existing actions. Never expose a
+  `human_only` or `internal` action. A new tool must be added to
+  `Tauros.Authority.mcp_tools/0` and the reviewed list in
+  `test/tauros/mcp_tools_test.exs`, and documented in docs/MCP.md. Use `select`
+  and `load` to keep model context bounded, and never put authorization logic
+  in the MCP layer: policies decide. Amounts stay decimal strings.
 
 ## Phoenix and HEEx conventions
 

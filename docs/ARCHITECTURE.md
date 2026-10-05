@@ -1,22 +1,35 @@
 # Architecture
 
 Tauros is a Phoenix application whose business logic lives entirely in
-[Ash](https://ash-hq.org) resources. Every interface (LiveView UI, JSON:API and,
-later, AI tools) calls the same Ash actions. Those actions go through the same
-policies, validations and changes, and there is no other path to the database.
+[Ash](https://ash-hq.org) resources. Every interface (LiveView UI, JSON:API and
+AI tools over MCP) calls the same Ash actions. Those actions go through the
+same policies, validations and changes, and there is no other path to the
+database.
 
 ```text
- Human browser            Services / agents            AI clients (planned)
+ Human browser             REST clients                  AI clients
+ (humans)                  (humans or agents)            (agents only)
       │                          │                            │
- LiveView + AshPhoenix     AshJsonApi (/api/v1)        AshAI MCP (allowlist)
-      │                          │                            │
+ LiveView + AshPhoenix     AshJsonApi /api/v1           AshAI MCP /mcp
+ interface: :ui            interface: :api              interface: :mcp
+      │                          │                      authenticated as an Agent;
+      │                          │                      8 reviewed tools, no human
+      │                          │                      authority action is a tool
       └──────────────┬───────────┴────────────────────────────┘
                      ▼
-        Ash domains: Tauros.Accounts · Tauros.Revenue
-     actions · policies · validations · changes · state machines
+        Ash actions (Tauros.Accounts · Tauros.Revenue)
                      │
-                AshPostgres ──▶ PostgreSQL
+        Ash policies ─ who may (HumanApprover, AgentActor, ownership)
+                     │
+        state machines ─ which moves exist (checked under a row lock)
+                     │
+        validations · idempotency · immutable revisions
+                     │
+        AshPostgres ──▶ PostgreSQL
 ```
+
+The interface is recorded for audit and never consulted for authorization.
+MCP differs from REST only in offering a deliberately narrower set of actions.
 
 ## Stack
 
@@ -30,6 +43,7 @@ policies, validations and changes, and there is no other path to the database.
 | UI integration | AshPhoenix (forms, LiveView generators) | 2.3 |
 | REST | AshJsonApi (JSON:API + OpenAPI) | 1.7 |
 | Lifecycles | AshStateMachine | 0.2 |
+| AI tools (MCP) | AshAI, without ReqLLM or any model runtime | 1.1.1 |
 
 ## Domains
 
@@ -81,6 +95,12 @@ have `registration_enabled? false`); humans are invited by an approver. The sess
 `ash_authentication_live_session` whose `on_mount` is
 `{TaurosWeb.LiveUserAuth, :live_user_required}`.
 
+**MCP clients** (`/mcp`) are agents only. The `:mcp` pipeline runs the
+AshAuthentication `api_key` plug for `Agent` and `TaurosWeb.ApiAuth.require_agent/2`,
+which answers 401 unless an agent was resolved. There is no `load_from_bearer`
+there, so a human's token never authenticates. The pipeline records
+`interface: :mcp`, and `AshAi.Mcp.Router` runs every tool as that agent.
+
 **API clients** send one header, `Authorization: Bearer <credential>`:
 
 1. `load_from_bearer` (AshAuthentication) resolves a human's sign-in token.
@@ -111,6 +131,9 @@ is not generator output or a configuration line:
 | `Tauros.Authority` | 90 | the reviewed agent-safe / human-only list |
 | `TaurosWeb.ApiAuth` | 55 | one bearer header for both actor kinds; 401 without credentials; interface context |
 | `ApprovalLive`, `InvoiceLive.*`, `InvoiceComponents`, `InviteLive` | 745 | the approval inbox, invoice pages, invitations |
+| `tools` block in `Tauros.Revenue` | ~130 of DSL | the eight MCP tools: action, output fields, model-facing description |
+| `TaurosWeb.Mcp.ExactNumbers` | 40 | refuse JSON floats in tool arguments (amounts are decimal strings) |
+| `ApiAuth.require_agent`, `:mcp` pipeline | 35 | MCP callers are agents |
 | `DashboardLive`, edits to generated LiveViews | small | landing page, destination state and lineage, agent names, empty states |
 
 ## Generators used
@@ -182,6 +205,10 @@ code needed manual edits in the following places:
   the one hand-written migration (codegen produces schema, not data).
 - **`InvoiceLine`** is hand-written: `mix ash.gen.resource` has no embedded data
   layer option.
+- **AshAI installer:** `mix igniter.install ash_ai --no-req-llm` also added an
+  `AshAi.Mcp.Dev` plug to the endpoint in dev. It was removed: it is an
+  unauthenticated second MCP endpoint pinned to the obsolete `2024-11-05`
+  protocol, which contradicts "MCP callers are agents".
 
 ## Decisions
 
@@ -223,8 +250,9 @@ decisions resolve those disagreements.
    Password changes go through the generated reset flow. Nothing ever broadcast on
    the PubSub topic.
 10. **Extensions are added only when used.** AshStateMachine arrived with
-    lifecycles. AshAI, AshOban, AshPaperTrail and AshCloak are planned for
-    specific epics in [ROADMAP.md](ROADMAP.md) and are not installed yet.
+    lifecycles and AshAI with the MCP tools (without ReqLLM: Tauros runs no
+    model). AshOban, AshPaperTrail and AshCloak are planned for specific epics
+    in [ROADMAP.md](ROADMAP.md) and are not installed yet.
 11. **`WalletAccount` became `PaymentDestination`, with an explicit `network`.**
     The old model let the currency imply the rail, which is false for
     multi-network assets such as USDC and meaningless for IBANs. The rename cost
@@ -247,3 +275,16 @@ decisions resolve those disagreements.
 16. **Customers stay out of the payload hash** (only the id is hashed), so
     correcting a contact detail, or anonymizing it under GDPR (Epic 7), never
     invalidates an approval.
+17. **AshAI is a thin exposure layer.** The tools are declared on existing
+    actions; there is no handwritten MCP server, no second argument schema
+    and no authorization in the MCP layer. It authenticates the agent, selects
+    tools, shapes outputs, refuses floats and formats errors.
+18. **MCP callers are agents** with their existing API key, through their own
+    pipeline. Humans have the UI and REST.
+19. **The MCP surface is an exact, reviewed list** (`Tauros.Authority.mcp_tools/0`),
+    narrower than what an agent may do: deactivating a destination is
+    permitted but not offered to a model.
+20. **Model context is bounded on purpose.** `list_customers` returns no email
+    and has no filter; `get_invoice` returns the current revision and its
+    decision, not the full history or approver identities; write tools return
+    the invoice's own fields.

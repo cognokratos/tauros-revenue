@@ -19,6 +19,13 @@ neither succeeds, `TaurosWeb.ApiAuth` returns `401` before any business action
 runs. The only routes reachable without a credential are `POST /api/v1/users/sign-in`
 and the OpenAPI document.
 
+**The MCP endpoint (`/mcp`) accepts agents only.** Its pipeline resolves only
+an agent API key; a human's bearer token is refused with 401, so no MCP caller
+can carry human authority. The agent is the Ash actor of every tool call, and
+Ash policies decide what it may do, exactly as for REST. The MCP layer adds no
+authorization of its own; it only selects which actions are offered as tools
+(see [MCP.md](MCP.md#security-model-two-layers)).
+
 Key rotation locks the agent row (`get_and_lock_for_update`), so concurrent
 rotations cannot leave two valid keys behind.
 
@@ -65,6 +72,22 @@ rotations cannot leave two valid keys behind.
 The tests in `test/tauros/**` assert these rules directly against the actions, in
 addition to the UI and API tests.
 
+## AI tools
+
+- **An exact allowlist.** Eight read and proposal tools; no approve, reject,
+  request changes, cancel, invite, bootstrap, agent or customer management
+  tool. `test/tauros/mcp_tools_test.exs` fails on any drift, and
+  `test/tauros_web/mcp/attacks_test.exs` shows that the policies refuse those
+  actions even when the same agent reaches them directly.
+- **Bounded model context.** No customer email, no customer filter (no email
+  oracle), no approver identities, no audit history in tool output.
+- **No precision loss.** Amounts are decimal strings; JSON numbers (floats)
+  are refused.
+- **No existence oracle.** Another agent's records and nonexistent ones produce
+  identical tool errors.
+- **Origin validation.** AshAI's router rejects browser requests from foreign
+  origins (DNS-rebinding protection); non-browser clients send no Origin.
+
 ## Web hardening
 
 - Phoenix CSRF protection and secure browser headers on the browser pipeline.
@@ -106,12 +129,17 @@ roadmap:
    reveals whether an id exists. Random UUIDv4 ids make this impractical to
    exploit. Invoices do not have this problem: unknown and foreign customers and
    destinations get the same error. Customers will get a uniform error too.
-7. **EVM addresses are format-checked only.** The EIP-55 checksum is not
+7. **No rate limiting on `/mcp` either**, and no per-agent tool quotas. An
+   agent with a valid key can call tools as fast as REST allows. Put the MCP
+   endpoint behind the same edge rate limiting as the API.
+8. **An agent key is a bearer credential on two interfaces** (REST and MCP).
+   Rotating it revokes both. There is no MCP-only scoped key.
+9. **EVM addresses are format-checked only.** The EIP-55 checksum is not
    verified (OTP has no Keccak-256). A mistyped lowercase EVM address passes.
    Destinations are shown to humans before any invoice using them is approved.
-8. **A token symbol is not a contract.** "USDC on Arbitrum" does not say
+10. **A token symbol is not a contract.** "USDC on Arbitrum" does not say
    which contract; execution (Epic 6) must map it before watching for payments.
-9. **Mail sender and host configuration** must be set for production
+11. **Mail sender and host configuration** must be set for production
    (`MAIL_FROM`, `PHX_HOST`, an SMTP adapter); the default is the local mailbox.
 
 ## Reporting

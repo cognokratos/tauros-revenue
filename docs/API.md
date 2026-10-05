@@ -5,6 +5,9 @@ routes declared on the domains (`Tauros.Accounts`, `Tauros.Revenue`). There are
 no controllers. The routes call the same actions, under the same policies, as
 the UI. **Which interface you use never changes what you may do.**
 
+AI clients use MCP instead ([MCP.md](MCP.md)): the same actions, offered to
+agents as a narrower, reviewed set of tools.
+
 - Base path: `/api/v1`
 - Media type: `application/vnd.api+json`
 - OpenAPI document: `GET /api/v1/open_api` · Swagger UI: `/api/swaggerui`

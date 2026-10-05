@@ -1,7 +1,7 @@
 # Roadmap
 
 Each epic delivers a working capability **and** teaches one idea of agentic
-financial workflow engineering. Epics 1–3 are done. Their numbering, scope
+financial workflow engineering. Epics 1–4 are done. Their numbering, scope
 and functional requirements (FR) come from the original product plan. Epics 3+
 rework the original backlog around Ash, AshAI, explicit state machines and
 human authority.
@@ -92,34 +92,37 @@ These criteria apply to every story that changes financial state:
   machine from depending on each other.
 - **`possible_next_states` is not exposed yet.** The inbox needs only "is it
   pending, and may this human decide?", which it asks of the domain with
-  `Ash.can?`. AshAI tool descriptions may want it in Epic 4.
+  `Ash.can?`. Epic 4 did not need it either: the tool descriptions state the
+  lifecycle in words, and an illegal move returns an `invalid_transition` error.
 - **Organizations are out of scope.** Each human still owns their agents; an
   approver decides on their own agents' invoices. Sharing agents between
   humans (and separation of duties between people) is future work.
 
-## Epic 4: AI capabilities with AshAI (FR18–FR23)
+## ✅ Epic 4: AI capabilities with AshAI (FR18–FR23)
 
 *Teaches: [AI capability is not authority](AI-AUTHORITY.md). Build the domain
-first, then expose a reviewed subset.*
+first, then expose a reviewed subset. Reference: [MCP.md](MCP.md).*
 
-Adds AshAI. It replaces the handwritten MCP server planned in original stories
-3.1 and 6.1.
+AshAI 1.1.1, without ReqLLM. It replaces the handwritten MCP server planned in
+original stories 3.1 and 6.1.
 
-- **4.1 MCP endpoint for agents.** The AshAI MCP router at `/mcp`, authenticated
-  with the agent's API key through the same AshAuthentication strategy. *AC:* an
-  unauthenticated call is refused, and tools run as the agent actor.
-- **4.2 Read-only tools.** `list_customers`, `list_payment_destinations`,
-  `get_invoice`, `list_invoices`. *AC:* results are the agent's own records only.
-  This meets journey 3's need for agents to fetch customer and account data.
-- **4.3 Proposal tools.** `create_invoice_draft` (with `idempotency_key` and
-  `reasoning`), `revise_invoice`, `submit_invoice`, `withdraw_invoice`. *AC:* the agent's reasoning
-  is stored and shown in the inbox; a missing-data error explains how to fix it.
-- **4.4 Allowlist test.** A test enumerates the exposed tools and fails unless
-  each one is in `Tauros.Authority.agent_safe/0`. The classification and its
-  policy checks already exist (`test/tauros/authority_test.exs`); this adds
-  only the tool list.
-- **4.5 MCP reference.** Tool documentation generated from action descriptions,
-  plus examples. This was original story 7.3.
+| Story | Delivered |
+| --- | --- |
+| 4.1 MCP endpoint for agents | `/mcp` with its own pipeline: agent API key only (human tokens refused), the agent is the actor, `interface: :mcp` in the audit envelope |
+| 4.2 Read tools | `list_customers` (id, name), `list_payment_destinations` (active only, new `PaymentDestination.active` read), `list_invoices`, `get_invoice` (current revision and its decision) |
+| 4.3 Proposal tools | `create_invoice_draft`, `revise_invoice`, `submit_invoice`, `withdraw_invoice`, with descriptions that say what they do *not* do |
+| 4.4 Allowlist test | `Tauros.McpToolsTest`: every tool is agent-safe, and the tools are *exactly* the reviewed eight in `Tauros.Authority`, the domain, the router and a live `tools/list` |
+| 4.5 MCP reference | [MCP.md](MCP.md), `docs/examples/mcp_walkthrough.sh`, exercises 7–11 |
+| *added* | actionable tool errors, floats refused, schema contract test, MCP attack and prompt-injection tests |
+
+**Changed from the plan, and why:**
+
+- **The tool list is narrower than "agent-safe".** Deactivating a destination
+  and reading the approval queue, raw revisions, approvals and events are
+  allowed to an agent but not offered to a model.
+- **Customer email is not shown to the model**, and customers cannot be
+  filtered, so emails cannot be probed. A name is enough to choose.
+- **`update_draft` is `revise_invoice`**, matching the domain action.
 
 ## Epic 5: Auditability and supervision (FR24–FR27, FR34–FR35)
 

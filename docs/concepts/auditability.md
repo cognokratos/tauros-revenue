@@ -8,7 +8,7 @@ long after the fact:
 | What happened? | the action name (`approve`, `revise`) and resource | ✅ `InvoiceEvent.action` |
 | Who initiated it? | actor id | ✅ `InvoiceEvent.actor_id` |
 | Human or agent? | actor kind | ✅ `InvoiceEvent.actor_kind` |
-| Through which interface? | `ui`, `api`, `console` (later `mcp`, `job`) | ✅ `InvoiceEvent.interface` |
+| Through which interface? | `ui`, `api`, `mcp`, `console` (later `job`) | ✅ `InvoiceEvent.interface` |
 | Why? | the agent's reasoning, the human's reason | ✅ `InvoiceRevision.reasoning`, `Approval.reason`, `InvoiceEvent.note` |
 | What exact payload was reviewed and authorized? | revision, canonical payload and its hash | ✅ `InvoiceRevision`, `Approval.payload_hash` |
 | Which retry produced it? | idempotency key | ✅ `Invoice.idempotency_key`, `InvoiceEvent.idempotency_key` |
@@ -29,8 +29,10 @@ command, without pulling the audit epic forward:
   written in the same transaction by `Invoice.Changes.RecordEvent`. Replays and
   failed commands write nothing.
 - The **interface** travels as Ash context: the JSON:API pipeline sets
-  `interface: :api` (`TaurosWeb.ApiAuth.put_interface/2`), the LiveViews pass
-  `interface: :ui`, and direct calls are `:console`. It is recorded for audit
+  `interface: :api` (`TaurosWeb.ApiAuth.put_interface/2`), the MCP pipeline sets
+  `interface: :mcp`, the LiveViews pass `interface: :ui`, and direct calls are
+  `:console`. The same agent has the same permissions through REST, MCP or a
+  direct call; MCP only offers fewer actions. It is recorded for audit
   and **never** read by authorization.
 
 None of these resources has an update or destroy action, and no actor may
