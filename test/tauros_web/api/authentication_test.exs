@@ -53,7 +53,8 @@ defmodule TaurosWeb.Api.AuthenticationTest do
     test "authenticate the agent", %{conn: conn} do
       agent = agent(user())
 
-      conn = conn |> authorize(agent.__metadata__.api_key) |> get("/api/v1/wallet-accounts")
+      conn =
+        conn |> authorize(agent.__metadata__.plaintext_api_key) |> get("/api/v1/wallet-accounts")
 
       assert json_response(conn, 200)["data"] == []
     end

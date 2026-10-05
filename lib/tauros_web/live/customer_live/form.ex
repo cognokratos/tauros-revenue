@@ -56,7 +56,7 @@ defmodule TaurosWeb.CustomerLive.Form do
           nil
 
         id ->
-          Ash.get!(Tauros.Revenue.Customer, id, actor: socket.assigns.current_user, load: :agent)
+          Tauros.Revenue.get_customer!(id, actor: socket.assigns.current_user, load: :agent)
       end
 
     action = if is_nil(customer), do: "New", else: "Edit"

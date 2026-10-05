@@ -47,7 +47,7 @@ defmodule TaurosWeb.AgentLive.Show do
      socket
      |> assign(:page_title, "Show Agent")
      |> assign(:api_key, nil)
-     |> assign(:agent, Ash.get!(Tauros.Accounts.Agent, id, actor: socket.assigns.current_user))}
+     |> assign(:agent, Tauros.Accounts.get_agent!(id, actor: socket.assigns.current_user))}
   end
 
   @impl true
@@ -57,6 +57,6 @@ defmodule TaurosWeb.AgentLive.Show do
         actor: socket.assigns.current_user
       )
 
-    {:noreply, assign(socket, agent: agent, api_key: agent.__metadata__.api_key)}
+    {:noreply, assign(socket, agent: agent, api_key: agent.__metadata__.plaintext_api_key)}
   end
 end

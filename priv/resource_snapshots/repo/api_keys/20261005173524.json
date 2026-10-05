@@ -21,11 +21,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
-      "type": "citext"
+      "source": "api_key_hash",
+      "type": "binary"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,20 +33,41 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "hashed_password",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "confirmed_at",
+      "source": "expires_at",
       "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": true,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "api_keys_agent_id_fkey",
+        "on_delete": "delete",
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "agents"
+      },
+      "scale": null,
+      "size": null,
+      "source": "agent_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -55,19 +76,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "A01E640622444E37C9EA41F1A062EFC63327D132E81E914ECA880E61B5A1221A",
+  "hash": "13DF356116636A6EC280BC36BF10219A9E9967E48065216F434253D62B622EA6",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "api_keys_unique_api_key_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "api_key_hash"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_api_key",
       "nils_distinct?": true,
       "where": null
     }
@@ -79,6 +100,6 @@
   },
   "repo": "Elixir.Tauros.Repo",
   "schema": null,
-  "table": "users",
+  "table": "api_keys",
   "temporal": null
 }

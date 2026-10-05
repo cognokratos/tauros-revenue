@@ -138,6 +138,12 @@ code needed manual edits in the following places:
 - **Layout:** the generated Phoenix marketing header was replaced with the app
   navigation. The root layout got Tauros branding and a Content-Security-Policy.
 - **Senders:** the generated `from` placeholders now read `config :tauros, :mail_sender`.
+- **Test config:** the auth installer configured fast `bcrypt_elixir` rounds for
+  tests, but `add_strategy password --hash-provider argon2` didn't do the same
+  for Argon2. `config/test.exs` now sets cheap Argon2 parameters instead.
+- **User resource:** the generated `change_password` action had no policy and so
+  could never be authorized. It now allows a user to change only their own
+  password.
 
 ## Decisions
 
@@ -159,10 +165,10 @@ decisions resolve those disagreements.
    bodies. AshJsonApi gives one documented format, an OpenAPI spec at
    `/api/v1/open_api` and Swagger UI at `/api/swaggerui`, with no controllers.
    See [API.md](API.md) for the old-to-new mapping.
-4. **Out-of-scope reads are 404, out-of-scope writes are 403.** This matches the
-   intent of story 1.4: reading a record you can't see behaves like it doesn't
-   exist. Creating a customer for someone else's agent is a policy denial (403);
-   the old API reported a 422.
+4. **Records you can't see behave as if they don't exist.** Reading, updating or
+   deleting another human's record returns 404, which matches the intent of story
+   1.4. Creating a customer for someone else's agent is a policy denial (403); the
+   old API reported a 422.
 5. **Agent management is scoped too.** The old agent show, edit and delete screens
    loaded agents without checking ownership. Ash policies make that class of bug
    impossible to write by accident.

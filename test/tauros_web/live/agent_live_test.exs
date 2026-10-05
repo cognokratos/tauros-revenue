@@ -35,6 +35,16 @@ defmodule TaurosWeb.AgentLiveTest do
       assert has_element?(view, "#agents-#{agent.id}")
       assert render(view) =~ "cannot be deleted"
     end
+
+    test "reports an agent deleted elsewhere instead of crashing", %{conn: conn, user: user} do
+      agent = agent(user)
+      {:ok, view, _html} = live(conn, ~p"/agents")
+      :ok = Tauros.Accounts.destroy_agent(agent, actor: user)
+
+      view |> element("#agents-#{agent.id} a", "Delete") |> render_click()
+
+      assert render(view) =~ "could not be deleted"
+    end
   end
 
   describe "New" do
@@ -85,7 +95,7 @@ defmodule TaurosWeb.AgentLiveTest do
       view |> element("#rotate-api-key") |> render_click()
 
       assert has_element?(view, "#api-key")
-      refute render(view) =~ agent.__metadata__.api_key
+      refute render(view) =~ agent.__metadata__.plaintext_api_key
     end
 
     test "is not reachable for other humans' agents", %{conn: conn} do

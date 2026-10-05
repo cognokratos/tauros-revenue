@@ -41,6 +41,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
 
     create unique_index(:api_keys, [:api_key_hash], name: "api_keys_unique_api_key_index")
 
+    create index(:api_keys, [:agent_id])
+
     create table(:customers, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :name, :text, null: false
@@ -64,6 +66,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
           ),
           null: false
     end
+
+    create index(:customers, [:agent_id])
 
     create table(:tokens, primary_key: false) do
       add :jti, :text, null: false, primary_key: true
@@ -95,6 +99,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
                on_delete: :delete_all
              )
     end
+
+    create index(:agents, [:user_id])
 
     alter table(:users) do
       add :email, :citext, null: false
@@ -128,9 +134,13 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
           ),
           null: false
     end
+
+    create index(:wallet_accounts, [:agent_id])
   end
 
   def down do
+    drop_if_exists index(:wallet_accounts, [:agent_id])
+
     drop constraint(:wallet_accounts, "wallet_accounts_agent_id_fkey")
 
     drop table(:wallet_accounts)
@@ -143,6 +153,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
       remove :email
     end
 
+    drop_if_exists index(:agents, [:user_id])
+
     drop constraint(:agents, "agents_user_id_fkey")
 
     alter table(:agents) do
@@ -153,9 +165,13 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
 
     drop table(:tokens)
 
+    drop_if_exists index(:customers, [:agent_id])
+
     drop constraint(:customers, "customers_agent_id_fkey")
 
     drop table(:customers)
+
+    drop_if_exists index(:api_keys, [:agent_id])
 
     drop constraint(:api_keys, "api_keys_agent_id_fkey")
 

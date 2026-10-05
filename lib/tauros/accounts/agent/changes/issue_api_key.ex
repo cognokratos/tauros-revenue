@@ -3,7 +3,7 @@ defmodule Tauros.Accounts.Agent.Changes.IssueApiKey do
   Issues a fresh API key for the agent, revoking any previous keys.
 
   The plaintext key exists only in the action result's metadata
-  (`agent.__metadata__.api_key`); only its hash is persisted.
+  (`agent.__metadata__.plaintext_api_key`); only its hash is persisted.
   """
   use Ash.Resource.Change
   require Ash.Query
@@ -25,7 +25,12 @@ defmodule Tauros.Accounts.Agent.Changes.IssueApiKey do
         })
         |> Ash.create!(authorize?: false)
 
-      {:ok, Ash.Resource.put_metadata(agent, :api_key, api_key.__metadata__.plaintext_api_key)}
+      {:ok,
+       Ash.Resource.put_metadata(
+         agent,
+         :plaintext_api_key,
+         api_key.__metadata__.plaintext_api_key
+       )}
     end)
   end
 end

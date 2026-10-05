@@ -48,8 +48,9 @@ magic-link strategies, email confirmation, and token storage in `Token`.
 - `name` is required, trimmed and at most 160 characters.
 - `user_id` is set from the actor by `relate_actor(:user)` and is never accepted as input.
 - Creating an agent **issues an API key**. The plaintext is returned once, in
-  action metadata (`agent.__metadata__.api_key`); only a SHA-256 hash is stored.
-- `rotate_api_key` revokes every existing key and issues a new one.
+  action metadata (`agent.__metadata__.plaintext_api_key`); only a SHA-256 hash is stored.
+- `rotate_api_key` locks the agent row, revokes every existing key and issues a
+  new one, so concurrent rotations leave exactly one valid key.
 - Keys expire after 365 days (`valid_api_keys` filters on `expires_at > now()`).
 - An agent cannot be destroyed while it owns customers or wallet accounts. The
   foreign keys use `ON DELETE RESTRICT`, and Ash reports "would leave records behind".

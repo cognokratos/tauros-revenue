@@ -26,7 +26,7 @@ defmodule Tauros.Revenue.WalletAccount do
     repo Tauros.Repo
 
     references do
-      reference :agent, on_delete: :restrict
+      reference :agent, on_delete: :restrict, index?: true
     end
   end
 

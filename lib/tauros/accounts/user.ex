@@ -281,6 +281,11 @@ defmodule Tauros.Accounts.User do
       authorize_if always()
     end
 
+    policy action(:change_password) do
+      description "Users may change only their own password"
+      authorize_if expr(id == ^actor(:id))
+    end
+
     policy action(:sign_in_with_password) do
       description "Anyone may attempt to sign in through the JSON API"
       authorize_if always()

@@ -40,6 +40,7 @@ defmodule Tauros.Revenue do
         action: :read,
         default_options: [query: [sort: [inserted_at: :desc]]]
 
+      define :get_wallet_account, action: :read, get_by: :id
       define :create_wallet_account, action: :create
     end
   end

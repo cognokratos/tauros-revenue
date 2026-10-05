@@ -20,7 +20,7 @@ defmodule Tauros.Accounts.AgentTest do
 
     test "issues an API key exactly once and stores only its hash" do
       agent = agent(user())
-      api_key = agent.__metadata__.api_key
+      api_key = agent.__metadata__.plaintext_api_key
 
       assert "tauros_" <> _ = api_key
       assert {:ok, %{id: id}} = sign_in(api_key)
@@ -58,10 +58,10 @@ defmodule Tauros.Accounts.AgentTest do
     test "rotation revokes the previous key" do
       user = user()
       agent = agent(user)
-      old_key = agent.__metadata__.api_key
+      old_key = agent.__metadata__.plaintext_api_key
 
       rotated = Accounts.rotate_agent_api_key!(agent, actor: user)
-      new_key = rotated.__metadata__.api_key
+      new_key = rotated.__metadata__.plaintext_api_key
 
       assert new_key != old_key
       refute match?({:ok, %Accounts.Agent{}}, sign_in(old_key))

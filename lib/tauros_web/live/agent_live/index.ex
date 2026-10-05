@@ -57,16 +57,19 @@ defmodule TaurosWeb.AgentLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    agent = Ash.get!(Tauros.Accounts.Agent, id, actor: socket.assigns.current_user)
+    actor = socket.assigns.current_user
 
-    case Ash.destroy(agent, actor: socket.assigns.current_user) do
-      :ok ->
-        {:noreply, stream_delete(socket, :agents, agent)}
-
-      {:error, _error} ->
+    with {:ok, agent} <- Tauros.Accounts.get_agent(id, actor: actor),
+         {:destroy, :ok} <- {:destroy, Tauros.Accounts.destroy_agent(agent, actor: actor)} do
+      {:noreply, stream_delete(socket, :agents, agent)}
+    else
+      # Destroying only fails validation when the agent still owns records.
+      {:destroy, {:error, %Ash.Error.Invalid{}}} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "An agent with customers or wallet accounts cannot be deleted")}
+         put_flash(socket, :error, "An agent with customers or wallet accounts cannot be deleted")}
+
+      _error ->
+        {:noreply, put_flash(socket, :error, "The agent could not be deleted")}
     end
   end
 end

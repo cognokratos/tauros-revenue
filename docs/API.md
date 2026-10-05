@@ -93,7 +93,11 @@ attribute:
 | 400 | invalid or unknown input, e.g. a missing field or trying to change `agent_id` |
 | 401 | no valid credential (`unauthorized`) or failed sign-in (`invalid_credentials`) |
 | 403 | authenticated, but a policy forbids the action |
-| 404 | the record does not exist *or is not visible to you* |
+| 404 | the record does not exist *or is not visible to you* (also for PATCH and DELETE) |
+
+Lists are unsorted unless you ask: use JSON:API sorting, e.g.
+`GET /api/v1/customers?sort=-inserted_at`. The UI sorts newest first through the
+domain code interface.
 
 ## Changes from the pre-Ash API
 

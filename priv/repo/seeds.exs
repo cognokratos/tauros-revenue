@@ -35,6 +35,6 @@ else
 
   IO.puts("""
   Signed-in human: #{email} / #{password}
-  Agent API key (shown once): #{agent.__metadata__.api_key}
+  Agent API key (shown once): #{agent.__metadata__.plaintext_api_key}
   """)
 end

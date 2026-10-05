@@ -51,11 +51,11 @@ defmodule TaurosWeb.Api.ResourcesTest do
         |> patch("/api/v1/agents/#{agent.id}/rotate-api-key", payload("agent", agent.id, %{}))
         |> json_response(200)
 
-      assert response["meta"]["api_key"] != agent.__metadata__.api_key
+      assert response["meta"]["api_key"] != agent.__metadata__.plaintext_api_key
     end
 
     test "agents cannot register agents", %{conn: conn, user: user} do
-      key = agent(user).__metadata__.api_key
+      key = agent(user).__metadata__.plaintext_api_key
 
       conn =
         conn |> authorize(key) |> post("/api/v1/agents", payload("agent", %{name: "Child"}))
@@ -149,7 +149,7 @@ defmodule TaurosWeb.Api.ResourcesTest do
   describe "wallet accounts" do
     setup %{conn: conn, user: user} do
       agent = agent(user)
-      %{agent: agent, as_agent: authorize(conn, agent.__metadata__.api_key)}
+      %{agent: agent, as_agent: authorize(conn, agent.__metadata__.plaintext_api_key)}
     end
 
     test "an agent registers a wallet account for itself", %{as_agent: as_agent, agent: agent} do

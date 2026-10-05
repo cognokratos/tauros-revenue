@@ -34,7 +34,7 @@ defmodule Tauros.Accounts.Agent do
     repo Tauros.Repo
 
     references do
-      reference :user, on_delete: :delete
+      reference :user, on_delete: :delete, index?: true
     end
   end
 
@@ -46,6 +46,11 @@ defmodule Tauros.Accounts.Agent do
       accept [:name]
       change relate_actor(:user)
       change Tauros.Accounts.Agent.Changes.IssueApiKey
+
+      metadata :plaintext_api_key, :string do
+        description "The issued API key. Returned only by this action; Tauros stores its hash."
+        allow_nil? false
+      end
     end
 
     update :update do
@@ -57,7 +62,14 @@ defmodule Tauros.Accounts.Agent do
       description "Revoke the agent's current API key and issue a new one."
       accept []
       require_atomic? false
+      # Serialize concurrent rotations so exactly one key survives.
+      change get_and_lock_for_update()
       change Tauros.Accounts.Agent.Changes.IssueApiKey
+
+      metadata :plaintext_api_key, :string do
+        description "The new API key. Returned only by this action; Tauros stores its hash."
+        allow_nil? false
+      end
     end
 
     read :sign_in_with_api_key do

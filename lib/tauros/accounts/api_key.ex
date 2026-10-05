@@ -14,7 +14,7 @@ defmodule Tauros.Accounts.ApiKey do
     repo Tauros.Repo
 
     references do
-      reference :agent, on_delete: :delete
+      reference :agent, on_delete: :delete, index?: true
     end
   end
 

@@ -27,7 +27,7 @@ defmodule Tauros.Fixtures do
     Ash.Resource.put_metadata(user, :token, token)
   end
 
-  @doc "Creates an agent owned by `user`. The plaintext key is in `agent.__metadata__.api_key`."
+  @doc "Creates an agent owned by `user`. The plaintext key is in `agent.__metadata__.plaintext_api_key`."
   def agent(user, attrs \\ %{}) do
     attrs = Enum.into(attrs, %{name: "Agent #{System.unique_integer([:positive])}"})
     Accounts.create_agent!(attrs.name, actor: user)

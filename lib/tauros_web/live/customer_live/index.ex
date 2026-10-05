@@ -72,9 +72,15 @@ defmodule TaurosWeb.CustomerLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    customer = Ash.get!(Tauros.Revenue.Customer, id, actor: socket.assigns.current_user)
-    Ash.destroy!(customer, actor: socket.assigns.current_user)
+    actor = socket.assigns.current_user
 
-    {:noreply, stream_customers(socket)}
+    with {:ok, customer} <- Tauros.Revenue.get_customer(id, actor: actor),
+         :ok <- Tauros.Revenue.destroy_customer(customer, actor: actor) do
+      {:noreply, stream_customers(socket)}
+    else
+      _error ->
+        {:noreply,
+         socket |> put_flash(:error, "The customer could not be deleted") |> stream_customers()}
+    end
   end
 end

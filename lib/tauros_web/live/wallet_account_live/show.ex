@@ -40,7 +40,7 @@ defmodule TaurosWeb.WalletAccountLive.Show do
      |> assign(:page_title, "Wallet account")
      |> assign(
        :wallet_account,
-       Ash.get!(Tauros.Revenue.WalletAccount, id,
+       Tauros.Revenue.get_wallet_account!(id,
          actor: socket.assigns.current_user,
          load: :agent
        )

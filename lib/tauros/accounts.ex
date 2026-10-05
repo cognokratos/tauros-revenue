@@ -19,14 +19,19 @@ defmodule Tauros.Accounts do
         get :read
 
         post :create do
-          metadata fn _subject, agent, _request -> %{api_key: agent.__metadata__.api_key} end
+          metadata fn _subject, agent, _request ->
+            %{api_key: agent.__metadata__.plaintext_api_key}
+          end
         end
 
         patch :update
 
         patch :rotate_api_key do
           route "/:id/rotate-api-key"
-          metadata fn _subject, agent, _request -> %{api_key: agent.__metadata__.api_key} end
+
+          metadata fn _subject, agent, _request ->
+            %{api_key: agent.__metadata__.plaintext_api_key}
+          end
         end
 
         delete :destroy

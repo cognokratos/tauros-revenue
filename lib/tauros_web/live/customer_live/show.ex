@@ -43,7 +43,7 @@ defmodule TaurosWeb.CustomerLive.Show do
      |> assign(:page_title, "Show Customer")
      |> assign(
        :customer,
-       Ash.get!(Tauros.Revenue.Customer, id, actor: socket.assigns.current_user, load: :agent)
+       Tauros.Revenue.get_customer!(id, actor: socket.assigns.current_user, load: :agent)
      )}
   end
 end

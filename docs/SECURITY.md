@@ -8,13 +8,19 @@ page states what it protects, how, and where the known gaps are.
 | Principal | Credential | Storage | Lifetime |
 | --- | --- | --- | --- |
 | Human (browser) | session cookie holding an AshAuthentication token | token stored in `tokens` (`store_all_tokens? true`); presence required for authentication | until sign-out; "log out everywhere" on password change |
-| Human (API) | bearer JWT from `POST /api/v1/users/sign-in` | same token store, so tokens can be revoked | AshAuthentication default |
+| Human (API) | bearer JWT from `POST /api/v1/users/sign-in` | same token store; presence required | until expiry, or "log out everywhere" on password reset (there is no API sign-out endpoint yet) |
 | Agent | API key `tauros_…` | SHA-256 hash in `api_keys`; plaintext shown once | 365 days, or until rotated |
 | Password | — | Argon2id (`AshAuthentication.Argon2Provider`) | — |
 
 There is one HTTP authentication header for both principal kinds:
-`Authorization: Bearer`. A request whose credential resolves to neither is
-rejected with `401` before any domain code runs (`TaurosWeb.ApiAuth`).
+`Authorization: Bearer`. The generated AshAuthentication plugs try to resolve the
+credential (`get_by_subject` for a token, `sign_in_with_api_key` for a key). If
+neither succeeds, `TaurosWeb.ApiAuth` returns `401` before any business action
+runs. The only routes reachable without a credential are `POST /api/v1/users/sign-in`
+and the OpenAPI document.
+
+Key rotation locks the agent row (`get_and_lock_for_update`), so concurrent
+rotations cannot leave two valid keys behind.
 
 ## Authorization model
 
@@ -30,8 +36,8 @@ rejected with `401` before any domain code runs (`TaurosWeb.ApiAuth`).
   agent.
 - **Ownership is immutable** because no update action accepts `agent_id` or
   `user_id`.
-- **Invisible is the same as non-existent**: reading another tenant's record
-  returns 404, not 403.
+- **Invisible is the same as non-existent**: reading, updating or deleting another
+  human's record returns 404, not 403.
 - **Generated credentials are unreadable**: `ApiKey` has no read policy except
   AshAuthentication's own sign-in interaction.
 
@@ -63,12 +69,17 @@ roadmap:
    isolated "admin" of their own agents. Organizations, invitations and roles
    (e.g. *approver* vs *operator*) are planned (Epic 3) before approvals exist.
 2. **No field encryption at rest.** Customer name and email are plaintext.
-   AshCloak is planned for PII (Epic 6).
+   AshCloak is planned for PII (Epic 7).
 3. **No audit trail of domain actions yet** (Epic 5).
 4. **No rate limiting** on sign-in or API routes. Use a reverse proxy in any
    real deployment.
 5. **API key expiry is fixed at 365 days**, and there is no "last used" tracking.
-6. **Mail sender and host configuration** must be set for production
+   Humans also have no API sign-out endpoint yet.
+6. **Agent id existence oracle.** `POST /customers` returns 403 for an agent id
+   owned by someone else, but 400 ("does not exist") for an unknown id. That
+   reveals whether an id exists. Random UUIDv4 ids make this impractical to
+   exploit; a uniform error is planned with the Epic 3 roles work.
+7. **Mail sender and host configuration** must be set for production
    (`MAIL_FROM`, `PHX_HOST`, an SMTP adapter); the default is the local mailbox.
 
 ## Reporting

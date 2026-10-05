@@ -1,6 +1,6 @@
 import Config
 config :tauros, token_signing_secret: "7CFBudzcHa+MEFUkR3HBI9VO6Du7LYKW"
-config :bcrypt_elixir, log_rounds: 1
+config :argon2_elixir, t_cost: 1, m_cost: 8
 config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Configure your database

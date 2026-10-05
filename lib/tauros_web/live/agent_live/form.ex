@@ -35,7 +35,7 @@ defmodule TaurosWeb.AgentLive.Form do
     agent =
       case params["id"] do
         nil -> nil
-        id -> Ash.get!(Tauros.Accounts.Agent, id, actor: socket.assigns.current_user)
+        id -> Tauros.Accounts.get_agent!(id, actor: socket.assigns.current_user)
       end
 
     action = if is_nil(agent), do: "New", else: "Edit"
@@ -59,7 +59,7 @@ defmodule TaurosWeb.AgentLive.Form do
 
   def handle_event("save", %{"agent" => agent_params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: agent_params) do
-      {:ok, %{__metadata__: %{api_key: api_key}} = agent} ->
+      {:ok, %{__metadata__: %{plaintext_api_key: api_key}} = agent} ->
         {:noreply,
          socket
          |> put_flash(:info, "Agent created successfully")
