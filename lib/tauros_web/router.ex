@@ -4,7 +4,7 @@ defmodule TaurosWeb.Router do
   use AshAuthentication.Phoenix.Router
 
   import AshAuthentication.Plug.Helpers
-  import TaurosWeb.ApiAuth, only: [require_actor: 2, put_interface: 2]
+  import TaurosWeb.ApiAuth, only: [require_actor: 2, require_agent: 2, put_interface: 2]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -36,6 +36,17 @@ defmodule TaurosWeb.Router do
     plug :put_interface, :api
   end
 
+  # MCP is machine capability, so MCP callers are agents: only an agent API key
+  # authenticates here (no human bearer tokens, no sessions).
+  pipeline :mcp do
+    plug AshAuthentication.Strategy.ApiKey.Plug,
+      resource: Tauros.Accounts.Agent,
+      required?: false,
+      on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
+
+    plug :require_agent
+  end
+
   scope "/", TaurosWeb do
     pipe_through :browser
 
@@ -64,6 +75,18 @@ defmodule TaurosWeb.Router do
       live "/destinations", PaymentDestinationLive.Index, :index
       live "/destinations/:id", PaymentDestinationLive.Show, :show
     end
+  end
+
+  scope "/mcp" do
+    pipe_through [:mcp]
+
+    # Exactly the reviewed tools (see Tauros.Authority.mcp_tools/0), run as the
+    # authenticated agent under the same Ash policies as every other interface.
+    forward "/", AshAi.Mcp.Router,
+      otp_app: :tauros,
+      tools: Tauros.Authority.mcp_tool_names(),
+      mcp_name: "Tauros",
+      mcp_server_version: "0.1.0"
   end
 
   scope "/api" do

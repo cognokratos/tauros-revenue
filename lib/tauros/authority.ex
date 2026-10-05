@@ -15,6 +15,15 @@ defmodule Tauros.Authority do
     * `internal/0`: actions no actor may call. They run only inside another,
       already authorized action.
 
+  Epic 4 adds a narrower list:
+
+    * `mcp_tools/0`: the AI capability surface actually served over MCP. Every
+      tool maps to an `agent_safe` action, but not every `agent_safe` action is
+      a tool: deactivating a destination, the approval-queue read and the raw
+      revision, approval and event reads are agent-safe yet deliberately not
+      offered to a model. Actor permission and AI exposure are related, not
+      identical.
+
   `test/tauros/authority_test.exs` fails if an action of a business resource
   is not classified, or if a policy disagrees with this list.
   """
@@ -26,6 +35,7 @@ defmodule Tauros.Authority do
   @agent_safe [
     {Customer, :read},
     {PaymentDestination, :read},
+    {PaymentDestination, :active},
     {PaymentDestination, :create},
     {PaymentDestination, :deactivate},
     {Invoice, :read},
@@ -63,6 +73,14 @@ defmodule Tauros.Authority do
     {PaymentDestination, :supersede}
   ]
 
+  # The reviewed Epic 4 MCP surface: tool name => the action it runs. Exact.
+  @mcp_tools [
+    list_customers: {Customer, :read},
+    list_payment_destinations: {PaymentDestination, :active},
+    list_invoices: {Invoice, :read},
+    get_invoice: {Invoice, :read}
+  ]
+
   @doc "Actions an agent may run on its own records. Candidates for AI tools."
   def agent_safe, do: @agent_safe
 
@@ -71,6 +89,12 @@ defmodule Tauros.Authority do
 
   @doc "Actions no actor may call directly."
   def internal, do: @internal
+
+  @doc "The MCP tools served to agents, as `tool_name: {resource, action}`. Exactly these."
+  def mcp_tools, do: @mcp_tools
+
+  @doc "The names of the MCP tools served to agents."
+  def mcp_tool_names, do: Keyword.keys(@mcp_tools)
 
   @doc "Resources whose every action must be classified."
   def business_resources,

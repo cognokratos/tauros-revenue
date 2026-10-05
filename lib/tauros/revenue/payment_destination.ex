@@ -55,6 +55,12 @@ defmodule Tauros.Revenue.PaymentDestination do
   actions do
     defaults [:read]
 
+    read :active do
+      description "Destinations a new invoice revision may use: active ones, newest first."
+      filter expr(state == :active)
+      prepare build(sort: [inserted_at: :desc])
+    end
+
     create :create do
       primary? true
 
