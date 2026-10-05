@@ -24,7 +24,7 @@ defmodule Tauros.Revenue.Invoice do
 
   json_api do
     type "invoice"
-    includes [:current_revision, :revisions, :approvals]
+    includes [:current_revision, :revisions, :approvals, :events]
   end
 
   state_machine do
@@ -273,6 +273,10 @@ defmodule Tauros.Revenue.Invoice do
     end
   end
 
+  changes do
+    change Tauros.Revenue.Invoice.Changes.RecordEvent, on: [:create, :update]
+  end
+
   attributes do
     uuid_primary_key :id
 
@@ -300,6 +304,12 @@ defmodule Tauros.Revenue.Invoice do
     has_many :approvals, Tauros.Revenue.Approval do
       public? true
       sort decided_at: :asc
+    end
+
+    has_many :events, Tauros.Revenue.InvoiceEvent do
+      description "The audit envelope: one event per command that changed something."
+      public? true
+      sort occurred_at: :asc
     end
 
     has_one :current_revision, Tauros.Revenue.InvoiceRevision do

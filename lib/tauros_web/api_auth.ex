@@ -21,6 +21,13 @@ defmodule TaurosWeb.ApiAuth do
   @doc "`on_error` for the API key plug: a human token is not an API key, so carry on."
   def ignore_invalid_api_key(conn, _error), do: conn
 
+  @doc """
+  Records which interface the request came through (`:api`) in the Ash context,
+  for the audit envelope. Authorization never reads it.
+  """
+  def put_interface(conn, interface),
+    do: Ash.PlugHelpers.update_context(conn, &Map.put(&1 || %{}, :interface, interface))
+
   @doc "Halts with 401 unless a human or agent was authenticated."
   def require_actor(conn, _opts) do
     if Ash.PlugHelpers.get_actor(conn) || conn.path_info in @public_paths do

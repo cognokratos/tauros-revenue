@@ -4,7 +4,7 @@ defmodule TaurosWeb.Router do
   use AshAuthentication.Phoenix.Router
 
   import AshAuthentication.Plug.Helpers
-  import TaurosWeb.ApiAuth, only: [require_actor: 2]
+  import TaurosWeb.ApiAuth, only: [require_actor: 2, put_interface: 2]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -33,6 +33,7 @@ defmodule TaurosWeb.Router do
       on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
 
     plug :require_actor
+    plug :put_interface, :api
   end
 
   scope "/", TaurosWeb do

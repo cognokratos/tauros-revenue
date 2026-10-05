@@ -148,6 +148,9 @@ defmodule TaurosWeb.Api.InvoicesTest do
 
       assert response["data"]["attributes"]["state"] == "approved"
       assert [%{"attributes" => approval}] = response["included"]
+
+      events = Ash.load!(ctx.invoice, :events, authorize?: false).events
+      assert %{action: :approve, interface: :api, actor_kind: :human} = List.last(events)
       assert approval["payload_hash"] == ctx.revision.payload_hash
       assert approval["decision"] == "approved"
     end

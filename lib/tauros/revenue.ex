@@ -86,5 +86,6 @@ defmodule Tauros.Revenue do
 
     resource Tauros.Revenue.InvoiceRevision
     resource Tauros.Revenue.Approval
+    resource Tauros.Revenue.InvoiceEvent
   end
 end
