@@ -9,6 +9,8 @@ reconciliation. AI agents do the operational work. Humans keep the authority.
 > How can AI safely take part in financial workflows without the model being
 > given financial authority?
 
+![](docs/bg.png)
+
 Tauros answers with architecture rather than prompts. Every interface (the
 LiveView UI, the REST API and, next, AI tools through AshAI) calls the **same
 Ash actions**. The same **policies** and **state machines** decide what may
