@@ -223,6 +223,9 @@ defmodule TaurosWeb.ApprovalLive do
     decide(socket, String.to_existing_atom(outcome), params)
   end
 
+  defp decide(%{assigns: %{invoice: nil}} = socket, _outcome, _params),
+    do: {:noreply, put_flash(socket, :error, "Select a proposal first.")}
+
   defp decide(socket, outcome, params) do
     input = %{
       revision_id: params["revision_id"],

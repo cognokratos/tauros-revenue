@@ -15,7 +15,7 @@ defmodule Tauros.Accounts.User do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshJsonApi.Resource, AshAuthentication]
 
-  alias Tauros.Accounts.Checks.{HumanApprover, NoApproverYet}
+  alias Tauros.Accounts.Checks.{AgentActor, HumanApprover, NoApproverYet}
 
   authentication do
     add_ons do
@@ -288,7 +288,8 @@ defmodule Tauros.Accounts.User do
     end
 
     policy action(:bootstrap_approver) do
-      description "The first approver can be designated only while there is none"
+      description "The first approver can be designated only while there is none, never by an agent"
+      forbid_if AgentActor
       authorize_if NoApproverYet
     end
   end

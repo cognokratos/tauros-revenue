@@ -43,6 +43,13 @@ defmodule Tauros.Accounts.UserTest do
       assert id == operator.id
     end
 
+    test "is never available to an agent, even before any approver exists" do
+      agent = agent(user())
+
+      assert {:error, %Ash.Error.Forbidden{}} =
+               Accounts.bootstrap_approver("ai@example.com", actor: agent)
+    end
+
     test "is refused as soon as an approver exists, for any caller" do
       approver = approver()
 
