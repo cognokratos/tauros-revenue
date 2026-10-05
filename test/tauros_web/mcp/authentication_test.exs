@@ -70,4 +70,67 @@ defmodule TaurosWeb.Mcp.AuthenticationTest do
 
     assert %{"result" => %{"protocolVersion" => "2025-06-18"}} = Jason.decode!(conn.resp_body)
   end
+
+  test "a session id carries no identity: each request runs as its own key", %{agent: agent} do
+    other = agent(user())
+    mine = customer(agent)
+    theirs = customer(other)
+
+    # Agent A initializes and receives a session id.
+    session =
+      build_conn()
+      |> authorize(agent.__metadata__.plaintext_api_key)
+      |> put_req_header("content-type", "application/json")
+      |> post(
+        "/mcp",
+        Jason.encode!(%{
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: %{
+            protocolVersion: "2025-06-18",
+            capabilities: %{},
+            clientInfo: %{name: "a", version: "1"}
+          }
+        })
+      )
+      |> get_resp_header("mcp-session-id")
+      |> List.first()
+
+    assert is_binary(session)
+
+    # Agent B presents A's session id with its own key: it acts as B.
+    response =
+      build_conn()
+      |> authorize(other.__metadata__.plaintext_api_key)
+      |> put_req_header("content-type", "application/json")
+      |> put_req_header("mcp-session-id", session)
+      |> put_req_header("mcp-protocol-version", "2025-06-18")
+      |> post(
+        "/mcp",
+        Jason.encode!(%{
+          jsonrpc: "2.0",
+          id: 2,
+          method: "tools/call",
+          params: %{name: "list_customers", arguments: %{}}
+        })
+      )
+      |> Map.fetch!(:resp_body)
+      |> Jason.decode!()
+
+    ids = response["result"]["structuredContent"]["results"] |> Enum.map(& &1["id"])
+    assert ids == [theirs.id]
+    refute mine.id in ids
+  end
+
+  test "MCP offers tools only: no resources and no prompts", %{key: key} do
+    assert %{"result" => %{"resources" => []}} =
+             key
+             |> McpClient.request("resources/list")
+             |> Map.fetch!(:resp_body)
+             |> Jason.decode!()
+
+    assert %{"error" => _} =
+             key |> McpClient.request("prompts/list") |> Map.fetch!(:resp_body) |> Jason.decode!()
+  end
 end
