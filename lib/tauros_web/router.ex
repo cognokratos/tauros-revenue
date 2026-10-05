@@ -45,6 +45,7 @@ defmodule TaurosWeb.Router do
       on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
 
     plug :require_agent
+    plug :put_interface, :mcp
   end
 
   scope "/", TaurosWeb do

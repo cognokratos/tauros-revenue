@@ -150,6 +150,20 @@ defmodule TaurosWeb.Mcp.ToolsTest do
 
       assert {revision.number, Decimal.equal?(revision.total, 1200)} == {2, true}
     end
+
+    test "every MCP command is audited as interface :mcp", ctx do
+      {:ok, %{"id" => id}} = call(ctx.key, "create_invoice_draft", draft(ctx))
+      {:ok, _} = call(ctx.key, "submit_invoice", %{"id" => id})
+      {:ok, _} = call(ctx.key, "withdraw_invoice", %{"id" => id})
+
+      events = Revenue.get_invoice!(id, actor: ctx.owner, load: :events).events
+
+      assert Enum.map(events, &{&1.action, &1.interface, &1.actor_kind, &1.actor_id}) == [
+               {:create_draft, :mcp, :agent, ctx.agent.id},
+               {:submit_for_approval, :mcp, :agent, ctx.agent.id},
+               {:withdraw, :mcp, :agent, ctx.agent.id}
+             ]
+    end
   end
 
   describe "withdraw_invoice" do

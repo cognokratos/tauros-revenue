@@ -8,6 +8,7 @@ defmodule Tauros.Revenue.Interface do
     values: [
       ui: "The LiveView UI",
       api: "The JSON:API (REST)",
+      mcp: "The MCP endpoint (AshAI tools), always as an agent",
       console: "A direct Ash call: console, seeds, tests or a job"
     ]
 end
