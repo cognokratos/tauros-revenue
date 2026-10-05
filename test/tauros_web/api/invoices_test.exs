@@ -118,4 +118,107 @@ defmodule TaurosWeb.Api.InvoicesTest do
                [1, 2]
     end
   end
+
+  describe "decisions" do
+    setup %{agent: agent} do
+      invoice = agent |> invoice_draft() |> Tauros.Revenue.submit_invoice!(actor: agent)
+      revision = Ash.load!(invoice, :current_revision, authorize?: false).current_revision
+      %{invoice: invoice, revision: revision}
+    end
+
+    defp decision(invoice, revision, extra \\ %{}) do
+      %{
+        data: %{
+          type: "invoice",
+          id: invoice.id,
+          attributes:
+            Map.merge(%{revision_id: revision.id, payload_hash: revision.payload_hash}, extra)
+        }
+      }
+    end
+
+    test "the owning approver approves the exact revision", ctx do
+      response =
+        ctx.as_human
+        |> patch(
+          "/api/v1/invoices/#{ctx.invoice.id}/approve?include=approvals",
+          decision(ctx.invoice, ctx.revision)
+        )
+        |> json_response(200)
+
+      assert response["data"]["attributes"]["state"] == "approved"
+      assert [%{"attributes" => approval}] = response["included"]
+      assert approval["payload_hash"] == ctx.revision.payload_hash
+      assert approval["decision"] == "approved"
+    end
+
+    test "the agent's own key is refused on every authority route", ctx do
+      for {route, extra} <- [
+            {"approve", %{}},
+            {"reject", %{reason: "x"}},
+            {"request-changes", %{reason: "x"}}
+          ] do
+        conn =
+          patch(
+            ctx.as_agent,
+            "/api/v1/invoices/#{ctx.invoice.id}/#{route}",
+            decision(ctx.invoice, ctx.revision, extra)
+          )
+
+        assert json_response(conn, 403), "#{route} must be forbidden for agents"
+      end
+
+      assert Tauros.Revenue.get_invoice!(ctx.invoice.id, authorize?: false).state ==
+               :pending_approval
+    end
+
+    test "an operator cannot approve their own agent's invoice", %{conn: conn} = ctx do
+      operator = user()
+      agent = agent(operator)
+      invoice = agent |> invoice_draft() |> Tauros.Revenue.submit_invoice!(actor: agent)
+      revision = Ash.load!(invoice, :current_revision, authorize?: false).current_revision
+      token = operator |> with_token() |> Map.fetch!(:__metadata__) |> Map.fetch!(:token)
+
+      conn =
+        conn
+        |> authorize(token)
+        |> patch("/api/v1/invoices/#{invoice.id}/approve", decision(invoice, revision))
+
+      assert json_response(conn, 403)
+      assert ctx.invoice
+    end
+
+    test "a stale revision is 409 stale_revision", ctx do
+      {:ok, _} =
+        Tauros.Revenue.revise_invoice(
+          ctx.invoice,
+          %{due_date: Date.add(Date.utc_today(), 60), reasoning: "More time"},
+          actor: ctx.agent
+        )
+
+      Tauros.Revenue.submit_invoice!(ctx.invoice, actor: ctx.agent)
+
+      response =
+        ctx.as_human
+        |> patch(
+          "/api/v1/invoices/#{ctx.invoice.id}/approve",
+          decision(ctx.invoice, ctx.revision)
+        )
+        |> json_response(409)
+
+      assert [%{"code" => "stale_revision"}] = response["errors"]
+    end
+
+    test "an illegal transition is 409 invalid_transition", ctx do
+      draft = invoice_draft(ctx.agent)
+      revision = Ash.load!(draft, :current_revision, authorize?: false).current_revision
+
+      response =
+        ctx.as_human
+        |> patch("/api/v1/invoices/#{draft.id}/approve", decision(draft, revision))
+        |> json_response(409)
+
+      assert [%{"code" => "invalid_transition"}] = response["errors"]
+    end
+  end
 end

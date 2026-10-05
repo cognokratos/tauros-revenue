@@ -36,6 +36,12 @@ defmodule Tauros.Revenue do
         patch :revise, route: "/:id/revise"
         patch :submit_for_approval, route: "/:id/submit"
         patch :withdraw, route: "/:id/withdraw"
+
+        # Human authority. Agents reach these routes and are refused by policy.
+        patch :approve, route: "/:id/approve"
+        patch :reject, route: "/:id/reject"
+        patch :request_changes, route: "/:id/request-changes"
+        patch :cancel, route: "/:id/cancel"
       end
     end
   end
@@ -72,8 +78,13 @@ defmodule Tauros.Revenue do
       define :revise_invoice, action: :revise
       define :submit_invoice, action: :submit_for_approval
       define :withdraw_invoice, action: :withdraw
+      define :approve_invoice, action: :approve
+      define :reject_invoice, action: :reject
+      define :request_invoice_changes, action: :request_changes
+      define :cancel_invoice, action: :cancel
     end
 
     resource Tauros.Revenue.InvoiceRevision
+    resource Tauros.Revenue.Approval
   end
 end

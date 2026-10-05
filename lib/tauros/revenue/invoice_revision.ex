@@ -147,6 +147,12 @@ defmodule Tauros.Revenue.InvoiceRevision do
       allow_nil? false
       public? true
     end
+
+    has_one :approval, Tauros.Revenue.Approval do
+      description "The human decision on this exact revision, if any."
+      destination_attribute :revision_id
+      public? true
+    end
   end
 
   identities do

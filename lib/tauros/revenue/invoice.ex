@@ -18,13 +18,13 @@ defmodule Tauros.Revenue.Invoice do
     authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer
 
-  alias Tauros.Accounts.Checks.{AgentActor, HumanActor}
+  alias Tauros.Accounts.Checks.{AgentActor, HumanActor, HumanApprover}
   alias Tauros.Revenue.Changes.Transition
-  alias Tauros.Revenue.Invoice.Changes.ProposeRevision
+  alias Tauros.Revenue.Invoice.Changes.{Decide, ProposeRevision}
 
   json_api do
     type "invoice"
-    includes [:current_revision, :revisions]
+    includes [:current_revision, :revisions, :approvals]
   end
 
   state_machine do
@@ -35,6 +35,10 @@ defmodule Tauros.Revenue.Invoice do
       transition :revise, from: [:draft, :pending_approval], to: :draft
       transition :submit_for_approval, from: :draft, to: :pending_approval
       transition :withdraw, from: [:draft, :pending_approval], to: :cancelled
+      transition :approve, from: :pending_approval, to: :approved
+      transition :reject, from: :pending_approval, to: :rejected
+      transition :request_changes, from: :pending_approval, to: :draft
+      transition :cancel, from: :approved, to: :cancelled
     end
   end
 
@@ -145,6 +149,87 @@ defmodule Tauros.Revenue.Invoice do
       require_atomic? false
       change {Transition, to: :cancelled, idempotent?: true}
     end
+
+    update :approve do
+      description """
+      HUMAN AUTHORITY. Authorize exactly one revision: name it with
+      `revision_id` and its `payload_hash`. Fails if it is no longer the
+      current revision, if the hash differs, or if its destination was
+      retired. Retry-safe for the same approver.
+      """
+
+      accept []
+      require_atomic? false
+      argument :revision_id, :uuid, allow_nil?: false
+
+      argument :payload_hash, :string do
+        allow_nil? false
+        constraints match: ~r/^[0-9a-f]{64}$/
+      end
+
+      argument :reason, :string, constraints: [trim?: true, max_length: 2000]
+      change {Decide, decision: :approved, to: :approved}
+    end
+
+    update :reject do
+      description "HUMAN AUTHORITY. Refuse one exact revision for good, with a reason."
+      accept []
+      require_atomic? false
+      argument :revision_id, :uuid, allow_nil?: false
+
+      argument :payload_hash, :string do
+        allow_nil? false
+        constraints match: ~r/^[0-9a-f]{64}$/
+      end
+
+      argument :reason, :string do
+        allow_nil? false
+        constraints trim?: true, min_length: 1, max_length: 2000
+      end
+
+      change {Decide, decision: :rejected, to: :rejected}
+    end
+
+    update :request_changes do
+      description """
+      HUMAN AUTHORITY. Send one exact revision back to the agent, with a
+      reason. The invoice returns to draft; the agent must revise before
+      submitting again.
+      """
+
+      accept []
+      require_atomic? false
+      argument :revision_id, :uuid, allow_nil?: false
+
+      argument :payload_hash, :string do
+        allow_nil? false
+        constraints match: ~r/^[0-9a-f]{64}$/
+      end
+
+      argument :reason, :string do
+        allow_nil? false
+        constraints trim?: true, min_length: 1, max_length: 2000
+      end
+
+      change {Decide, decision: :changes_requested, to: :draft}
+    end
+
+    update :cancel do
+      description """
+      HUMAN AUTHORITY. Cancel an approved invoice before it is issued, with a
+      reason. Retry-safe.
+      """
+
+      accept []
+      require_atomic? false
+
+      argument :reason, :string do
+        allow_nil? false
+        constraints trim?: true, min_length: 1, max_length: 2000
+      end
+
+      change {Transition, to: :cancelled, idempotent?: true}
+    end
   end
 
   policies do
@@ -178,6 +263,14 @@ defmodule Tauros.Revenue.Invoice do
       description "The owning human, approver or not, may withdraw an undecided proposal"
       authorize_if relates_to_actor_via([:agent, :user])
     end
+
+    # AI capability is not financial authority. This is the policy that stops
+    # an agent (or an operator) from approving, whatever interface it uses.
+    policy action([:approve, :reject, :request_changes, :cancel]) do
+      description "Only a human approver who owns the proposing agent decides"
+      forbid_unless HumanApprover
+      authorize_if relates_to_actor_via([:agent, :user])
+    end
   end
 
   attributes do
@@ -202,6 +295,11 @@ defmodule Tauros.Revenue.Invoice do
     has_many :revisions, Tauros.Revenue.InvoiceRevision do
       public? true
       sort number: :asc
+    end
+
+    has_many :approvals, Tauros.Revenue.Approval do
+      public? true
+      sort decided_at: :asc
     end
 
     has_one :current_revision, Tauros.Revenue.InvoiceRevision do
