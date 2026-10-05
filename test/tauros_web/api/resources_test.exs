@@ -200,6 +200,36 @@ defmodule TaurosWeb.Api.ResourcesTest do
       assert [%{"source" => %{"pointer" => "/data/attributes/network"}}] = response["errors"]
     end
 
+    test "an agent deactivates its own destination", %{as_agent: as_agent, agent: agent} do
+      destination = payment_destination(agent)
+
+      response =
+        as_agent
+        |> patch(
+          "/api/v1/payment-destinations/#{destination.id}/deactivate",
+          payload("payment_destination", destination.id, %{})
+        )
+        |> json_response(200)
+
+      assert response["data"]["attributes"]["state"] == "deactivated"
+    end
+
+    test "state cannot be written through the API", %{as_agent: as_agent, agent: agent} do
+      destination = payment_destination(agent)
+
+      conn =
+        patch(
+          as_agent,
+          "/api/v1/payment-destinations/#{destination.id}/deactivate",
+          payload("payment_destination", destination.id, %{state: "active", address: @eth})
+        )
+
+      assert json_response(conn, 400)
+
+      conn = post(as_agent, "/api/v1/payment-destinations", destination_payload(%{state: "x"}))
+      assert json_response(conn, 400)
+    end
+
     test "humans can list but not register destinations", %{human: human, agent: agent} do
       destination = payment_destination(agent)
 

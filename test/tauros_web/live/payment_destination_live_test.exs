@@ -48,6 +48,29 @@ defmodule TaurosWeb.PaymentDestinationLiveTest do
     assert html =~ destination.address
   end
 
+  test "the owner deactivates a destination and it stays on record", %{conn: conn, user: user} do
+    destination = payment_destination(agent(user))
+    {:ok, view, _html} = live(conn, ~p"/destinations/#{destination}")
+
+    assert has_element?(view, "#destination-state", "active")
+    view |> element("#deactivate-destination") |> render_click()
+
+    assert has_element?(view, "#destination-state", "deactivated")
+    refute has_element?(view, "#deactivate-panel")
+  end
+
+  test "a superseded destination links to its replacement", %{conn: conn, user: user} do
+    agent = agent(user)
+    old = payment_destination(agent)
+    new = payment_destination(agent, %{label: "Corrected", supersedes_id: old.id})
+
+    {:ok, view, _html} = live(conn, ~p"/destinations/#{old}")
+
+    assert has_element?(view, "#destination-state", "superseded")
+    assert has_element?(view, "#superseded-by[href='/destinations/#{new.id}']", "Corrected")
+    refute has_element?(view, "#deactivate-panel")
+  end
+
   test "requires authentication" do
     assert {:error, {:redirect, %{to: "/sign-in"}}} = live(build_conn(), ~p"/destinations")
   end

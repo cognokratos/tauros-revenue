@@ -20,6 +20,10 @@ defmodule TaurosWeb.PaymentDestinationLive.Index do
       >
         <:col :let={{_id, destination}} label="Label">{destination.label}</:col>
 
+        <:col :let={{_id, destination}} label="State">
+          <.state_badge state={destination.state} />
+        </:col>
+
         <:col :let={{_id, destination}} label="Currency">{destination.currency}</:col>
 
         <:col :let={{_id, destination}} label="Network">

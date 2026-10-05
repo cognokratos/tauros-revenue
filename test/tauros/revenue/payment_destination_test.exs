@@ -139,6 +139,116 @@ defmodule Tauros.Revenue.PaymentDestinationTest do
     end
   end
 
+  describe "destination details cannot silently change" do
+    test "no action can change label, currency, network or address", %{agent: agent} do
+      destination = payment_destination(agent)
+
+      for action <- Ash.Resource.Info.actions(Revenue.PaymentDestination),
+          action.type == :update do
+        assert action.accept == [], "#{action.name} must not accept attributes"
+
+        assert {:error, %Ash.Error.Invalid{}} =
+                 destination
+                 |> Ash.Changeset.for_update(action.name, %{address: @evm, network: :base},
+                   actor: agent
+                 )
+                 |> Ash.update()
+      end
+
+      assert Revenue.get_payment_destination!(destination.id, actor: agent).network == :ethereum
+    end
+
+    test "state is set by the lifecycle, never accepted as input", %{agent: agent} do
+      assert {:error, %Ash.Error.Invalid{}} = create(agent, %{state: "deactivated"})
+    end
+  end
+
+  describe "deactivate" do
+    test "retires a destination but keeps it on record", %{agent: agent} do
+      destination = payment_destination(agent)
+
+      assert {:ok, %{state: :deactivated}} =
+               Revenue.deactivate_payment_destination(destination, actor: agent)
+
+      assert %{state: :deactivated, address: address} =
+               Revenue.get_payment_destination!(destination.id, actor: agent)
+
+      assert address == destination.address
+    end
+
+    test "the owning human may deactivate; other humans and agents may not", ctx do
+      destination = payment_destination(ctx.agent)
+
+      assert {:error, %Ash.Error.Forbidden{}} =
+               Revenue.deactivate_payment_destination(destination, actor: user())
+
+      assert {:error, %Ash.Error.Forbidden{}} =
+               Revenue.deactivate_payment_destination(destination, actor: agent(ctx.owner))
+
+      assert {:ok, %{state: :deactivated}} =
+               Revenue.deactivate_payment_destination(destination, actor: ctx.owner)
+    end
+
+    test "a retired destination cannot be deactivated again, even from a stale copy", %{
+      agent: agent
+    } do
+      stale = payment_destination(agent)
+      {:ok, _} = Revenue.deactivate_payment_destination(stale, actor: agent)
+
+      assert {:error,
+              %Ash.Error.Invalid{errors: [%AshStateMachine.Errors.NoMatchingTransition{}]}} =
+               Revenue.deactivate_payment_destination(stale, actor: agent)
+    end
+  end
+
+  describe "superseding" do
+    test "a replacement retires the destination it names", %{agent: agent} do
+      old = payment_destination(agent)
+
+      assert {:ok, new} = create(agent, %{network: "arbitrum", supersedes_id: old.id})
+      assert new.state == :active
+
+      old = Revenue.get_payment_destination!(old.id, actor: agent, load: :superseded_by)
+      assert old.state == :superseded
+      assert old.superseded_by.id == new.id
+    end
+
+    test "only an active destination of the same agent can be replaced", ctx do
+      foreign = payment_destination(agent(user()))
+      sibling = payment_destination(agent(ctx.owner))
+      retired = payment_destination(ctx.agent)
+      {:ok, _} = Revenue.deactivate_payment_destination(retired, actor: ctx.agent)
+
+      for id <- [foreign.id, sibling.id, retired.id, Ash.UUID.generate()] do
+        assert {:error, %Ash.Error.Invalid{errors: [error]}} =
+                 create(ctx.agent, %{supersedes_id: id})
+
+        assert error.field == :supersedes_id
+        assert error.message == "is not one of your active destinations"
+      end
+
+      assert Revenue.get_payment_destination!(foreign.id, authorize?: false).state == :active
+    end
+
+    test "a destination is replaced at most once", %{agent: agent} do
+      old = payment_destination(agent)
+      {:ok, _} = create(agent, %{supersedes_id: old.id})
+
+      assert {:error, %Ash.Error.Invalid{}} = create(agent, %{supersedes_id: old.id})
+    end
+
+    test "supersede cannot be called directly by any actor", %{owner: owner, agent: agent} do
+      destination = payment_destination(agent)
+
+      for actor <- [agent, owner] do
+        assert {:error, %Ash.Error.Forbidden{}} =
+                 destination
+                 |> Ash.Changeset.for_update(:supersede, %{})
+                 |> Ash.update(actor: actor)
+      end
+    end
+  end
+
   describe "reading" do
     test "humans see the destinations of all their agents, and only theirs", ctx do
       mine = [payment_destination(ctx.agent), payment_destination(agent(ctx.owner))]

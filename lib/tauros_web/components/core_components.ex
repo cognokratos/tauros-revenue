@@ -536,6 +536,31 @@ defmodule TaurosWeb.CoreComponents do
   end
 
   @doc """
+  A lifecycle state as a chip. Status is always text plus colour, never colour alone.
+
+      <.state_badge state={:pending_approval} />
+  """
+  attr :state, :atom, required: true
+  attr :id, :string, default: nil
+
+  def state_badge(assigns) do
+    ~H"""
+    <span
+      id={@id}
+      class={[
+        "badge badge-sm whitespace-nowrap",
+        @state in [:active, :approved] && "badge-success",
+        @state == :pending_approval && "badge-info",
+        @state == :rejected && "badge-error",
+        @state in [:draft, :deactivated, :superseded, :cancelled] && "badge-ghost"
+      ]}
+    >
+      {@state |> to_string() |> String.replace("_", " ")}
+    </span>
+    """
+  end
+
+  @doc """
   Translates the errors for a field from a keyword list of errors.
   """
   def translate_errors(errors, field) when is_list(errors) do

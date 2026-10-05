@@ -19,6 +19,7 @@ defmodule Tauros.Revenue do
         index :read
         get :read
         post :create
+        patch :deactivate, route: "/:id/deactivate"
       end
     end
   end
@@ -42,6 +43,7 @@ defmodule Tauros.Revenue do
 
       define :get_payment_destination, action: :read, get_by: :id
       define :create_payment_destination, action: :create
+      define :deactivate_payment_destination, action: :deactivate
     end
   end
 end

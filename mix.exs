@@ -41,6 +41,7 @@ defmodule Tauros.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash_state_machine, "~> 0.2"},
       {:mix_audit, "~> 2.0", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.16", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
