@@ -15,7 +15,7 @@ defmodule Tauros.Accounts.User do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshJsonApi.Resource, AshAuthentication]
 
-  alias Tauros.Accounts.Checks.{AgentActor, HumanApprover, NoApproverYet}
+  alias Tauros.Accounts.Checks.{AgentActor, HumanActor, HumanApprover, NoApproverYet}
 
   authentication do
     add_ons do
@@ -267,12 +267,12 @@ defmodule Tauros.Accounts.User do
       authorize_if always()
     end
 
-    policy action(:read) do
+    policy [action(:read), HumanActor] do
       description "A human may read their own record (e.g. as the approver of a decision)"
       authorize_if expr(id == ^actor(:id))
     end
 
-    policy action(:change_password) do
+    policy [action(:change_password), HumanActor] do
       description "Users may change only their own password"
       authorize_if expr(id == ^actor(:id))
     end

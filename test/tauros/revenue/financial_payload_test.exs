@@ -117,6 +117,18 @@ defmodule Tauros.Revenue.FinancialPayloadTest do
     end
   end
 
+  test "18-decimal amounts beyond Decimal's default 34 digits stay exact and distinct" do
+    unit = "987654321098765.123456789012345678"
+    one_wei_more = "987654321098765.123456789012345679"
+
+    # 37 significant digits. The default Decimal context would give …1604.
+    total = FinancialPayload.total([line("ETH", "123.7", unit)])
+    assert Decimal.to_string(total, :normal) == "122172839519917245.7716048008271603686"
+
+    refute hash(fields(%{currency: :ETH, lines: [line("ETH", "123.7", unit)]})) ==
+             hash(fields(%{currency: :ETH, lines: [line("ETH", "123.7", one_wei_more)]}))
+  end
+
   test "the total is exact: no float, no rounding" do
     lines = [line("a", "3", "0.1"), line("b", "1", "0.2")]
     assert FinancialPayload.total(lines) == Decimal.new("0.5")

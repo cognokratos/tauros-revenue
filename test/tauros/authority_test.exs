@@ -16,7 +16,7 @@ defmodule Tauros.AuthorityTest do
   alias Tauros.Accounts.{Agent, User}
   alias Tauros.Authority
   alias Tauros.Revenue
-  alias Tauros.Revenue.{Approval, Customer, Invoice, InvoiceEvent, InvoiceRevision}
+  alias Tauros.Revenue.{Customer, Invoice}
   alias Tauros.Revenue.PaymentDestination
 
   setup do

@@ -29,7 +29,7 @@ defmodule Tauros.Revenue.InvoiceRevision.Validations.AmountsFitCurrency do
     lines
     |> Enum.with_index(1)
     |> Enum.find_value(fn {line, number} ->
-      amount = Decimal.mult(line.quantity, line.unit_amount)
+      amount = FinancialPayload.line_amount(line)
 
       cond do
         scale(line.unit_amount) > decimals -> too_precise(number, line.unit_amount, currency)

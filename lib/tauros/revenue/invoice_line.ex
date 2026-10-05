@@ -19,14 +19,14 @@ defmodule Tauros.Revenue.InvoiceLine do
       description "How many units, e.g. 1, 3 or 1.5 (hours)."
       allow_nil? false
       public? true
-      constraints greater_than: 0
+      constraints greater_than: 0, max: 1_000_000_000, scale: 18
     end
 
     attribute :unit_amount, :decimal do
       description "Price of one unit in the revision's currency."
       allow_nil? false
       public? true
-      constraints min: 0
+      constraints min: 0, max: 1_000_000_000_000_000, scale: 18
     end
   end
 end

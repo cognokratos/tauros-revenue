@@ -160,7 +160,7 @@ defmodule Tauros.Revenue.InvoiceTest do
   end
 
   describe "an invoice only combines the agent's own records" do
-    setup %{owner: owner, agent: agent} do
+    setup %{owner: owner} do
       sibling = agent(owner)
       stranger = agent(user())
       %{sibling: sibling, stranger: stranger}
@@ -269,6 +269,19 @@ defmodule Tauros.Revenue.InvoiceTest do
 
       assert [%{total: total}] = revisions(invoice)
       assert Decimal.equal?(total, "180.75")
+    end
+
+    test "absurd magnitudes and precisions are refused at the input", ctx do
+      for line <- [
+            %{description: "Too many", quantity: "1000000001", unit_amount: "1"},
+            %{description: "Too dear", quantity: "1", unit_amount: "1000000000000000.01"},
+            %{description: "Too fine", quantity: "0.0000000000000000001", unit_amount: "1"}
+          ] do
+        assert {:error, %Ash.Error.Invalid{}} =
+                 ctx.agent
+                 |> draft_input(destination: ctx.eur, lines: [line])
+                 |> Revenue.create_invoice_draft(actor: ctx.agent)
+      end
     end
 
     test "quantities must be positive and the total more than zero", ctx do

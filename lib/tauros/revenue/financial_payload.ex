@@ -42,7 +42,7 @@ defmodule Tauros.Revenue.FinancialPayload do
   they name.
   """
   def seal(fields, destination) do
-    json = fields |> build(destination) |> encode()
+    json = exactly(fn -> fields |> build(destination) |> encode() end)
     {json, hash(json)}
   end
 
@@ -59,12 +59,27 @@ defmodule Tauros.Revenue.FinancialPayload do
     }
   end
 
-  @doc "The sum of `quantity × unit_amount` over the lines, exactly (no rounding)."
+  @doc "`quantity × unit_amount`, exactly."
+  def line_amount(line), do: exactly(fn -> Decimal.mult(line.quantity, line.unit_amount) end)
+
+  @doc "The sum of the line amounts, exactly."
   def total(lines) do
-    Enum.reduce(lines, Decimal.new(0), fn line, sum ->
-      Decimal.add(sum, Decimal.mult(line.quantity, line.unit_amount))
+    exactly(fn ->
+      Enum.reduce(lines, Decimal.new(0), &Decimal.add(&2, line_amount(&1)))
     end)
   end
+
+  # Decimal's default context keeps 34 significant digits and rounds silently
+  # beyond that, which an 18-decimal asset can reach. Financial arithmetic runs
+  # with room to spare and traps `:inexact`, so a result is exact or an error.
+  @exact %Decimal.Context{
+    precision: 200,
+    rounding: :half_even,
+    traps: [:invalid_operation, :division_by_zero, :inexact]
+  }
+
+  @doc "Runs `fun` in a decimal context where any rounding raises."
+  def exactly(fun), do: Decimal.Context.with(@exact, fun)
 
   @doc "Encodes a payload map canonically."
   def encode(payload), do: payload |> canonical() |> Jason.encode!()

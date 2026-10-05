@@ -83,7 +83,7 @@ defmodule TaurosWeb.AgentLive.Index do
          put_flash(
            socket,
            :error,
-           "An agent with customers or payment destinations cannot be deleted"
+           "An agent with customers, payment destinations or invoices cannot be deleted"
          )}
 
       _error ->

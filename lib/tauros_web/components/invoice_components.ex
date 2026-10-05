@@ -12,7 +12,7 @@ defmodule TaurosWeb.InvoiceComponents do
 
   import TaurosWeb.CoreComponents
 
-  alias Tauros.Revenue.{Currency, Network}
+  alias Tauros.Revenue.{Currency, FinancialPayload, Network}
 
   @doc """
   An amount in its currency, never rounded: shown with at least two decimals
@@ -125,7 +125,7 @@ defmodule TaurosWeb.InvoiceComponents do
                 <td class="text-right font-mono">{Decimal.to_string(line.quantity, :normal)}</td>
                 <td class="text-right font-mono">{money(line.unit_amount, @revision.currency)}</td>
                 <td class="text-right font-mono">
-                  {money(Decimal.mult(line.quantity, line.unit_amount), @revision.currency)}
+                  {money(FinancialPayload.line_amount(line), @revision.currency)}
                 </td>
               </tr>
             </tbody>
