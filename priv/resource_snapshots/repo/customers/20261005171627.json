@@ -26,6 +26,18 @@
     },
     {
       "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -69,16 +81,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "agents_user_id_fkey",
-        "on_delete": "delete",
+        "name": "customers_agent_id_fkey",
+        "on_delete": "restrict",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "users"
+        "table": "agents"
       },
       "scale": null,
       "size": null,
-      "source": "user_id",
+      "source": "agent_id",
       "type": "uuid"
     }
   ],
@@ -88,7 +100,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "12C3BCA79B61B4A8A0797C73BE38338ED98D8A165B1C03ECE5C8C7726CA58FB0",
+  "hash": "6E9A5F3027ABFCC3DFBFFD3EF693783E5FE81C4C9E9702B9B460066D30E31DAA",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -97,6 +109,6 @@
   },
   "repo": "Elixir.Tauros.Repo",
   "schema": null,
-  "table": "agents",
+  "table": "customers",
   "temporal": null
 }

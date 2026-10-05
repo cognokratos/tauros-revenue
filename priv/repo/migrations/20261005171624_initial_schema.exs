@@ -1,4 +1,4 @@
-defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
+defmodule Tauros.Repo.Migrations.InitialSchema do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 
@@ -20,15 +20,7 @@ defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
         null: false,
         default: fragment("(now() AT TIME ZONE 'utc')")
 
-      add :user_id,
-          references(:users,
-            column: :id,
-            name: "agents_user_id_fkey",
-            type: :uuid,
-            prefix: "public",
-            on_delete: :delete_all
-          ),
-          null: false
+      add :user_id, :uuid, null: false
     end
 
     create table(:api_keys, primary_key: false) do
@@ -43,8 +35,7 @@ defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:api_keys, [:api_key_hash], name: "api_keys_unique_api_key_index")
@@ -69,9 +60,47 @@ defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
             type: :uuid,
             prefix: "public",
             on_delete: :restrict
-          ),
-          null: false
+          ), null: false
     end
+
+    create table(:tokens, primary_key: false) do
+      add :jti, :text, null: false, primary_key: true
+      add :subject, :text, null: false
+      add :expires_at, :utc_datetime, null: false
+      add :purpose, :text, null: false
+      add :extra_data, :map
+
+      add :created_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+    end
+
+    create table(:users, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+    end
+
+    alter table(:agents) do
+      modify :user_id,
+             references(:users,
+               column: :id,
+               name: "agents_user_id_fkey",
+               type: :uuid,
+               prefix: "public",
+               on_delete: :delete_all
+             )
+    end
+
+    alter table(:users) do
+      add :email, :citext, null: false
+      add :hashed_password, :text
+      add :confirmed_at, :utc_datetime_usec
+    end
+
+    create unique_index(:users, [:email], name: "users_unique_email_index")
 
     create table(:wallet_accounts, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
@@ -94,8 +123,7 @@ defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
             type: :uuid,
             prefix: "public",
             on_delete: :restrict
-          ),
-          null: false
+          ), null: false
     end
   end
 
@@ -103,6 +131,24 @@ defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
     drop constraint(:wallet_accounts, "wallet_accounts_agent_id_fkey")
 
     drop table(:wallet_accounts)
+
+    drop_if_exists unique_index(:users, [:email], name: "users_unique_email_index")
+
+    alter table(:users) do
+      remove :confirmed_at
+      remove :hashed_password
+      remove :email
+    end
+
+    drop constraint(:agents, "agents_user_id_fkey")
+
+    alter table(:agents) do
+      modify :user_id, :uuid
+    end
+
+    drop table(:users)
+
+    drop table(:tokens)
 
     drop constraint(:customers, "customers_agent_id_fkey")
 
@@ -113,8 +159,6 @@ defmodule Tauros.Repo.Migrations.CreateAgentsCustomersAndWalletAccounts do
     drop_if_exists unique_index(:api_keys, [:api_key_hash], name: "api_keys_unique_api_key_index")
 
     drop table(:api_keys)
-
-    drop constraint(:agents, "agents_user_id_fkey")
 
     drop table(:agents)
   end

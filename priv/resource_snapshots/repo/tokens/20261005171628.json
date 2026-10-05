@@ -2,26 +2,14 @@
   "attributes": [
     {
       "allow_nil?": false,
-      "default": "fragment(\"gen_random_uuid()\")",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": true,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "wallet_name",
+      "source": "jti",
       "type": "text"
     },
     {
@@ -33,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "public_address",
+      "source": "subject",
       "type": "text"
     },
     {
@@ -45,8 +33,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "currency",
+      "source": "expires_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "purpose",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "extra_data",
+      "type": "map"
     },
     {
       "allow_nil?": false,
@@ -57,7 +69,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "inserted_at",
+      "source": "created_at",
       "type": "utc_datetime_usec"
     },
     {
@@ -71,39 +83,6 @@
       "size": null,
       "source": "updated_at",
       "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "index_where": null,
-        "match_tenant?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "wallet_accounts_agent_id_fkey",
-        "on_delete": "restrict",
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "agents"
-      },
-      "scale": null,
-      "size": null,
-      "source": "agent_id",
-      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -112,7 +91,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "006B57DA62CD6DFED4B54B3C19B171CB8DCEF059AF77BD800B9666925E3AE24C",
+  "hash": "84F7C772A7776C9FDD50FDE1D897EDCA8A0D2F1A3BB198DB8951B9CF909A10B0",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -121,6 +100,6 @@
   },
   "repo": "Elixir.Tauros.Repo",
   "schema": null,
-  "table": "wallet_accounts",
+  "table": "tokens",
   "temporal": null
 }

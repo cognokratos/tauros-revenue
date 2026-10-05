@@ -1,4 +1,4 @@
-defmodule Tauros.Repo.Migrations.InitializeAndAddAuthenticationResourcesAndAddMagicLinkAuthExtensions1 do
+defmodule Tauros.Repo.Migrations.InitialSchemaExtensions1 do
   @moduledoc """
   Installs any extensions that are mentioned in the repo's `installed_extensions/0` callback
 

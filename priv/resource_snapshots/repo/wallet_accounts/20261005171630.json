@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "wallet_name",
       "type": "text"
     },
     {
@@ -33,7 +33,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
+      "source": "public_address",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "currency",
       "type": "text"
     },
     {
@@ -81,7 +93,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "customers_agent_id_fkey",
+        "name": "wallet_accounts_agent_id_fkey",
         "on_delete": "restrict",
         "on_update": null,
         "primary_key?": true,
@@ -100,7 +112,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "D692B1156D147ABF0A21791794463D811180752A7EB9957BFBF669B6C16F0B40",
+  "hash": "DECD96FDD75990E7EBB91E0D49809CB4E047A08C6EC5F7C36D04AB38580380F1",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -109,6 +121,6 @@
   },
   "repo": "Elixir.Tauros.Repo",
   "schema": null,
-  "table": "customers",
+  "table": "wallet_accounts",
   "temporal": null
 }
