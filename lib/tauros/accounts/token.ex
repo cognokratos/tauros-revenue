@@ -1,4 +1,7 @@
 defmodule Tauros.Accounts.Token do
+  @moduledoc """
+  AshAuthentication token storage (sessions, magic links, password resets).
+  """
   use Ash.Resource,
     otp_app: :tauros,
     domain: Tauros.Accounts,

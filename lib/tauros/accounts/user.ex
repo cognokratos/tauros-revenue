@@ -1,4 +1,8 @@
 defmodule Tauros.Accounts.User do
+  @moduledoc """
+  A human. Humans sign in to the UI (password or magic link) or obtain a
+  bearer token for the API, own agents, and hold financial authority.
+  """
   use Ash.Resource,
     otp_app: :tauros,
     domain: Tauros.Accounts,

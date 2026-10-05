@@ -41,6 +41,9 @@ defmodule Tauros.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:mix_audit, "~> 2.0", only: [:dev, :test], runtime: false},
+      {:sobelow, "~> 0.16", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:argon2_elixir, "~> 4.0"},
       {:picosat_elixir, "~> 0.2"},
       {:sourceror, "~> 1.8", only: [:dev, :test]},
@@ -107,7 +110,14 @@ defmodule Tauros.MixProject do
         "esbuild tauros --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "credo",
+        "sobelow --exit --skip",
+        "test"
+      ]
     ]
   end
 end

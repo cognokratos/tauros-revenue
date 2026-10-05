@@ -1,4 +1,8 @@
 defmodule Tauros.Accounts.ApiKey do
+  @moduledoc """
+  A hashed agent API key (AshAuthentication `api_key` strategy).
+  Keys are only created through `Agent` actions and are never readable.
+  """
   use Ash.Resource,
     otp_app: :tauros,
     domain: Tauros.Accounts,

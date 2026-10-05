@@ -1,4 +1,7 @@
 defmodule TaurosWeb.AuthOverrides do
+  @moduledoc """
+  Visual overrides for the AshAuthenticationPhoenix sign-in pages.
+  """
   use AshAuthentication.Phoenix.Overrides
 
   # configure your UI overrides here

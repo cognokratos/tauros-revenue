@@ -35,7 +35,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
     end
 
     create unique_index(:api_keys, [:api_key_hash], name: "api_keys_unique_api_key_index")
@@ -60,7 +61,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
             type: :uuid,
             prefix: "public",
             on_delete: :restrict
-          ), null: false
+          ),
+          null: false
     end
 
     create table(:tokens, primary_key: false) do
@@ -123,7 +125,8 @@ defmodule Tauros.Repo.Migrations.InitialSchema do
             type: :uuid,
             prefix: "public",
             on_delete: :restrict
-          ), null: false
+          ),
+          null: false
     end
   end
 

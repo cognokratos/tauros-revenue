@@ -1,4 +1,7 @@
 defmodule Tauros.Secrets do
+  @moduledoc """
+  Supplies the token signing secret to AshAuthentication.
+  """
   use AshAuthentication.Secret
 
   def secret_for(

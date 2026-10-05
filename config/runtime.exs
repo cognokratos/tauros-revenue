@@ -41,6 +41,10 @@ if config_env() == :dev do
 end
 
 if config_env() == :prod do
+  if mail_from = System.get_env("MAIL_FROM") do
+    config :tauros, :mail_sender, {"Tauros", mail_from}
+  end
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
