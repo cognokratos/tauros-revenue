@@ -3,49 +3,60 @@
 An audit trail is useful only if it can answer, for any financial record and
 long after the fact:
 
-| Question | Recorded as |
-| --- | --- |
-| What happened? | the action name (`approve`, `record_payment`) and resource |
-| Who initiated it? | actor id |
-| Human, agent or service? | actor kind (`user`, `agent`, `system`) |
-| Through which interface? | `ui`, `api`, `mcp`, `job` |
-| What existed before, and after? | a version snapshot or diff of the record |
-| Which policy and rules applied? | the application version (git SHA) and, where relevant, a rule or policy version |
-| Who approved it, and what exactly? | approval record: approver, timestamp, **hash of the approved payload** |
-| What external event caused it? | reference to the stored inbound event (`source`, `external_id`) |
+| Question | Recorded as | Today |
+| --- | --- | --- |
+| What happened? | the action name (`approve`, `revise`) and resource | ✅ `InvoiceEvent.action` |
+| Who initiated it? | actor id | ✅ `InvoiceEvent.actor_id` |
+| Human or agent? | actor kind | ✅ `InvoiceEvent.actor_kind` |
+| Through which interface? | `ui`, `api`, `console` (later `mcp`, `job`) | ✅ `InvoiceEvent.interface` |
+| Why? | the agent's reasoning, the human's reason | ✅ `InvoiceRevision.reasoning`, `Approval.reason`, `InvoiceEvent.note` |
+| What exact payload was reviewed and authorized? | revision, canonical payload and its hash | ✅ `InvoiceRevision`, `Approval.payload_hash` |
+| Which retry produced it? | idempotency key | ✅ `Invoice.idempotency_key`, `InvoiceEvent.idempotency_key` |
+| What existed before, and after? | a version snapshot of every record | Epic 5 (AshPaperTrail) |
+| Which policy and rules applied? | application version (git SHA) | Epic 5 |
+| What external event caused it? | the stored inbound event | Epic 6 |
 
-## How Tauros plans to record it
+## What exists now: a lightweight envelope
 
-- **[AshPaperTrail](https://hexdocs.pm/ash_paper_trail)** on financial resources
-  (invoices, payments, wallet accounts). It writes a version row per action,
-  inside the same transaction, with the action name and changes. Actor
-  attribution comes from the Ash actor that every interface already passes.
-- **Context, not log parsing.** Interface and correlation ids travel as Ash
-  context (`Ash.PlugHelpers.set_context/2` for HTTP; the MCP and job equivalents),
-  so the version row records them without each LiveView or controller having to
-  remember.
-- **Approvals are first-class records**, not a column on the invoice. An
-  approval has an approver, a decision, a reason and the payload hash.
-- **Append-only by design.** Version and approval resources have no update or
-  destroy actions, and the database role used by the app may only `INSERT` and
-  `SELECT` on those tables.
+This learning phase adds just enough to explain every authority-bearing
+command, without pulling the audit epic forward:
+
+- **`InvoiceRevision`** keeps every version of an invoice's financial content,
+  immutably, with the agent's reasoning and the payload hash.
+- **`Approval`** is a first-class record, not a column on the invoice: who
+  decided, what (decision and reason), on which revision and hash, when.
+- **`InvoiceEvent`** is one row per invoice command that changed something,
+  written in the same transaction by `Invoice.Changes.RecordEvent`. Replays and
+  failed commands write nothing.
+- The **interface** travels as Ash context: the JSON:API pipeline sets
+  `interface: :api` (`TaurosWeb.ApiAuth.put_interface/2`), the LiveViews pass
+  `interface: :ui`, and direct calls are `:console`. It is recorded for audit
+  and **never** read by authorization.
+
+None of these resources has an update or destroy action, and no actor may
+create an event or a revision directly.
+
+`test/tauros/revenue/invoice_event_test.exs` walks a full journey (propose,
+send back, revise, resubmit, approve) and answers each question above from the
+recorded data.
+
+## What remains for Epic 5
+
+- **AshPaperTrail versions** for invoices, destinations and approvals: the
+  full before and after of every change, not only the event envelope.
+- **Append-only at the database.** Today immutability is enforced by the
+  application (no actions, and a payload seal that detects tampering). Epic 5
+  restricts the app's database role to `INSERT` and `SELECT` on revision,
+  approval, event and version tables.
+- **Destination lifecycle events** and agent and key management events.
+- **Application version** on every record.
+- **A supervision feed** with live updates.
 
 ## Retention and erasure
 
-The original PRD required audit logs "retained until manual purge" and also GDPR
-erasure. These two pull in opposite directions. The planned resolution:
-
-- Financial facts (amounts, dates, states, who approved) are retained.
-- Personal data (customer names and emails) is **encrypted at rest**
-  (AshCloak) and erased by **anonymization**: the customer's PII is replaced,
-  and the audit trail keeps referring to an anonymized customer id.
-- A purge is itself an audited action, recorded in a table the purge does not
-  touch.
-
-## What already exists
-
-Today, AshAuthentication's `Token` resource records sign-ins, and every row has
-timestamps. Nothing else is audited yet. The current resources do already
-prepare for it: every write goes through an action with an explicit actor,
-there is no update or delete path for wallet accounts, and ownership fields
-cannot be changed.
+Financial facts (amounts, dates, states, who approved) are retained. Personal
+data (customer names and emails) will be encrypted at rest (AshCloak, Epic 7)
+and erased by anonymization, so the audit trail keeps referring to an
+anonymized customer id. This is one reason customer contact details are
+**not** part of the hashed payload: erasing them must not invalidate an
+approval.

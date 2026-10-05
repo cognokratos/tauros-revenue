@@ -1,64 +1,117 @@
 # Learning path
 
-A reading order through the repository. Each stop names one idea and the
-smallest piece of code that demonstrates it. A full, exercise-based curriculum
-will build on this.
+A reading order through the repository. Each stop names one idea, the
+smallest piece of code that demonstrates it, and a test or exercise that
+proves it. Keep one question in mind throughout:
 
-## 1. The problem: capability vs authority
+> **What exact line stops an agent with a valid key from doing this?**
 
-Read [VISION.md](VISION.md), then [AI-AUTHORITY.md](AI-AUTHORITY.md). Keep one
-question in mind for the rest of the path: *what stops an agent with a valid key
-from doing this?*
+By the end you should be able to answer it for approving an invoice without
+looking (the answer is in [AI-AUTHORITY.md](AI-AUTHORITY.md#what-exactly-stops-an-agent-from-approving-an-invoice)).
 
-## 2. A domain is a list of declarations
+## 1. Capability vs authority
 
-Open `lib/tauros/revenue/customer.ex`. Everything about a customer is in one
-module: shape, actions, who may call them, and validation. Then open
-`lib/tauros/revenue.ex` and see how the domain picks the public surface: the code
-interface (`list_customers`) and the HTTP routes (`base_route "/customers"`).
+Read [VISION.md](VISION.md), then [AI-AUTHORITY.md](AI-AUTHORITY.md). Then
+open `lib/tauros/authority.ex`: the whole application's answer to "what may an
+agent do?" fits on one screen. Its test (`test/tauros/authority_test.exs`)
+fails if a new action is not classified, or if a policy disagrees.
 
-*Try:* in `iex -S mix`, call `Tauros.Revenue.list_customers!(actor: user)` with two
-different users.
+## 2. Actor identity
 
-## 3. Policies are the only gate
+Two structs, two kinds of actor: `Tauros.Accounts.User` (a human, with a
+`role`) and `Tauros.Accounts.Agent` (an AI or service, with an API key). Read
+the three checks in `lib/tauros/accounts/checks/`: `HumanActor`,
+`HumanApprover`, `AgentActor`. Then read `lib/tauros_web/api_auth.ex` to see
+how one bearer header becomes either kind.
 
-Read the `policies` block in `customer.ex`, then
-`lib/tauros/accounts/checks/human_actor.ex`. One policy covers every action:
-"the actor must be a human, and the customer's agent must belong to them".
+Registration is closed (`registration_enabled? false` in `user.ex`). Find
+`bootstrap_approver` and `invite`, and the policies that guard them. Why
+does `bootstrap_approver` say `forbid_if AgentActor`?
+(`test/tauros/accounts/user_test.exs`)
 
-*Try:* `test/tauros/revenue/customer_test.exs`. Find the test showing that an
-agent can't create a customer *even for itself*, and explain which line of the
-policy causes it.
+## 3. Ownership policies
 
-## 4. Make the wrong thing impossible to express
+Open `lib/tauros/revenue/customer.ex`. Ownership is a relationship path:
+`relates_to_actor_via([:agent, :user])` for humans, `relates_to_actor_via(:agent)`
+for agents. Records you cannot see behave as if they don't exist.
 
-In `customer.ex`, `update` accepts only `[:name, :email]`. There is no code
-that checks for "ownership reassignment", because the action has no way to
-express it. Compare `wallet_account.ex`, which has no update action at all.
+*Try:* [exercise 1, break ownership](EXERCISES.md#1-break-ownership).
 
-## 5. Identity for non-humans
+## 4. Immutable payment destinations
 
-`lib/tauros/accounts/agent.ex` uses the AshAuthentication `api_key` strategy.
-`lib/tauros/accounts/agent/changes/issue_api_key.ex` issues a key inside the
-create transaction and returns it once, as metadata. Then read
-`lib/tauros_web/api_auth.ex` to see how one bearer header becomes either a human
-or an agent actor.
+Read [concepts/payment-destinations.md](concepts/payment-destinations.md),
+then `lib/tauros/revenue/network.ex` (a currency is not a rail),
+`lib/tauros/revenue/address.ex` (format vs checksum) and
+`lib/tauros/revenue/payment_destination.ex`: no action can change an address,
+but the state machine can retire one.
 
-## 6. One domain, many interfaces
+*Proof:* `test/tauros/revenue/payment_destination_test.exs`, especially
+"checksums catch typos that the format alone would accept".
 
-Follow "register a wallet account" through `POST /api/v1/wallet-accounts`
-([API.md](API.md)), the generated LiveView in `lib/tauros_web/live/wallet_account_live/`,
-and the domain test. All three call `Tauros.Revenue.create_wallet_account`.
-AI tools (Epic 4) will be the fourth caller, with nothing new below them.
+## 5. Financial intent
 
-## 7. Where this is heading
+An agent proposes; the proposal is data, never a fact. Read
+`Invoice.create_draft` in `lib/tauros/revenue/invoice.ex` and
+`Validations.UsableReferences` in `lib/tauros/revenue/invoice_revision/validations/`.
+The caller's ids are never trusted: each record is loaded and compared.
 
-Read the concepts in the order they will be implemented:
+## 6. Invoice revisions
 
-1. [Intent, authority, execution](concepts/intent-authority-execution.md)
-2. [Financial state machines](concepts/financial-state-machines.md)
-3. [Idempotency](concepts/idempotency.md)
-4. [Auditability](concepts/auditability.md)
-5. [Eventual consistency and reconciliation](concepts/eventual-consistency.md)
+Read [concepts/exact-payload-approval.md](concepts/exact-payload-approval.md),
+then `lib/tauros/revenue/invoice_revision.ex` (no update action; writes only
+through `accessing_from(Invoice, :revisions)`) and
+`lib/tauros/revenue/financial_payload.ex` (what is hashed, and why).
 
-Then see [ROADMAP.md](ROADMAP.md) for which epic turns each one into code.
+*Proof:* `test/tauros/revenue/financial_payload_test.exs`.
+
+## 7. Deterministic state machines
+
+Read [concepts/financial-state-machines.md](concepts/financial-state-machines.md),
+the `state_machine` block in `invoice.ex`, and
+`lib/tauros/revenue/changes/transition.ex`, which locks the row and asks the
+state machine about the current state rather than the caller's copy.
+
+*Try:* [exercise 2, skip the state machine](EXERCISES.md#2-skip-the-state-machine).
+*Proof:* `test/tauros/revenue/invoice_lifecycle_test.exs`.
+
+## 8. Idempotency
+
+Read [concepts/idempotency.md](concepts/idempotency.md) and
+`lib/tauros/revenue/invoice/changes/propose_revision.ex`.
+
+*Try:* [exercise 3, replay a request](EXERCISES.md#3-replay-a-request).
+
+## 9. Exact-payload human approval
+
+Read `lib/tauros/revenue/invoice/changes/decide.ex` and
+`lib/tauros/revenue/approval.ex`. Then open the approval inbox
+(`/approvals`, signed in as `demo@tauros.local`) and compare what you see
+with the `canonical_payload` it shows.
+
+*Try:* [exercise 4, mutate approved intent](EXERCISES.md#4-mutate-approved-intent).
+*Proof:* `test/tauros/revenue/approval_test.exs`, `test/tauros_web/live/approval_live_test.exs`.
+
+## 10. Adversarial authority tests
+
+Read `test/tauros/adversarial_test.exs` top to bottom. Every test is an
+attack, and its comment names the guard that stops it. Then read
+`test/tauros_web/live/adversarial_live_test.exs`: hiding a button is not
+authorization.
+
+*Try:* [exercise 5, impersonate authority](EXERCISES.md#5-impersonate-authority),
+including breaking the policy on purpose, and the bonus
+[tampering exercise](EXERCISES.md#6-tamper-behind-tauross-back-bonus).
+
+## 11. Later: AshAI exposure
+
+Epic 4 ([ROADMAP.md](ROADMAP.md#epic-4-ai-capabilities-with-ashai-fr18fr23))
+exposes a reviewed subset of `Tauros.Authority.agent_safe/0` as AshAI tools.
+Nothing below them changes: the tools call the same actions, the same
+policies refuse the same things, and one more test checks that every tool is
+agent-safe.
+
+## Further concepts
+
+- [Auditability](concepts/auditability.md): what the envelope records today, and what Epic 5 adds
+- [Eventual consistency and reconciliation](concepts/eventual-consistency.md): Epic 6
+- [Intent, authority, execution](concepts/intent-authority-execution.md): the frame for all of the above

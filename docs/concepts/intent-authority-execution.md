@@ -5,53 +5,48 @@ different questions into one function call:
 
 | | Question | Who answers | In Tauros |
 | --- | --- | --- | --- |
-| **Intent** | *What should happen?* | a human or an agent proposes | an action input: "create an invoice for Acme, 1,200 USDC" |
-| **Authority** | *May it happen?* | the application, deterministically | Ash policies, validations, the state machine and, for some transitions, a recorded human approval |
-| **Execution** | *Make it happen.* | the application, a job, or an external system | the action's data-layer write; later, Oban jobs and external rails (a bank, a chain, Arktos for signing) |
+| **Intent** | *What should happen?* | an agent (or a human) proposes | an invoice revision: "Acme owes 1,200 USDC on Arbitrum to 0x…, because…" |
+| **Authority** | *May it happen?* | the application, deterministically, and for some transitions a recorded human decision | Ash policies, validations, the state machine, and an `Approval` bound to one payload hash |
+| **Execution** | *Make it happen.* | jobs and external systems | issuing and settlement (Epic 6); signing stays with a custody system such as Arktos |
 
 ## Why keep them apart
 
 **Intent is cheap and untrusted.** An LLM can produce a thousand plausible
 intents a minute, and so can a buggy integration or a replayed HTTP request.
-Expressing intent must therefore be harmless: it creates a *proposal* (a draft
-invoice, a pending approval), never a fact.
+Expressing intent must therefore be harmless: it creates a *proposal* (a draft,
+a pending invoice), never a fact.
 
 **Authority must not depend on who phrased the intent well.** If the model can
 talk its way past a check, the check is part of the prompt and not part of the
-system. In Tauros, authority is code: a policy reads the actor and the record,
-and a state machine reads the current state. Neither ever reads the
-conversation.
+system. In Tauros a policy reads the actor and the record, and the state
+machine reads the current state. Neither ever reads the conversation.
 
 **Execution must be repeatable and observable.** It talks to the outside world,
-which fails, times out and retries. It belongs in idempotent actions and durable
-jobs (see [idempotency](idempotency.md) and
-[eventual consistency](eventual-consistency.md)), so that "approved" never
-silently becomes "half sent".
+which fails, times out and retries. It belongs in idempotent actions and
+durable jobs, so that "approved" never silently becomes "half sent".
 
-## How it already shows in the code
-
-Even before invoices exist, the split is visible:
-
-- An **agent** may *propose* a payment destination (`WalletAccount.create`), but
-  the **domain** decides whether the address is valid for that rail, and the
-  record is append-only.
-- An agent cannot touch the authority layer at all: it can't create agents,
-  rotate keys or create customers. `HumanActor` checks in the policies make that
-  explicit.
-- Issuing an API key is *execution* inside the transaction (`IssueApiKey`), and
-  it runs only after authority (the agent policy) has said yes.
-
-## The invoice flow (planned)
+## The invoice flow (implemented up to approval)
 
 ```text
-INTENT      agent:  create_invoice_draft(customer, lines, wallet_account)   → draft
-            agent:  submit_for_approval(invoice)                             → pending_approval
-AUTHORITY   human:  approve(invoice, payload_hash)                           → approved
-            policy: only HumanActor may approve; state machine: only from pending_approval
-EXECUTION   job:    issue(invoice)  (idempotent, Oban)                       → issued
-            rail:   payment observed → confirmed → reconciled                → paid
+INTENT      agent  create_draft(customer, destination, lines, reasoning, key)  → draft, revision 1 sealed
+            agent  revise(...)                                                 → revision 2 sealed
+            agent  submit_for_approval                                          → pending_approval
+AUTHORITY   human  approve(revision_id, payload_hash)                           → approved
+                   policy: HumanApprover · state machine: from pending_approval
+                   Decide: current revision, exact hash, intact seal, active destination
+EXECUTION   job    issue (Epic 6, idempotent)                                   → issued
+            rail   payment observed → confirmed → reconciled                    → paid
 ```
 
-An approval is bound to the **exact payload** that was reviewed, by a hash of
-the invoice as approved. If the draft changes, the approval no longer applies.
-This closes the "approve one thing, execute another" gap.
+The approval is bound to the **exact payload** that was reviewed. If the
+proposal changes, it is a new revision with a new hash, and the old approval
+cannot apply to it. This closes the "approve one thing, execute another" gap.
+See [exact-payload approval](exact-payload-approval.md).
+
+## Where each part lives in the code
+
+| Part | Code |
+| --- | --- |
+| intent | `Invoice.create_draft`, `revise`, `submit_for_approval`; `InvoiceRevision` (immutable); `PaymentDestination.create` |
+| authority | the `policies` blocks; `Tauros.Accounts.Checks.HumanApprover`; the `state_machine` blocks; `Invoice.Changes.Decide`; `Approval` |
+| execution | not yet in Tauros: Epic 6 (AshOban issuing, settlement events), Epic 9 (Arktos adapter) |

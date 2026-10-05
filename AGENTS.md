@@ -8,7 +8,8 @@ and [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) before changing code.
 
 - `mix precommit` must pass before you finish (compile with warnings as errors, format, credo, sobelow, tests).
 - `mix test test/path_test.exs` / `mix test --failed` while iterating.
-- `mix ash.codegen <describe_change>` after any resource change. Never write migrations by hand.
+- `mix ash.codegen <describe_change>` after any resource change. Never write schema
+  migrations by hand; the only exception is a data backfill (see docs/DEVELOPMENT.md).
 
 ## Generators first
 
@@ -22,24 +23,34 @@ first. Typical generators: `ash.gen.resource`, `ash.gen.change`,
 ## Domain rules
 
 - Domains: `Tauros.Accounts` (User, Token, Agent, ApiKey) and `Tauros.Revenue`
-  (Customer, WalletAccount, and later invoices and payments). Add resources to an
-  existing domain unless the reason to change is genuinely different.
+  (Customer, PaymentDestination, Invoice, InvoiceRevision, Approval,
+  InvoiceEvent, and later payments). Add resources to an existing domain unless
+  the reason to change is genuinely different.
 - Express rules declaratively, in this order of preference: attribute
   constraints and `accept` lists, then validations, changes, policies and
   calculations. Do not write context modules, service objects or repository
   wrappers around Ash.
-- Every policy states which actor kind it means: `Tauros.Accounts.Checks.HumanActor`
-  or `AgentActor`. Authority-bearing actions (approve, issue, cancel, manage
-  agents) are human-only. **AI capability is not financial authority.**
+- Every policy states which actor kind it means: `Tauros.Accounts.Checks.HumanActor`,
+  `HumanApprover` or `AgentActor`. Authority-bearing actions (approve, reject,
+  cancel, issue, invite, manage agents) are human-only; financial decisions need
+  `HumanApprover`. **AI capability is not financial authority.**
+- Classify every new action in `Tauros.Authority` (agent-safe, human-only or
+  internal). `test/tauros/authority_test.exs` fails until you do.
 - Ownership fields are set with `relate_actor/1` or accepted only on create.
   They are never updatable.
 - No action may accept a lifecycle `state`. State changes are state-machine
-  transitions (AshStateMachine).
-- Financial commands must be idempotent and use Decimal or Money, never floats.
+  transitions (AshStateMachine) run through `Tauros.Revenue.Changes.Transition`,
+  which checks them against the locked row.
+- Financial content is never edited in place: a change is a new immutable
+  `InvoiceRevision` with a new payload hash. Approvals name a revision and hash.
+- Financial commands must be idempotent and use Decimal, never floats, and never
+  round implicitly (`Tauros.Revenue.FinancialPayload.exactly/1`).
 - Call actions through the domain code interface (`Tauros.Revenue.create_customer(attrs, actor: actor)`).
   Use `authorize?: false` only in fixtures, seeds, or changes running inside an
   already-authorized action.
 - Tauros never stores private keys, seeds or signatures, only public addresses.
+- Never trust a foreign id from the caller: load the record and compare its
+  owner. Give unknown and foreign ids the same error.
 
 ## Interfaces
 
@@ -65,7 +76,8 @@ first. Typical generators: `ash.gen.resource`, `ash.gen.change`,
 ## Tests
 
 - Test actions and policies in `test/tauros/**`, including the actors who must be
-  refused. Test interfaces in `test/tauros_web/**`.
+  refused. Add attacks to `test/tauros/adversarial_test.exs`, naming the guard
+  that stops each one. Test interfaces in `test/tauros_web/**`.
 - Build data with `Tauros.Fixtures`, which goes through the real actions.
 - In LiveView tests, assert on element ids (`has_element?/3`), not raw HTML.
 - Don't use `Process.sleep/1`. Use `start_supervised!/1` for processes.
