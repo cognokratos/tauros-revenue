@@ -1,5 +1,5 @@
 defmodule Tauros.Application do
-  # See https://hexdocs.pm/elixir/Application.html
+  # See https://elixir.hexdocs.pm/Application.html
   # for more information on OTP Applications
   @moduledoc false
 
@@ -15,10 +15,11 @@ defmodule Tauros.Application do
       # Start a worker by calling: Tauros.Worker.start_link(arg)
       # {Tauros.Worker, arg},
       # Start to serve requests, typically the last entry
-      TaurosWeb.Endpoint
+      TaurosWeb.Endpoint,
+      {AshAuthentication.Supervisor, [otp_app: :tauros]}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
+    # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Tauros.Supervisor]
     Supervisor.start_link(children, opts)

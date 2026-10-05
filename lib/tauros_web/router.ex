@@ -1,7 +1,9 @@
 defmodule TaurosWeb.Router do
   use TaurosWeb, :router
 
-  import TaurosWeb.UserAuth
+  use AshAuthentication.Phoenix.Router
+
+  import AshAuthentication.Plug.Helpers
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -10,47 +12,81 @@ defmodule TaurosWeb.Router do
     plug :put_root_layout, html: {TaurosWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :fetch_current_scope_for_user
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
+    plug :set_actor, :user
   end
 
-  pipeline :api_agent do
-    plug :accepts, ["json"]
-    plug TaurosWeb.AgentAuth
+  scope "/", TaurosWeb do
+    pipe_through :browser
+
+    ash_authentication_live_session :authenticated_routes do
+      # in each liveview, add one of the following at the top of the module:
+      #
+      # If an authenticated user must be present:
+      # on_mount {TaurosWeb.LiveUserAuth, :live_user_required}
+      #
+      # If an authenticated user *may* be present:
+      # on_mount {TaurosWeb.LiveUserAuth, :live_user_optional}
+      #
+      # If an authenticated user must *not* be present:
+      # on_mount {TaurosWeb.LiveUserAuth, :live_no_user}
+    end
   end
 
-  pipeline :api_admin do
-    plug :accepts, ["json"]
-    plug :require_admin_api_token
+  scope "/api/json" do
+    pipe_through [:api]
+
+    forward "/swaggerui", OpenApiSpex.Plug.SwaggerUI,
+      path: "/api/json/open_api",
+      default_model_expand_depth: 4
+
+    forward "/", TaurosWeb.AshJsonApiRouter
   end
 
-  scope "/api", TaurosWeb.Api.Agent do
-    pipe_through :api_agent
+  scope "/", TaurosWeb do
+    pipe_through :browser
 
-    get "/v1/test", TestController, :show
-    post "/v1/accounts", AccountController, :create
+    get "/", PageController, :home
+    auth_routes AuthController, Tauros.Accounts.User, path: "/auth"
+
+    sign_out_route AuthController, "/sign-out",
+      overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Remove these if you'd like to use your own authentication views
+    sign_in_route register_path: "/register",
+                  reset_path: "/reset",
+                  auth_routes_prefix: "/auth",
+                  on_mount: [{TaurosWeb.LiveUserAuth, :live_no_user}],
+                  overrides: [
+                    TaurosWeb.AuthOverrides,
+                    AshAuthentication.Phoenix.Overrides.Default
+                  ]
+
+    # Remove this if you do not want to use the reset password feature
+    reset_route auth_routes_prefix: "/auth",
+                overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Remove this if you do not use the confirmation strategy
+    confirm_route Tauros.Accounts.User, :confirm_new_user,
+      auth_routes_prefix: "/auth",
+      overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Remove this if you do not use the magic link strategy.
+    magic_sign_in_route(Tauros.Accounts.User, :magic_link,
+      auth_routes_prefix: "/auth",
+      overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
   end
 
-  scope "/api/admin", TaurosWeb.Api.Admin do
-    pipe_through :api
-
-    post "/v1/login", LoginController, :create
-  end
-
-  scope "/api/admin", TaurosWeb.Api.Admin do
-    pipe_through :api_admin
-
-    get "/v1/test", TestController, :show
-    post "/v1/agents", AgentController, :create
-    post "/v1/customers", CustomerController, :create
-    get "/v1/customers", CustomerController, :list
-    get "/v1/customers/:id", CustomerController, :show
-    patch "/v1/customers/:id", CustomerController, :update
-    delete "/v1/customers/:id", CustomerController, :delete
-  end
+  # Other scopes may use custom stacks.
+  # scope "/api", TaurosWeb do
+  #   pipe_through :api
+  # end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:tauros, :dev_routes) do
@@ -67,43 +103,5 @@ defmodule TaurosWeb.Router do
       live_dashboard "/dashboard", metrics: TaurosWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
-  end
-
-  ## Authentication routes
-
-  scope "/", TaurosWeb do
-    pipe_through [:browser, :require_authenticated_user]
-
-    live_session :require_authenticated_user,
-      on_mount: [{TaurosWeb.UserAuth, :require_authenticated}] do
-      live "/", DashboardLive, :index
-      live "/users/settings", UserLive.Settings, :edit
-      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
-      live "/agents", AgentLive.Index, :index
-      live "/agents/new", AgentLive.Form, :new
-      live "/agents/:id", AgentLive.Show, :show
-      live "/agents/:id/edit", AgentLive.Form, :edit
-      live "/customers", CustomerLive.Index, :index
-      live "/customers/new", CustomerLive.Form, :new
-      live "/customers/:id", CustomerLive.Show, :show
-      live "/customers/:id/edit", CustomerLive.Form, :edit
-      live "/accounts", AccountLive.Index, :index
-    end
-
-    post "/users/update-password", UserSessionController, :update_password
-  end
-
-  scope "/", TaurosWeb do
-    pipe_through [:browser]
-
-    live_session :current_user,
-      on_mount: [{TaurosWeb.UserAuth, :mount_current_scope}] do
-      live "/users/register", UserLive.Registration, :new
-      live "/users/log-in", UserLive.Login, :new
-      live "/users/log-in/:token", UserLive.Confirmation, :new
-    end
-
-    post "/users/log-in", UserSessionController, :create
-    delete "/users/log-out", UserSessionController, :delete
   end
 end

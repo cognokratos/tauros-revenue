@@ -7,22 +7,72 @@
 # General application configuration
 import Config
 
-config :tauros, :scopes,
-  user: [
-    default: true,
-    module: Tauros.Accounts.Scope,
-    assign_key: :current_scope,
-    access_path: [:user, :id],
-    schema_key: :user_id,
-    schema_type: :binary_id,
-    schema_table: :users,
-    test_data_fixture: Tauros.AccountsFixtures,
-    test_setup_helper: :register_and_log_in_user
+config :mime,
+  extensions: %{"json" => "application/vnd.api+json"},
+  types: %{"application/vnd.api+json" => ["json"]}
+
+config :ash_json_api,
+  show_public_calculations_when_loaded?: false,
+  authorize_update_destroy_with_error?: true
+
+# These enable behaviors that will become the default in the next major
+# version of Ash. Setting them now opts your application into the new
+# behavior and ensures a seamless upgrade. See the backwards compatibility
+# guide for an explanation of each setting:
+# https://hexdocs.pm/ash/backwards-compatibility-config.html
+config :ash,
+  allow_forbidden_field_for_relationships_by_default: true,
+  include_embedded_source_by_default?: false,
+  show_keysets_for_all_actions?: false,
+  default_page_type: :keyset,
+  policies: [no_filter_static_forbidden_reads?: false],
+  keep_read_action_loads_when_loading?: false,
+  default_actions_require_atomic?: true,
+  read_action_after_action_hooks_in_order?: true,
+  bulk_actions_default_to_errors?: true,
+  transaction_rollback_on_error?: true,
+  redact_sensitive_values_in_errors?: true,
+  default_string_length_count: :codepoints,
+  infer_generic_action_reactors?: false,
+  many_to_many_destroy_destination_on_match?: true,
+  known_types: [AshPostgres.Timestamptz, AshPostgres.TimestamptzUsec]
+
+config :spark,
+  formatter: [
+    remove_parens?: true,
+    "Ash.Resource": [
+      section_order: [
+        :authentication,
+        :token,
+        :user_identity,
+        :json_api,
+        :postgres,
+        :resource,
+        :code_interface,
+        :actions,
+        :policies,
+        :pub_sub,
+        :preparations,
+        :changes,
+        :validations,
+        :multitenancy,
+        :attributes,
+        :relationships,
+        :calculations,
+        :aggregates,
+        :identities
+      ]
+    ],
+    "Ash.Domain": [
+      section_order: [:json_api, :resources, :policies, :authorization, :domain, :execution]
+    ]
   ]
 
 config :tauros,
   ecto_repos: [Tauros.Repo],
-  generators: [timestamp_type: :utc_datetime, binary_id: true]
+  generators: [timestamp_type: :utc_datetime, binary_id: true],
+  ash_domains: [Tauros.Accounts],
+  ash_authentication: [return_error_on_invalid_magic_link_token?: true]
 
 # Configure the endpoint
 config :tauros, TaurosWeb.Endpoint,
@@ -33,7 +83,12 @@ config :tauros, TaurosWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Tauros.PubSub,
-  live_view: [signing_salt: "nhVMZH8L"]
+  live_view: [signing_salt: "bjwYWe9c"]
+
+# Configure LiveView
+config :phoenix_live_view,
+  # the attribute set on all root tags. Used for Phoenix.LiveView.ColocatedCSS.
+  root_tag_attribute: "phx-r"
 
 # Configure the mailer
 #
@@ -56,13 +111,14 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "4.1.12",
+  version: "4.3.3",
   tauros: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css
     ),
-    cd: Path.expand("..", __DIR__)
+    cd: Path.expand("..", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
 # Configure Elixir's Logger

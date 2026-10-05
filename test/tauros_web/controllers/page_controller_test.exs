@@ -1,8 +1,8 @@
 defmodule TaurosWeb.PageControllerTest do
   use TaurosWeb.ConnCase
 
-  test "GET / redirects to login when not authenticated", %{conn: conn} do
+  test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert redirected_to(conn, 302) =~ ~p"/users/log-in"
+    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
   end
 end
