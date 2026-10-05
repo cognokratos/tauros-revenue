@@ -4,6 +4,7 @@ defmodule TaurosWeb.Router do
   use AshAuthentication.Phoenix.Router
 
   import AshAuthentication.Plug.Helpers
+  import TaurosWeb.ApiAuth, only: [require_actor: 2]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -22,33 +23,42 @@ defmodule TaurosWeb.Router do
 
     plug AshAuthentication.Strategy.ApiKey.Plug,
       resource: Tauros.Accounts.Agent,
-      # if you want to require an api key to be supplied, set `required?` to true
-      required?: false
+      required?: false,
+      on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
+
+    plug :require_actor
   end
 
   scope "/", TaurosWeb do
     pipe_through :browser
 
-    ash_authentication_live_session :authenticated_routes do
-      # in each liveview, add one of the following at the top of the module:
-      #
-      # If an authenticated user must be present:
-      # on_mount {TaurosWeb.LiveUserAuth, :live_user_required}
-      #
-      # If an authenticated user *may* be present:
-      # on_mount {TaurosWeb.LiveUserAuth, :live_user_optional}
-      #
-      # If an authenticated user must *not* be present:
-      # on_mount {TaurosWeb.LiveUserAuth, :live_no_user}
+    ash_authentication_live_session :authenticated_routes,
+      on_mount: {TaurosWeb.LiveUserAuth, :live_user_required} do
+      live "/", DashboardLive, :index
+
+      live "/agents", AgentLive.Index, :index
+      live "/agents/new", AgentLive.Form, :new
+      live "/agents/:id/edit", AgentLive.Form, :edit
+      live "/agents/:id", AgentLive.Show, :show
+
+      live "/customers", CustomerLive.Index, :index
+      live "/customers/new", CustomerLive.Form, :new
+      live "/customers/:id/edit", CustomerLive.Form, :edit
+      live "/customers/:id", CustomerLive.Show, :show
+
+      live "/wallet-accounts", WalletAccountLive.Index, :index
+      live "/wallet-accounts/:id", WalletAccountLive.Show, :show
     end
   end
 
-  scope "/api/json" do
-    pipe_through [:api]
-
+  scope "/api" do
     forward "/swaggerui", OpenApiSpex.Plug.SwaggerUI,
-      path: "/api/json/open_api",
+      path: "/api/v1/open_api",
       default_model_expand_depth: 4
+  end
+
+  scope "/api/v1" do
+    pipe_through [:api]
 
     forward "/", TaurosWeb.AshJsonApiRouter
   end
@@ -56,7 +66,6 @@ defmodule TaurosWeb.Router do
   scope "/", TaurosWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
     auth_routes AuthController, Tauros.Accounts.User, path: "/auth"
 
     sign_out_route AuthController, "/sign-out",

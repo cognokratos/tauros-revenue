@@ -497,6 +497,28 @@ defmodule TaurosWeb.CoreComponents do
   end
 
   @doc """
+  Shows a freshly issued agent API key. Tauros stores only its hash,
+  so this is the only time the key can be read.
+  """
+  attr :api_key, :string, required: true
+  slot :inner_block
+
+  def api_key_notice(assigns) do
+    ~H"""
+    <div id="api-key-notice" role="alert" class="alert alert-warning flex-col items-start gap-3">
+      <p class="font-semibold">Copy this API key now. It will not be shown again.</p>
+      <code id="api-key" class="w-full select-all break-all rounded bg-base-100 p-3 font-mono text-sm">
+        {@api_key}
+      </code>
+      <p class="text-sm">
+        The agent sends it as <code class="font-mono">Authorization: Bearer &lt;key&gt;</code>.
+      </p>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
   Translates the errors for a field from a keyword list of errors.
   """
   def translate_errors(errors, field) when is_list(errors) do

@@ -50,6 +50,7 @@ defmodule Tauros.Revenue.Customer do
 
   validations do
     validate match(:email, ~r/^[^@,;\s]+@[^@,;\s]+$/) do
+      where changing(:email)
       message "must have the @ sign and no spaces"
     end
   end

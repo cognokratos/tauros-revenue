@@ -60,15 +60,18 @@ defmodule Tauros.Revenue.WalletAccount do
   validations do
     validate match(:public_address, ~r/^bc1p[a-z0-9]{38,60}$/),
       where: attribute_in(:currency, Currency.bitcoin()),
-      message: "must be a valid Taproot Bitcoin address"
+      message: "must be a valid Taproot Bitcoin address",
+      only_when_valid?: true
 
     validate match(:public_address, ~r/^0x[a-fA-F0-9]{40}$/),
       where: attribute_in(:currency, Currency.ethereum()),
-      message: "must be a valid Ethereum address"
+      message: "must be a valid Ethereum address",
+      only_when_valid?: true
 
     validate match(:public_address, ~r/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/),
       where: attribute_in(:currency, Currency.fiat()),
-      message: "must be a valid IBAN"
+      message: "must be a valid IBAN",
+      only_when_valid?: true
   end
 
   attributes do
