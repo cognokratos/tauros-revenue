@@ -1,5 +1,7 @@
 [
   import_deps: [
+    :ash_ai,
+    :ash_state_machine,
     :ash_authentication_phoenix,
     :ash_authentication,
     :ash_json_api,

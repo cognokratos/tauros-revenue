@@ -4,7 +4,7 @@ defmodule TaurosWeb.CustomerLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
         {@customer.name}
         <:subtitle>Customer {@customer.id}</:subtitle>
@@ -26,7 +26,7 @@ defmodule TaurosWeb.CustomerLive.Show do
 
         <:item title="Email">{@customer.email}</:item>
 
-        <:item title="Created at">{@customer.inserted_at}</:item>
+        <:item title="Created"><.datetime value={@customer.inserted_at} /></:item>
 
         <:item title="Updated at">{@customer.updated_at}</:item>
 

@@ -25,7 +25,7 @@ re-organised, sent to the wrong address or underpaid.
   `observed → confirmed → reconciled`, plus the side branches `failed` and
   `unmatched`. It is separate from the invoice's.
 - **Reconciliation is a deterministic action.** It matches a confirmed payment
-  to an invoice by destination (one of the agent's wallet accounts), currency and
+  to an invoice by destination (one of the agent's payment destinations), network, currency and
   reference, then records an allocation. The invoice moves to `partially_paid` or
   `paid` only through that action, comparing the sum of allocations with the
   total.

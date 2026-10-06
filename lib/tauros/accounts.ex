@@ -41,7 +41,11 @@ defmodule Tauros.Accounts do
 
   resources do
     resource Tauros.Accounts.Token
-    resource Tauros.Accounts.User
+
+    resource Tauros.Accounts.User do
+      define :bootstrap_approver, action: :bootstrap_approver, args: [:email]
+      define :invite_user, action: :invite, args: [:email, :role]
+    end
 
     resource Tauros.Accounts.Agent do
       define :list_agents, action: :read, default_options: [query: [sort: [inserted_at: :desc]]]

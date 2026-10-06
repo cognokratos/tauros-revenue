@@ -47,6 +47,16 @@ defmodule TaurosWeb.ConnCase do
     %{conn: log_in_user(conn, user), user: user}
   end
 
+  @doc """
+  Setup helper that signs in a human approver.
+
+      setup :register_and_log_in_approver
+  """
+  def register_and_log_in_approver(%{conn: conn}) do
+    user = Tauros.Fixtures.approver()
+    %{conn: log_in_user(conn, user), user: user}
+  end
+
   @doc "Stores a session token for `user` in the connection."
   def log_in_user(conn, user) do
     conn

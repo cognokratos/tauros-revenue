@@ -8,29 +8,69 @@ running it twice has the same effect as running it once.
 
 ## Three techniques, by command type
 
-| Command | Technique | Ash mechanism |
+| Command | Technique | In Tauros |
 | --- | --- | --- |
-| Create something from an external request: create an invoice draft, record a payment | **Idempotency key.** The client sends a key, and the key is unique per actor. A repeat returns the original record. | `attribute :idempotency_key`, `identity [:agent_id, :idempotency_key]`, `create ... upsert? true, upsert_identity: ...` that changes nothing on conflict |
-| State transition: submit, approve, issue | **Transition guard.** Approving an already approved invoice is a no-op success, never a second approval. | AshStateMachine transitions plus a `where` that returns the current record when already in the target state |
-| Process an external event: settlement notice, webhook | **Natural key.** The event is stored once by `(source, external_id)`. Processing is a separate, repeatable step. | identity on the event resource; the AshOban trigger processes unprocessed events |
+| Create something from an external request | **Idempotency key**, unique per actor; compare the payload on replay | `Invoice.create_draft` ✅ |
+| State transition | **The goal state already holds because of this same command** → no-op success | `submit_for_approval`, `withdraw`, `cancel`, `approve`/`reject`/`request_changes` ✅ |
+| Process an external event | **Natural key**, e.g. `(source, external_id)` | settlement events (Epic 6) |
+
+## `create_draft`: the contract
+
+```text
+same agent + same key + same payload      → the original invoice  (meta.idempotent_replay = true)
+same agent + same key + different payload → 409 idempotency_conflict, nothing written
+different agent + same key                → independent invoices (keys are scoped to the agent)
+```
+
+How it is built (`Invoice.Changes.ProposeRevision`), inside the create
+transaction:
+
+1. **Lock the agent's row** (`SELECT … FOR UPDATE`). Concurrent creates by the
+   same agent now run one after another, so "look up, then insert" cannot race.
+2. **Look up** an invoice with this agent and key.
+3. **Compare payloads.** "Same payload" means the same
+   [financial payload hash](exact-payload-approval.md) as the invoice's first
+   revision. The hash ignores formatting (`400` = `400.00`) and the agent's
+   reasoning, so an LLM that rewords its explanation on retry still gets a
+   replay, while any change to the money is a conflict.
+4. A **unique index** on `(agent_id, idempotency_key)` is the backstop if
+   anything ever bypassed steps 1–3.
+
+A replay returns the invoice as it is *now*: if it was revised or withdrawn
+since, the agent sees that. A replay also succeeds if the destination was
+retired after the original call; the original succeeded, and replaying it
+creates nothing.
+
+Putting a unique constraint on a key is not enough on its own: a duplicate then
+fails with a database error, the client cannot tell "you already did this"
+from "something broke", and a reused key with different content is never
+noticed.
+
+## Transitions
+
+| Command retried | Result |
+| --- | --- |
+| `submit_for_approval` on a pending invoice | success, nothing changes |
+| `withdraw` / `cancel` on a cancelled invoice | success, nothing changes |
+| `approve` (or reject / request changes) by the same approver, same revision and hash | success, still one approval |
+| a different decision, or a different approver, on a decided revision | 409 `already_decided` |
+| `revise` to exactly the current payload | success, no new revision |
+
+The shared `Tauros.Revenue.Changes.Transition` implements the first two with
+its `idempotent?: true` option; `Invoice.Changes.Decide` implements the
+decision replay. Replays write no audit event, because nothing happened.
 
 ## Rules
 
 - **Keys are scoped to the actor.** Agent A's `inv-42` is not agent B's `inv-42`.
-- **A key replayed with a different payload is an error**, not a silent success.
-  Store a hash of the original input and compare it on replay.
-- **Side effects are executed by jobs keyed by the record**, never fired inline
-  from a request that might be retried. AshOban schedules work from record state,
-  so re-running the scheduler cannot double-issue.
-- **Idempotency is tested at the action level**, for example "call
-  `create_invoice_draft` twice with the same key and assert there is one row".
-  Then every interface (UI, REST, MCP) inherits it.
+- **A key replayed with a different payload is an error**, never a silent success.
+- **Side effects are executed by jobs keyed by the record** (Epic 6), never
+  fired inline from a request that might be retried.
+- **Idempotency is tested at the action level**, then every interface inherits
+  it: `test/tauros/revenue/invoice_test.exs` ("idempotency"),
+  `test/tauros/adversarial_test.exs` (concurrent duplicates).
 
-## In the roadmap
+## Try it
 
-Idempotency is an acceptance criterion of every financial command in
-[ROADMAP.md](../ROADMAP.md), not a later hardening epic. The current scope has
-little to make idempotent. Agent registration is human-driven, and wallet
-accounts are append-only records an agent registers once. Requiring an
-`idempotency_key` arrives with the first command an agent will retry
-autonomously: creating invoice drafts.
+[Exercise 3](../EXERCISES.md#3-replay-a-request) sends the same key twice over
+HTTP, then changes one amount.

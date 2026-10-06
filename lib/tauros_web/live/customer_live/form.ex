@@ -4,7 +4,7 @@ defmodule TaurosWeb.CustomerLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
         {@page_title}
         <:subtitle>Every customer belongs to exactly one of your agents.</:subtitle>

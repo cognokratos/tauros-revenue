@@ -535,6 +535,42 @@ defmodule TaurosWeb.CoreComponents do
     """
   end
 
+  @doc "A timestamp people can read: `2026-10-06 11:18 UTC`."
+  attr :value, :any, required: true
+
+  def datetime(assigns) do
+    ~H"""
+    <time datetime={@value && DateTime.to_iso8601(@value)} class="whitespace-nowrap">
+      {@value && Calendar.strftime(@value, "%Y-%m-%d %H:%M UTC")}
+    </time>
+    """
+  end
+
+  @doc """
+  A lifecycle state as a chip. Status is always text plus colour, never colour alone.
+
+      <.state_badge state={:pending_approval} />
+  """
+  attr :state, :atom, required: true
+  attr :id, :string, default: nil
+
+  def state_badge(assigns) do
+    ~H"""
+    <span
+      id={@id}
+      class={[
+        "badge badge-sm whitespace-nowrap",
+        @state in [:active, :approved] && "badge-success",
+        @state == :pending_approval && "badge-info",
+        @state == :rejected && "badge-error",
+        @state in [:draft, :deactivated, :superseded, :cancelled] && "badge-ghost"
+      ]}
+    >
+      {@state |> to_string() |> String.replace("_", " ")}
+    </span>
+    """
+  end
+
   @doc """
   Translates the errors for a field from a keyword list of errors.
   """

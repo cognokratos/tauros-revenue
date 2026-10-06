@@ -4,9 +4,12 @@ defmodule TaurosWeb.AgentLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
         Agents
+        <:subtitle>
+          Agents prepare invoice proposals through the REST API or MCP. They can never approve one.
+        </:subtitle>
         <:actions>
           <.button variant="primary" navigate={~p"/agents/new"}>
             <.icon name="hero-plus" /> New Agent
@@ -21,10 +24,8 @@ defmodule TaurosWeb.AgentLive.Index do
       >
         <:col :let={{_id, agent}} label="Name">{agent.name}</:col>
 
-        <:col :let={{_id, agent}} label="Id" class="hidden sm:table-cell">{agent.id}</:col>
-
-        <:col :let={{_id, agent}} label="Created at" class="hidden sm:table-cell">
-          {agent.inserted_at}
+        <:col :let={{_id, agent}} label="Created" class="hidden sm:table-cell">
+          <.datetime value={agent.inserted_at} />
         </:col>
 
         <:action :let={{_id, agent}}>
@@ -46,7 +47,7 @@ defmodule TaurosWeb.AgentLive.Index do
       </.table>
 
       <p :if={@empty?} id="empty-state" class="py-8 text-center opacity-70">
-        No agents yet. Create one to get started.
+        No agents yet. Create one, then give its API key to your AI client.
       </p>
     </Layouts.app>
     """
@@ -80,7 +81,11 @@ defmodule TaurosWeb.AgentLive.Index do
       # Destroying only fails validation when the agent still owns records.
       {:destroy, {:error, %Ash.Error.Invalid{}}} ->
         {:noreply,
-         put_flash(socket, :error, "An agent with customers or wallet accounts cannot be deleted")}
+         put_flash(
+           socket,
+           :error,
+           "An agent with customers, payment destinations or invoices cannot be deleted"
+         )}
 
       _error ->
         {:noreply, put_flash(socket, :error, "The agent could not be deleted")}

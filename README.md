@@ -1,9 +1,9 @@
 # Ταύρος Revenue
 
-**Agentic financial workflow engineering with Elixir and Ash.**
+**Agentic financial workflow engineering with Elixir, Ash and AshAI.**
 
 Tauros is an open-source, educational revenue application covering customers,
-wallet destinations, and later invoices, approvals, payments and
+payment destinations, invoices and human approvals, and later payments and
 reconciliation. AI agents do the operational work. Humans keep the authority.
 
 > How can AI safely take part in financial workflows without the model being
@@ -12,17 +12,38 @@ reconciliation. AI agents do the operational work. Humans keep the authority.
 ![](docs/bg.png)
 
 Tauros answers with architecture rather than prompts. Every interface (the
-LiveView UI, the REST API and, next, AI tools through AshAI) calls the **same
-Ash actions**. The same **policies** and **state machines** decide what may
+LiveView UI, the REST API and AI tools over MCP through AshAI) calls the
+**same Ash actions**. The same **policies** and **state machines** decide what may
 happen, whoever is asking. An agent with a valid API key can read, draft and
 propose; it can't approve, issue, mark paid or change who owns what.
+
+```text
+AI proposes ─▶ the domain validates ─▶ a human reviews the exact payload ─▶ the human authorizes ─▶ (execution, later)
+```
+
+> An agent can prepare a financial proposal, pick only records it is allowed
+> to use, explain its reasoning and submit it. A human sees the exact,
+> immutable financial intent and approves it. The agent cannot obtain that
+> approval itself, not through prompts, direct Ash calls, REST, manipulated
+> state, retries or any other interface.
+
+The repository proves this with tests, not claims. See
+[what exactly stops an agent from approving](docs/AI-AUTHORITY.md#what-exactly-stops-an-agent-from-approving-an-invoice),
+then try to break it with the [exercises](docs/EXERCISES.md).
+
+## Two ways to use Tauros
+
+| | |
+| --- | --- |
+| **Run it** as a reference architecture | `mix setup && mix phx.server`, sign in as `demo@tauros.local`, and decide on the proposals an agent left for you. Then drive the agent side yourself over [MCP](docs/MCP.md). |
+| **Learn from it** as a course | **[Start the course →](docs/LEARNING-PATH.md)** 16 short lessons in four parts (identity, financial intent, human authority, AI capability). In each one you read a little code, run it, attack it, and find the guard that stopped you. |
 
 | I want to… | Read |
 | --- | --- |
 | Understand why Tauros exists | [Vision](docs/VISION.md) · [AI capability is not authority](docs/AI-AUTHORITY.md) |
 | See how it is built | [Architecture](docs/ARCHITECTURE.md) · [Domain model](docs/DOMAIN_MODEL.md) |
-| Call the API | [REST API](docs/API.md) |
-| Learn the concepts | [Learning path](docs/LEARNING-PATH.md) · [concepts/](docs/concepts) |
+| Call the API | [REST API](docs/API.md) · [MCP for AI clients](docs/MCP.md) |
+| Learn the concepts | [The course](docs/LEARNING-PATH.md) · [Labs](docs/EXERCISES.md) · [concepts/](docs/concepts) |
 | Know what's next | [Roadmap](docs/ROADMAP.md) · [Workflows](docs/WORKFLOWS.md) |
 | Contribute | [Development](docs/DEVELOPMENT.md) · [Security](docs/SECURITY.md) |
 
@@ -65,33 +86,43 @@ is a few hundred lines of DSL.
 ## Architecture
 
 ```text
- Human browser            Services / agents            AI clients (planned)
+ Human browser            Services / agents            AI clients (agents only)
       │                          │                            │
- LiveView + AshPhoenix     AshJsonApi (/api/v1)        AshAI MCP (allowlist)
+ LiveView + AshPhoenix     AshJsonApi (/api/v1)        AshAI MCP (/mcp, 8 reviewed tools)
       └──────────────┬───────────┴────────────────────────────┘
                      ▼
      Tauros.Accounts                 Tauros.Revenue
-     User · Agent · ApiKey · Token   Customer · WalletAccount · (Invoice …)
-                     │  actions · policies · validations · changes
+     User (operator | approver)      Customer · PaymentDestination
+     Agent · ApiKey · Token          Invoice ─▶ InvoiceRevision (immutable, sealed)
+                                     Approval · InvoiceEvent
+                     │  actions · policies · validations · changes · state machines
                      ▼
                AshPostgres ──▶ PostgreSQL
 ```
 
 - **Humans** sign in with a password (Argon2id) or a magic link, or get a bearer
-  token from the API. They own agents and hold authority.
+  token from the API. Registration is closed: approvers invite humans. An
+  **operator** manages agents and customers; an **approver** also decides.
 - **Agents** are AI or service principals. They authenticate with a generated API
   key (shown once, stored hashed, rotatable) and act only within their policies.
-- **Ownership** (human → agent → customer / wallet account) is enforced by Ash
-  policies, including on creates, and cannot be reassigned.
+  Over MCP an AI client is offered eight reviewed tools to read its records and
+  draft, revise, submit or withdraw invoices; there is no approval tool, and the
+  policies would refuse one anyway.
+- **Ownership** (human → agent → customer, destination, invoice) is enforced by
+  Ash policies, including on creates, and cannot be reassigned.
+- **Financial intent is immutable.** An invoice's content lives in revisions
+  that are never edited; each is sealed with a SHA-256 of its canonical
+  payload, and a human approval names one revision and its hash.
 
 ## Status
 
 | | Capability | State |
 | --- | --- | --- |
 | Epic 1 | Human authentication; agents with generated API keys; customers owned through agents | ✅ rebuilt on Ash |
-| Epic 2 | Agents register wallet accounts (address validated per settlement rail); humans review them | ✅ rebuilt on Ash |
-| Epic 3 | Invoice drafts, state machine, human approval gate | next |
-| Epic 4 | AshAI tools with an explicit allowlist | planned |
+| Epic 2 | Agents register payment destinations; humans review them | ✅ rebuilt on Ash |
+| Learning phase | Currency ≠ network ≠ rail; IBAN and Taproot checksums; destination lifecycle | ✅ |
+| Epic 3 | Approver role and closed registration; idempotent invoice drafts; immutable revisions with payload hashes; AshStateMachine lifecycle; exact-payload approvals; the approval inbox; audit envelope; authority classification and adversarial tests | ✅ |
+| Epic 4 | AshAI MCP endpoint for agents; eight reviewed read and proposal tools; exact allowlist test; MCP attack and prompt-injection tests | ✅ |
 | Epics 5–9 | Audit, payments and reconciliation, data protection, semantic search, optional Arktos adapter | planned |
 
 The original Phoenix-contexts implementation of Epics 1–2 is in the git history.
@@ -106,14 +137,14 @@ You need the Erlang/Elixir versions in `.tool-versions` and PostgreSQL at
 ```bash
 docker run -d --name tauros-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:17-alpine
 
-mix setup        # deps, database, assets, demo seeds (prints a demo login and agent key)
+mix setup        # deps, database, assets, demo seeds (a demo approver, an agent key, two proposals)
 mix phx.server   # http://localhost:4000 · API docs at /api/swaggerui
 ```
 
 ## Test it
 
 ```bash
-mix test         # domain policies, API contract and LiveView flows
+mix test         # domain policies, lifecycles, authority, attacks, API contract and LiveView flows
 mix precommit    # warnings-as-errors, format, credo, sobelow, tests
 ```
 
@@ -122,11 +153,9 @@ CI also runs dependency audits and checks that migrations match the resources
 
 ## What comes next
 
-Epic 3 introduces the invoice: a draft an agent can create idempotently, an
-AshStateMachine lifecycle that no actor can skip, and an approval bound to
-the exact payload a human reviewed. Epic 4 then exposes the safe part of the
-domain to AI clients through AshAI, and explicitly not the part that carries
-authority. See the [roadmap](docs/ROADMAP.md).
+Epic 5 turns the audit envelope into full, database-enforced history (AshPaperTrail);
+Epic 6 issues approved invoices and reconciles payments. See the
+[roadmap](docs/ROADMAP.md).
 
 ---
 

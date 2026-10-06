@@ -4,7 +4,7 @@ defmodule TaurosWeb.Router do
   use AshAuthentication.Phoenix.Router
 
   import AshAuthentication.Plug.Helpers
-  import TaurosWeb.ApiAuth, only: [require_actor: 2]
+  import TaurosWeb.ApiAuth, only: [require_actor: 2, require_agent: 2, put_interface: 2]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -33,6 +33,19 @@ defmodule TaurosWeb.Router do
       on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
 
     plug :require_actor
+    plug :put_interface, :api
+  end
+
+  # MCP is machine capability, so MCP callers are agents: only an agent API key
+  # authenticates here (no human bearer tokens, no sessions).
+  pipeline :mcp do
+    plug AshAuthentication.Strategy.ApiKey.Plug,
+      resource: Tauros.Accounts.Agent,
+      required?: false,
+      on_error: &TaurosWeb.ApiAuth.ignore_invalid_api_key/2
+
+    plug :require_agent
+    plug :put_interface, :mcp
   end
 
   scope "/", TaurosWeb do
@@ -52,9 +65,30 @@ defmodule TaurosWeb.Router do
       live "/customers/:id/edit", CustomerLive.Form, :edit
       live "/customers/:id", CustomerLive.Show, :show
 
-      live "/wallet-accounts", WalletAccountLive.Index, :index
-      live "/wallet-accounts/:id", WalletAccountLive.Show, :show
+      live "/invoices", InvoiceLive.Index, :index
+      # Reviewing is a step of an invoice's lifecycle, not a separate object.
+      live "/invoices/review", InvoiceLive.Review, :index
+      live "/invoices/:id", InvoiceLive.Show, :show
+      live "/invoices/:id/review", InvoiceLive.Review, :show
+
+      live "/invite", InviteLive, :new
+
+      live "/destinations", PaymentDestinationLive.Index, :index
+      live "/destinations/:id", PaymentDestinationLive.Show, :show
     end
+  end
+
+  scope "/mcp" do
+    pipe_through [:mcp]
+
+    # Exactly the reviewed tools (see Tauros.Authority.mcp_tools/0), run as the
+    # authenticated agent under the same Ash policies as every other interface.
+    forward "/", AshAi.Mcp.Router,
+      otp_app: :tauros,
+      tools: Tauros.Authority.mcp_tool_names(),
+      tool_argument_transformer: &TaurosWeb.Mcp.StrictArguments.check/3,
+      mcp_name: "Tauros",
+      mcp_server_version: "0.1.0"
   end
 
   scope "/api" do
@@ -77,9 +111,9 @@ defmodule TaurosWeb.Router do
     sign_out_route AuthController, "/sign-out",
       overrides: [TaurosWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
 
-    # Remove these if you'd like to use your own authentication views
-    sign_in_route register_path: "/register",
-                  reset_path: "/reset",
+    # Registration is closed: humans are invited by an approver, so there is no
+    # register_path. (Generated with one; removed on purpose.)
+    sign_in_route reset_path: "/reset",
                   auth_routes_prefix: "/auth",
                   on_mount: [{TaurosWeb.LiveUserAuth, :live_no_user}],
                   overrides: [

@@ -2,6 +2,11 @@ defmodule Tauros.Accounts.User do
   @moduledoc """
   A human. Humans sign in to the UI (password or magic link) or obtain a
   bearer token for the API, own agents, and hold financial authority.
+
+  Registration is closed. The first approver is created (or, after an
+  upgrade, promoted) with `bootstrap_approver`; everyone after that is
+  invited by an approver. A human's `role` (`Tauros.Accounts.Role`) is fixed
+  when they are invited.
   """
   use Ash.Resource,
     otp_app: :tauros,
@@ -9,6 +14,8 @@ defmodule Tauros.Accounts.User do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshJsonApi.Resource, AshAuthentication]
+
+  alias Tauros.Accounts.Checks.{AgentActor, HumanActor, HumanApprover, NoApproverYet}
 
   authentication do
     add_ons do
@@ -22,7 +29,7 @@ defmodule Tauros.Accounts.User do
         confirm_on_update? false
         require_interaction? true
         confirmed_at_field :confirmed_at
-        auto_confirm_actions [:sign_in_with_magic_link, :reset_password_with_token]
+        auto_confirm_actions [:reset_password_with_token]
         sender Tauros.Accounts.User.Senders.SendNewUserConfirmationEmail
       end
     end
@@ -38,7 +45,8 @@ defmodule Tauros.Accounts.User do
     strategies do
       magic_link do
         identity_field :email
-        registration_enabled? true
+        # Closed: a magic link signs in an existing (invited) human only.
+        registration_enabled? false
         require_interaction? true
 
         sender Tauros.Accounts.User.Senders.SendMagicLinkEmail
@@ -49,6 +57,8 @@ defmodule Tauros.Accounts.User do
       password :password do
         identity_field :email
         hash_provider AshAuthentication.Argon2Provider
+        # Closed: strangers cannot register and give themselves authority.
+        registration_enabled? false
 
         resettable do
           sender Tauros.Accounts.User.Senders.SendPasswordResetEmail
@@ -84,8 +94,9 @@ defmodule Tauros.Accounts.User do
       get_by :email
     end
 
-    create :sign_in_with_magic_link do
-      description "Sign in or register a user with magic link."
+    read :sign_in_with_magic_link do
+      description "Sign in an existing human with a magic link. It never registers anyone."
+      get? true
 
       argument :token, :string do
         description "The token from the magic link that was sent to the user"
@@ -97,27 +108,40 @@ defmodule Tauros.Accounts.User do
         allow_nil? true
       end
 
-      upsert? true
-      upsert_identity :unique_email
-      upsert_fields [:email]
+      prepare AshAuthentication.Strategy.MagicLink.SignInPreparation
 
-      # Uses the information from the token to create or sign in the user
-      change AshAuthentication.Strategy.MagicLink.SignInChange
-
-      change {AshAuthentication.Strategy.RememberMe.MaybeGenerateTokenChange,
-              strategy_name: :remember_me}
+      prepare {AshAuthentication.Strategy.RememberMe.MaybeGenerateTokenPreparation,
+               strategy_name: :remember_me}
 
       metadata :token, :string do
         allow_nil? false
       end
     end
 
-    action :request_magic_link do
-      argument :email, :ci_string do
-        allow_nil? false
-      end
+    create :invite do
+      description """
+      An approver invites a human by email, as an operator or an approver. The
+      invitee signs in with a magic link, or sets a password through "Forgot
+      your password?".
+      """
 
-      run AshAuthentication.Strategy.MagicLink.Request
+      accept [:email, :role]
+    end
+
+    create :bootstrap_approver do
+      description """
+      Make `email` the first approver, creating that human if needed. Allowed
+      only while no approver exists: on a fresh installation, or once after
+      upgrading from before roles existed. Run it from a console or the seeds.
+      The human then signs in with a magic link or sets a password through
+      "Forgot your password?".
+      """
+
+      accept [:email]
+      change set_attribute(:role, :approver)
+      upsert? true
+      upsert_identity :unique_email
+      upsert_fields [:role]
     end
 
     update :change_password do
@@ -194,44 +218,6 @@ defmodule Tauros.Accounts.User do
       end
     end
 
-    create :register_with_password do
-      description "Register a new user with a email and password."
-
-      argument :email, :ci_string do
-        allow_nil? false
-      end
-
-      argument :password, :string do
-        description "The proposed password for the user, in plain text."
-        allow_nil? false
-        constraints min_length: 8
-        sensitive? true
-      end
-
-      argument :password_confirmation, :string do
-        description "The proposed password for the user (again), in plain text."
-        allow_nil? false
-        sensitive? true
-      end
-
-      # Sets the email from the argument
-      change set_attribute(:email, arg(:email))
-
-      # Hashes the provided password
-      change AshAuthentication.Strategy.Password.HashPasswordChange
-
-      # Generates an authentication token for the user
-      change AshAuthentication.GenerateTokenChange
-
-      # validates that the password matches the confirmation
-      validate AshAuthentication.Strategy.Password.PasswordConfirmationValidation
-
-      metadata :token, :string do
-        description "A JWT that can be used to authenticate the user."
-        allow_nil? false
-      end
-    end
-
     action :request_password_reset_token do
       description "Send password reset instructions to a user if they exist."
 
@@ -281,7 +267,12 @@ defmodule Tauros.Accounts.User do
       authorize_if always()
     end
 
-    policy action(:change_password) do
+    policy [action(:read), HumanActor] do
+      description "A human may read their own record (e.g. as the approver of a decision)"
+      authorize_if expr(id == ^actor(:id))
+    end
+
+    policy [action(:change_password), HumanActor] do
       description "Users may change only their own password"
       authorize_if expr(id == ^actor(:id))
     end
@@ -289,6 +280,17 @@ defmodule Tauros.Accounts.User do
     policy action(:sign_in_with_password) do
       description "Anyone may attempt to sign in through the JSON API"
       authorize_if always()
+    end
+
+    policy action(:invite) do
+      description "Only an approver may bring another human into Tauros"
+      authorize_if HumanApprover
+    end
+
+    policy action(:bootstrap_approver) do
+      description "The first approver can be designated only while there is none, never by an agent"
+      forbid_if AgentActor
+      authorize_if NoApproverYet
     end
   end
 
@@ -305,6 +307,13 @@ defmodule Tauros.Accounts.User do
     end
 
     attribute :confirmed_at, :utc_datetime_usec
+
+    attribute :role, Tauros.Accounts.Role do
+      description "operator or approver. Set on invitation; no action changes it."
+      allow_nil? false
+      default :operator
+      public? true
+    end
   end
 
   relationships do

@@ -146,29 +146,33 @@ defmodule TaurosWeb.Api.ResourcesTest do
     end
   end
 
-  describe "wallet accounts" do
+  describe "payment destinations" do
     setup %{conn: conn, user: user} do
       agent = agent(user)
       %{agent: agent, as_agent: authorize(conn, agent.__metadata__.plaintext_api_key)}
     end
 
-    test "an agent registers a wallet account for itself", %{as_agent: as_agent, agent: agent} do
+    defp destination_payload(overrides \\ %{}) do
+      payload(
+        "payment_destination",
+        Map.merge(
+          %{label: "Treasury", currency: "USDC", network: "arbitrum", address: @eth},
+          overrides
+        )
+      )
+    end
+
+    test "an agent registers a destination for itself", %{as_agent: as_agent, agent: agent} do
       response =
         as_agent
-        |> post(
-          "/api/v1/wallet-accounts",
-          payload("wallet_account", %{
-            wallet_name: "Treasury",
-            public_address: @eth,
-            currency: "ETH"
-          })
-        )
+        |> post("/api/v1/payment-destinations", destination_payload())
         |> json_response(201)
 
       assert %{
-               "wallet_name" => "Treasury",
-               "public_address" => @eth,
-               "currency" => "ETH",
+               "label" => "Treasury",
+               "currency" => "USDC",
+               "network" => "arbitrum",
+               "address" => @eth,
                "agent_id" => agent_id
              } = response["data"]["attributes"]
 
@@ -179,29 +183,65 @@ defmodule TaurosWeb.Api.ResourcesTest do
       response =
         as_agent
         |> post(
-          "/api/v1/wallet-accounts",
-          payload("wallet_account", %{wallet_name: "Bank", public_address: @eth, currency: "EUR"})
+          "/api/v1/payment-destinations",
+          destination_payload(%{currency: "EUR", network: "iban"})
         )
         |> json_response(400)
 
-      assert [%{"detail" => "must be a valid IBAN"}] = response["errors"]
+      assert [%{"source" => %{"pointer" => "/data/attributes/address"}}] = response["errors"]
     end
 
-    test "humans can list but not register wallet accounts", %{human: human, agent: agent} do
-      account = wallet_account(agent)
+    test "a network that cannot carry the currency is rejected", %{as_agent: as_agent} do
+      response =
+        as_agent
+        |> post("/api/v1/payment-destinations", destination_payload(%{currency: "BTC"}))
+        |> json_response(400)
 
-      assert [%{"id" => id}] =
-               human |> get("/api/v1/wallet-accounts") |> json_response(200) |> Map.get("data")
+      assert [%{"source" => %{"pointer" => "/data/attributes/network"}}] = response["errors"]
+    end
 
-      assert id == account.id
+    test "an agent deactivates its own destination", %{as_agent: as_agent, agent: agent} do
+      destination = payment_destination(agent)
+
+      response =
+        as_agent
+        |> patch(
+          "/api/v1/payment-destinations/#{destination.id}/deactivate",
+          payload("payment_destination", destination.id, %{})
+        )
+        |> json_response(200)
+
+      assert response["data"]["attributes"]["state"] == "deactivated"
+    end
+
+    test "state cannot be written through the API", %{as_agent: as_agent, agent: agent} do
+      destination = payment_destination(agent)
 
       conn =
-        post(
-          human,
-          "/api/v1/wallet-accounts",
-          payload("wallet_account", %{wallet_name: "T", public_address: @eth, currency: "ETH"})
+        patch(
+          as_agent,
+          "/api/v1/payment-destinations/#{destination.id}/deactivate",
+          payload("payment_destination", destination.id, %{state: "active", address: @eth})
         )
 
+      assert json_response(conn, 400)
+
+      conn = post(as_agent, "/api/v1/payment-destinations", destination_payload(%{state: "x"}))
+      assert json_response(conn, 400)
+    end
+
+    test "humans can list but not register destinations", %{human: human, agent: agent} do
+      destination = payment_destination(agent)
+
+      assert [%{"id" => id}] =
+               human
+               |> get("/api/v1/payment-destinations")
+               |> json_response(200)
+               |> Map.get("data")
+
+      assert id == destination.id
+
+      conn = post(human, "/api/v1/payment-destinations", destination_payload())
       assert json_response(conn, 403)
     end
   end

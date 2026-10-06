@@ -4,9 +4,10 @@ defmodule TaurosWeb.CustomerLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
         Customers
+        <:subtitle>Who your agents may bill. Each customer belongs to one agent.</:subtitle>
         <:actions>
           <.button variant="primary" navigate={~p"/customers/new"}>
             <.icon name="hero-plus" /> New Customer
@@ -27,8 +28,8 @@ defmodule TaurosWeb.CustomerLive.Index do
 
         <:col :let={{_id, customer}} label="Agent">{customer.agent.name}</:col>
 
-        <:col :let={{_id, customer}} label="Created at" class="hidden sm:table-cell">
-          {customer.inserted_at}
+        <:col :let={{_id, customer}} label="Created" class="hidden sm:table-cell">
+          <.datetime value={customer.inserted_at} />
         </:col>
 
         <:action :let={{_id, customer}}>
