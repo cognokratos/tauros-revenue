@@ -8,8 +8,8 @@ defmodule TaurosWeb.PaymentDestinationLive.Index do
       <.header>
         Payment destinations
         <:subtitle>
-          Where your agents get paid: a currency, the network it arrives on and a public address.
-          Tauros stores public addresses only.
+          Payment destinations tell agents where an invoice can be paid: a currency, the network it
+          arrives on and a public address. Tauros stores public receiving information only.
         </:subtitle>
       </.header>
 

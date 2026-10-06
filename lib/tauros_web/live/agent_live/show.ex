@@ -33,7 +33,7 @@ defmodule TaurosWeb.AgentLive.Show do
 
         <:item title="Name">{@agent.name}</:item>
 
-        <:item title="Created at">{@agent.inserted_at}</:item>
+        <:item title="Created"><.datetime value={@agent.inserted_at} /></:item>
 
         <:item title="Updated at">{@agent.updated_at}</:item>
       </.list>

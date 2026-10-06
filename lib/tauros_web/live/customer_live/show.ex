@@ -26,7 +26,7 @@ defmodule TaurosWeb.CustomerLive.Show do
 
         <:item title="Email">{@customer.email}</:item>
 
-        <:item title="Created at">{@customer.inserted_at}</:item>
+        <:item title="Created"><.datetime value={@customer.inserted_at} /></:item>
 
         <:item title="Updated at">{@customer.updated_at}</:item>
 
