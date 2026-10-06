@@ -1,6 +1,6 @@
 # Ταύρος Revenue
 
-**Agentic financial workflow engineering with Elixir and Ash.**
+**Agentic financial workflow engineering with Elixir, Ash and AshAI.**
 
 Tauros is an open-source, educational revenue application covering customers,
 payment destinations, invoices and human approvals, and later payments and
@@ -31,12 +31,19 @@ The repository proves this with tests, not claims. See
 [what exactly stops an agent from approving](docs/AI-AUTHORITY.md#what-exactly-stops-an-agent-from-approving-an-invoice),
 then try to break it with the [exercises](docs/EXERCISES.md).
 
+## Two ways to use Tauros
+
+| | |
+| --- | --- |
+| **Run it** as a reference architecture | `mix setup && mix phx.server`, sign in as `demo@tauros.local`, and decide on the proposals an agent left for you. Then drive the agent side yourself over [MCP](docs/MCP.md). |
+| **Learn from it** as a course | **[Start the course →](docs/LEARNING-PATH.md)** 16 short lessons in four parts (identity, financial intent, human authority, AI capability). In each one you read a little code, run it, attack it, and find the guard that stopped you. |
+
 | I want to… | Read |
 | --- | --- |
 | Understand why Tauros exists | [Vision](docs/VISION.md) · [AI capability is not authority](docs/AI-AUTHORITY.md) |
 | See how it is built | [Architecture](docs/ARCHITECTURE.md) · [Domain model](docs/DOMAIN_MODEL.md) |
 | Call the API | [REST API](docs/API.md) · [MCP for AI clients](docs/MCP.md) |
-| Learn the concepts | [Learning path](docs/LEARNING-PATH.md) · [Exercises](docs/EXERCISES.md) · [concepts/](docs/concepts) |
+| Learn the concepts | [The course](docs/LEARNING-PATH.md) · [Labs](docs/EXERCISES.md) · [concepts/](docs/concepts) |
 | Know what's next | [Roadmap](docs/ROADMAP.md) · [Workflows](docs/WORKFLOWS.md) |
 | Contribute | [Development](docs/DEVELOPMENT.md) · [Security](docs/SECURITY.md) |
 

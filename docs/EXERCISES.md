@@ -1,8 +1,23 @@
-# Exercises: learn by failed attacks
+# Labs: learn by failed attacks
 
-Each exercise tries something an agent (or a careless human) should not be able
-to do, shows the refusal, and asks you to find the exact declaration that
-caused it. They run against the demo data from `mix setup`.
+The runnable labs of the [course](LEARNING-PATH.md). Each one tries something
+an agent (or a careless human) should not be able to do, shows the refusal,
+and asks you to find the exact declaration that caused it. They run against
+the demo data from `mix setup`.
+
+| Lab | Used in lesson |
+| --- | --- |
+| [1 · Break ownership](#1-break-ownership) | [3 · Tenant isolation](course/03-tenant-isolation.md) |
+| [2 · Skip the state machine](#2-skip-the-state-machine) | [6 · Financial state machines](course/06-state-machines.md) |
+| [3 · Replay a request](#3-replay-a-request) | [7 · Idempotency](course/07-idempotency.md) |
+| [4 · Mutate approved intent](#4-mutate-approved-intent) | [5 · Invoice revisions](course/05-invoice-revisions.md), [8 · Exact-payload approval](course/08-exact-payload-approval.md) |
+| [5 · Impersonate authority](#5-impersonate-authority) | [11 · Breaking the approval boundary](course/11-breaking-the-boundary.md) |
+| [6 · Tamper behind Tauros's back](#6-tamper-behind-tauross-back-bonus) | [11](course/11-breaking-the-boundary.md) |
+| [7 · Discover tools](#7-discover-tools) | [12 · AshAI and MCP](course/12-ashai-and-mcp.md) |
+| [8 · Create a proposal](#8-create-a-proposal) | [16 · Capstone](course/16-capstone-mcp-to-approval.md) |
+| [9 · Try to approve](#9-try-to-approve) | [14 · Capability vs permission](course/14-capability-vs-permission.md) |
+| [10 · Replay a draft](#10-replay-a-draft) | [13 · A reviewed tool surface](course/13-reviewed-tool-surface.md) |
+| [11 · Cross-tenant request](#11-cross-tenant-request) | [3 · Tenant isolation](course/03-tenant-isolation.md) |
 
 Start a console:
 
@@ -223,8 +238,9 @@ call submit_invoice "{\"id\":\"$INVOICE\"}" | out
 # {"id":"…","state":"pending_approval"}
 ```
 
-Now sign in at <http://localhost:4000/approvals> as `demo@tauros.local`. The
-proposal is waiting, with the agent's reasoning and the exact payload hash.
+Now sign in at <http://localhost:4000> as `demo@tauros.local`. The Overview
+shows the proposal waiting; open it from **Needs review** and see the agent's
+reasoning, who proposed it, who decides, and the exact revision.
 **Explain** what the agent can no longer do to this proposal, and what it still
 can (`revise_invoice`): what happens to a human looking at the old revision?
 
