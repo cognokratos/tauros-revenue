@@ -4,7 +4,7 @@ defmodule TaurosWeb.DashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
         Dashboard
         <:subtitle>What you and your agents are responsible for.</:subtitle>
@@ -13,7 +13,7 @@ defmodule TaurosWeb.DashboardLive do
       <.link
         :if={@counts.awaiting_approval > 0}
         id="awaiting-approval"
-        navigate={~p"/approvals"}
+        navigate={~p"/invoices/review"}
         class="alert alert-info"
       >
         <.icon name="hero-inbox" class="size-5" />

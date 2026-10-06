@@ -19,7 +19,7 @@ defmodule TaurosWeb.AdversarialLiveTest do
   end
 
   test "an operator pushes an approve event the page never offered", ctx do
-    {:ok, view, _html} = live(ctx.conn, ~p"/approvals/#{ctx.invoice}")
+    {:ok, view, _html} = live(ctx.conn, ~p"/invoices/#{ctx.invoice}/review")
     refute has_element?(view, "#approve-form")
 
     html =
@@ -42,7 +42,7 @@ defmodule TaurosWeb.AdversarialLiveTest do
     invoice = agent |> invoice_draft() |> Revenue.submit_invoice!(actor: agent)
     revision = Ash.load!(invoice, :current_revision, authorize?: false).current_revision
 
-    {:ok, view, _html} = live(log_in_user(conn, approver), ~p"/approvals/#{invoice}")
+    {:ok, view, _html} = live(log_in_user(conn, approver), ~p"/invoices/#{invoice}/review")
 
     render_hook(view, "approve", %{
       "approval" => %{"revision_id" => revision.id, "payload_hash" => String.duplicate("0", 64)}
@@ -53,7 +53,7 @@ defmodule TaurosWeb.AdversarialLiveTest do
   end
 
   test "a decision event without a selected proposal decides nothing", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/approvals")
+    {:ok, view, _html} = live(conn, ~p"/invoices/review")
     assert render_hook(view, "approve", %{"approval" => %{}}) =~ "Select a proposal first"
   end
 end

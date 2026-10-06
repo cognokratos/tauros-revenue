@@ -65,11 +65,11 @@ defmodule TaurosWeb.Router do
       live "/customers/:id/edit", CustomerLive.Form, :edit
       live "/customers/:id", CustomerLive.Show, :show
 
-      live "/approvals", ApprovalLive, :index
-      live "/approvals/:id", ApprovalLive, :show
-
       live "/invoices", InvoiceLive.Index, :index
+      # Reviewing is a step of an invoice's lifecycle, not a separate object.
+      live "/invoices/review", InvoiceLive.Review, :index
       live "/invoices/:id", InvoiceLive.Show, :show
+      live "/invoices/:id/review", InvoiceLive.Review, :show
 
       live "/invite", InviteLive, :new
 

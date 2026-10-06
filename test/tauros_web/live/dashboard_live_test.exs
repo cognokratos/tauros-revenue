@@ -23,7 +23,7 @@ defmodule TaurosWeb.DashboardLiveTest do
   test "offers every section in the mobile menu, including sign-out", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/")
 
-    for path <- ["/", "/agents", "/customers", "/destinations"] do
+    for path <- ["/", "/invoices/review", "/invoices", "/agents", "/customers", "/destinations"] do
       assert has_element?(view, "#mobile-menu a[href='#{path}']")
     end
 

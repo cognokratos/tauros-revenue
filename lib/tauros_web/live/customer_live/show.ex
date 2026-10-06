@@ -4,7 +4,7 @@ defmodule TaurosWeb.CustomerLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
         {@customer.name}
         <:subtitle>Customer {@customer.id}</:subtitle>

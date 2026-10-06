@@ -1,7 +1,8 @@
-defmodule TaurosWeb.ApprovalLive do
+defmodule TaurosWeb.InvoiceLive.Review do
   @moduledoc """
-  The approval inbox ("Quiet Ledger"): pending proposals on the left, the exact
-  financial intent of the selected one on the right.
+  "Needs review": the invoices waiting for a human decision, and the review of
+  one of them ("Quiet Ledger"). Reviewing is a step of an invoice's lifecycle,
+  so it lives under /invoices.
 
   The decision form carries the `revision_id` and `payload_hash` that were on
   screen. If the proposal changed in the meantime, the domain refuses the
@@ -20,17 +21,17 @@ defmodule TaurosWeb.ApprovalLive do
     :agent,
     :revisions,
     :events,
-    current_revision: [:customer, :payment_destination]
+    current_revision: [:customer, :payment_destination, :approval]
   ]
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} nav={@nav}>
       <.header>
-        Approvals
+        Needs review
         <:subtitle>
-          Proposals your agents submitted. Nothing is approved until you decide, one at a time.
+          Proposals your agents submitted. Nothing is approved until a human approver decides, one at a time.
         </:subtitle>
       </.header>
 
@@ -40,26 +41,69 @@ defmodule TaurosWeb.ApprovalLive do
             <div :for={{id, invoice} <- @streams.pending} id={id}>
               <.proposal_card
                 invoice={invoice}
-                patch={~p"/approvals/#{invoice}"}
+                patch={~p"/invoices/#{invoice}/review"}
                 selected?={@invoice && @invoice.id == invoice.id}
               />
             </div>
           </div>
-          <p
+          <div
             :if={@pending_count == 0}
             id="empty-state"
-            class="rounded-box border border-dashed border-base-300 p-8 text-center opacity-70"
+            class="rounded-box border border-dashed border-base-300 p-8 text-center"
           >
-            Nothing is waiting for your decision.
-          </p>
+            <p class="font-medium">Nothing needs your review.</p>
+            <p class="mt-1 text-sm opacity-70">
+              When an agent submits a proposal, it appears here.
+              <.link navigate={~p"/invoices"} class="link">See all invoices</.link>
+            </p>
+          </div>
         </section>
 
-        <section :if={@invoice} id="proposal" aria-label="Selected proposal" class="space-y-6">
-          <.link patch={~p"/approvals"} class="btn btn-ghost btn-sm lg:hidden">
-            <.icon name="hero-arrow-left" /> All proposals
-          </.link>
+        <p
+          :if={!@invoice and @pending_count > 0}
+          id="select-prompt"
+          class="hidden self-start rounded-box border border-dashed border-base-300 p-8 text-center text-sm opacity-70 lg:block"
+        >
+          Select a proposal to see exactly what approving it would authorize.
+        </p>
 
-          <.financial_intent invoice={@invoice} />
+        <section :if={@invoice} id="proposal" aria-label="Selected proposal" class="space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <.link patch={~p"/invoices/review"} class="btn btn-ghost btn-sm lg:hidden">
+              <.icon name="hero-arrow-left" /> All proposals
+            </.link>
+            <.link
+              id="open-invoice"
+              navigate={~p"/invoices/#{@invoice}"}
+              class="link link-hover ml-auto text-sm"
+            >
+              Open the invoice <.icon name="hero-arrow-right" class="size-3" />
+            </.link>
+          </div>
+
+          <div
+            id="authority"
+            class="grid gap-3 rounded-box border border-base-300 bg-base-100 p-4 text-sm sm:grid-cols-2"
+          >
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide opacity-60">Proposed by</p>
+              <p><span class="font-semibold">{@invoice.agent.name}</span>, an AI agent</p>
+              <p class="text-xs opacity-70">It can prepare and submit; it cannot approve.</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide opacity-60">
+                Decision authority
+              </p>
+              <p :if={@can_decide?} id="decision-authority">
+                <span class="font-semibold">You</span>, a human approver
+              </p>
+              <p :if={!@can_decide?} id="decision-authority">
+                A human approver (not you: your role is {@current_user.role})
+              </p>
+            </div>
+          </div>
+
+          <.financial_intent invoice={@invoice} summary_label="What approving authorizes" />
 
           <div
             :if={@invoice.current_revision.payment_destination.state != :active}
@@ -86,7 +130,8 @@ defmodule TaurosWeb.ApprovalLive do
             id="not-pending"
             class="rounded-box border border-base-300 p-4 text-sm"
           >
-            This invoice is <.state_badge state={@invoice.state} />; there is nothing to decide.
+            This invoice is <.invoice_status invoice={@invoice} />; there is nothing to decide.
+            <.link navigate={~p"/invoices/#{@invoice}"} class="link">Open the invoice</.link>
           </p>
 
           <p
@@ -97,7 +142,8 @@ defmodule TaurosWeb.ApprovalLive do
             You can review this proposal. Only an approver can decide; your role is {@current_user.role}.
           </p>
 
-          <.history events={@invoice.events} />
+          <.revision_details invoice={@invoice} />
+          <.history events={@invoice.events} agent_names={@agent_names} viewer={@current_user} />
         </section>
       </div>
     </Layouts.app>
@@ -114,7 +160,7 @@ defmodule TaurosWeb.ApprovalLive do
     <section
       id="decision-panel"
       aria-labelledby="decision-heading"
-      class="space-y-4 rounded-box border-2 border-base-300 p-4"
+      class="space-y-4 rounded-box border-2 border-base-300 bg-base-100 p-4"
     >
       <h3 id="decision-heading" class="font-semibold">Your decision</h3>
 
@@ -129,9 +175,12 @@ defmodule TaurosWeb.ApprovalLive do
         <input type="hidden" name="approval[revision_id]" value={@revision.id} />
         <input type="hidden" name="approval[payload_hash]" value={@revision.payload_hash} />
         <p class="text-sm">
-          Approving authorizes revision {@revision.number} exactly as shown above
-          (SHA-256 <code class="font-mono text-xs">{String.slice(@revision.payload_hash, 0, 12)}…</code>).
-          It does not send or issue anything yet.
+          You are approving <strong>revision {@revision.number}</strong>
+          exactly as shown above. If the agent changes anything, that becomes a new revision that
+          needs its own review. Approving does not send or issue anything yet.
+          <span class="block pt-1 text-xs opacity-70">
+            Fingerprint <code class="font-mono">{String.slice(@revision.payload_hash, 0, 12)}…</code>
+          </span>
         </p>
         <.input
           type="textarea"
@@ -158,7 +207,7 @@ defmodule TaurosWeb.ApprovalLive do
           name="decision[reason]"
           id="decision_reason"
           value=""
-          label="Reason (required to send back or reject)"
+          label="Reason (required to request changes or reject)"
         />
         <div class="flex flex-col gap-2 sm:flex-row">
           <button
@@ -180,6 +229,9 @@ defmodule TaurosWeb.ApprovalLive do
             Reject
           </button>
         </div>
+        <p class="text-xs opacity-70">
+          Request changes sends it back to the agent to revise. Reject closes it for good.
+        </p>
       </.form>
     </section>
     """
@@ -189,9 +241,10 @@ defmodule TaurosWeb.ApprovalLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Approvals")
+     |> assign(:page_title, "Needs review")
      |> assign(:invoice, nil)
      |> assign(:can_decide?, false)
+     |> assign(:agent_names, agent_names(socket.assigns.current_user))
      |> stream_pending()}
   end
 
@@ -205,12 +258,15 @@ defmodule TaurosWeb.ApprovalLive do
         {:noreply,
          socket
          |> put_flash(:error, "That proposal is not available")
-         |> push_patch(to: ~p"/approvals")}
+         |> push_patch(to: ~p"/invoices/review")}
     end
   end
 
   def handle_params(_params, _uri, socket) do
-    {:noreply, socket |> assign(invoice: nil, can_decide?: false) |> stream_pending()}
+    {:noreply,
+     socket
+     |> assign(invoice: nil, can_decide?: false, page_title: "Needs review")
+     |> stream_pending()}
   end
 
   @impl true
@@ -236,11 +292,12 @@ defmodule TaurosWeb.ApprovalLive do
     opts = [actor: socket.assigns.current_user, context: %{interface: :ui}]
 
     case apply(Revenue, function(outcome), [socket.assigns.invoice, input, opts]) do
-      {:ok, _invoice} ->
+      {:ok, invoice} ->
+        # Show the result where it lives: the invoice, with its new state.
         {:noreply,
          socket
          |> put_flash(:info, done(outcome))
-         |> push_patch(to: ~p"/approvals")}
+         |> push_navigate(to: ~p"/invoices/#{invoice}")}
 
       {:error, error} ->
         {:noreply, socket |> put_flash(:error, explain(error)) |> reload()}
@@ -252,7 +309,7 @@ defmodule TaurosWeb.ApprovalLive do
   defp function(:request_changes), do: :request_invoice_changes
 
   defp done(:approve), do: "Approved. Nothing has been issued or paid yet."
-  defp done(:reject), do: "Rejected."
+  defp done(:reject), do: "Rejected. The invoice is closed."
   defp done(:request_changes), do: "Sent back to the agent with your reason."
 
   defp explain(%Ash.Error.Invalid{errors: [%Conflict{code: code} | _]})
@@ -297,14 +354,18 @@ defmodule TaurosWeb.ApprovalLive do
           socket.assigns.current_user
         )
 
-    assign(socket, invoice: invoice, can_decide?: can_decide?)
+    assign(socket,
+      invoice: invoice,
+      can_decide?: can_decide?,
+      page_title: "Review · #{revision.customer.name}"
+    )
   end
 
   defp stream_pending(socket) do
     pending =
       Revenue.list_invoices_awaiting_approval!(
         actor: socket.assigns.current_user,
-        load: [current_revision: [:customer, :payment_destination]]
+        load: [:agent, current_revision: [:customer, :payment_destination]]
       )
 
     socket
