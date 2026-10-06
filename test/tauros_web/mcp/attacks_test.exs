@@ -98,11 +98,13 @@ defmodule TaurosWeb.Mcp.AttacksTest do
                "input" => %{"reasoning" => "x", "state" => "approved"}
              })
 
-    # A stray top-level key is ignored: submit runs as submit and nothing else.
+    # A stray top-level key is refused too: unknown input is an error.
     draft = invoice_draft(ctx.agent)
 
-    assert {:ok, %{"state" => "pending_approval"}} =
+    assert {:tool_error, "Unknown arguments for submit_invoice: state." <> _} =
              call(ctx.key, "submit_invoice", %{"id" => draft.id, "state" => "approved"})
+
+    assert Revenue.get_invoice!(draft.id, actor: ctx.agent).state == :draft
 
     refute state(ctx.pending) == :approved
     assert Ash.read!(Revenue.Approval, authorize?: false) == []

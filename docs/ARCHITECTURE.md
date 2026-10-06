@@ -132,7 +132,7 @@ is not generator output or a configuration line:
 | `TaurosWeb.ApiAuth` | 55 | one bearer header for both actor kinds; 401 without credentials; interface context |
 | `ApprovalLive`, `InvoiceLive.*`, `InvoiceComponents`, `InviteLive` | 745 | the approval inbox, invoice pages, invitations |
 | `tools` block in `Tauros.Revenue` | ~130 of DSL | the eight MCP tools: action, output fields, model-facing description |
-| `TaurosWeb.Mcp.ExactNumbers` | 40 | refuse JSON floats in tool arguments (amounts are decimal strings) |
+| `TaurosWeb.Mcp.StrictArguments` | 60 | refuse unknown top-level tool arguments and JSON floats (amounts are decimal strings) |
 | `ApiAuth.require_agent`, `:mcp` pipeline | 35 | MCP callers are agents |
 | `DashboardLive`, edits to generated LiveViews | small | landing page, destination state and lineage, agent names, empty states |
 
@@ -278,7 +278,7 @@ decisions resolve those disagreements.
 17. **AshAI is a thin exposure layer.** The tools are declared on existing
     actions; there is no handwritten MCP server, no second argument schema
     and no authorization in the MCP layer. It authenticates the agent, selects
-    tools, shapes outputs, refuses floats and formats errors.
+    tools, shapes outputs, refuses unknown arguments and floats, and formats errors.
 18. **MCP callers are agents** with their existing API key, through their own
     pipeline. Humans have the UI and REST.
 19. **The MCP surface is an exact, reviewed list** (`Tauros.Authority.mcp_tools/0`),

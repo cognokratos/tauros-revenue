@@ -261,7 +261,7 @@ call create_invoice_draft "$(echo "$INPUT" | jq '.input.idempotency_key="ex-10" 
 ```
 
 **Explain** each answer. Which one would silently lose precision if Tauros
-accepted it, and where is it refused (`lib/tauros_web/mcp/exact_numbers.ex`)?
+accepted it, and where is it refused (`lib/tauros_web/mcp/strict_arguments.ex`)?
 
 ## 11. Cross-tenant request
 

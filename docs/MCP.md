@@ -81,11 +81,19 @@ summary is for reading.
 **Money is a decimal string.** `quantity` and `unit_amount` are declared as
 `"type": "string"` (`"1200.50"`), never as JSON numbers. JSON parsers turn
 numbers into IEEE floats before Tauros sees them, so a float is refused with
-an instruction to resend it as a string (`TaurosWeb.Mcp.ExactNumbers`).
+an instruction to resend it as a string (`TaurosWeb.Mcp.StrictArguments`).
 Amounts must also fit the currency's decimal places; Tauros never rounds.
 
-Unknown keys inside `input` (such as `state` or `agent_id`) are rejected with
-the list of valid arguments.
+**Unknown input is an error, never silently dropped.** A tool call must express
+exactly the command Tauros declares:
+
+- an unknown top-level argument (`{"id": "…", "state": "approved"}` to
+  `submit_invoice`) is refused by `TaurosWeb.Mcp.StrictArguments`, which reads
+  the accepted names from the same schema `tools/list` publishes;
+- an unknown key inside `input` (such as `state` or `agent_id`) is refused by
+  AshAI.
+
+Both errors name the unknown argument and list the accepted ones.
 
 ## A complete flow
 
@@ -157,7 +165,8 @@ can act on. Calling a tool that does not exist is a JSON-RPC error.
 | reused idempotency key | `idempotency_key: was already used by this agent for a different financial payload (idempotency_conflict)` |
 | illegal transition | `submit_for_approval is not allowed while the invoice is cancelled (invalid_transition)` |
 | another agent's (or no) invoice | `could not be found` |
-| unknown argument | `Unknown arguments provided: state. Valid arguments are: …` |
+| unknown top-level argument | `Unknown arguments for submit_invoice: state. Accepted arguments: id` |
+| unknown argument inside `input` | `Unknown arguments provided: state. Valid arguments are: …` |
 | a tool that does not exist | JSON-RPC `-32602 Tool not found: approve_invoice` |
 
 The `revisions.0.` prefix appears because those rules belong to the
@@ -188,7 +197,8 @@ Layer 2  authorization        the agent may not run it anyway
   same key gives 403. `TaurosWeb.Mcp.AttacksTest` plays this out with a fully
   obedient client.
 - **The MCP layer holds no authorization logic.** It authenticates the agent,
-  selects tools, shapes outputs, refuses floats and formats errors. Ownership,
+  selects tools, shapes outputs, refuses unknown arguments and floats, and
+  formats errors. Ownership,
   lifecycle, idempotency and authority stay in the Ash resources.
 
 ## Audit

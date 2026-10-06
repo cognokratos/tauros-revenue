@@ -86,7 +86,7 @@ defmodule TaurosWeb.Router do
     forward "/", AshAi.Mcp.Router,
       otp_app: :tauros,
       tools: Tauros.Authority.mcp_tool_names(),
-      tool_argument_transformer: &TaurosWeb.Mcp.ExactNumbers.reject_floats/3,
+      tool_argument_transformer: &TaurosWeb.Mcp.StrictArguments.check/3,
       mcp_name: "Tauros",
       mcp_server_version: "0.1.0"
   end
