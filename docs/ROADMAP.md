@@ -70,7 +70,7 @@ These criteria apply to every story that changes financial state:
 | 3.1 Human authority roles | registration closed; `role` operator/approver; `invite`; `bootstrap_approver`; `HumanApprover` check |
 | 3.2 Invoice draft | `create_draft` with a required idempotency key; customer and destination of the same agent; destination active and receiving the invoice currency; Decimal amounts that fit the currency |
 | 3.3 Invoice lifecycle | AshStateMachine; transitions checked against the locked row; no action accepts `state` |
-| 3.4 Approval inbox | the Quiet Ledger at `/approvals`, plus `/invoices` |
+| 3.4 Approval inbox | the Quiet Ledger review, plus the invoice pages (reorganized in the pre-PR polish, below) |
 | 3.5 Approval bound to the payload | immutable `InvoiceRevision`s with a canonical payload and SHA-256; `Approval` names one revision and hash |
 | 3.6 The gate holds on every interface | `AuthorityTest`, `AdversarialTest`, API and LiveView attack tests |
 | *added* | lightweight audit envelope (`InvoiceEvent`), `Tauros.Authority` classification, exercises |
@@ -123,6 +123,22 @@ original stories 3.1 and 6.1.
 - **Customer email is not shown to the model**, and customers cannot be
   filtered, so emails cannot be probed. A name is enough to choose.
 - **`update_draft` is `revise_invoice`**, matching the domain action.
+
+## ✅ Learning-phase polish (before the PR)
+
+Not an epic: a review pass over Epics 1–4.
+
+- **MCP strictness.** Unknown top-level tool arguments are refused, like
+  unknown keys inside `input` (`TaurosWeb.Mcp.StrictArguments`).
+- **Information architecture, from a browser review.** Navigation grouped by
+  what a human does (Overview · Revenue: Needs review, Invoices · Business ·
+  Automation · Admin); reviewing moved under invoices (`/invoices/review`,
+  `/invoices/:id/review`); a workflow Overview (what needs attention, invoices
+  by state, recent activity); invoice pages with a lifecycle and the next step;
+  status filters on the invoice list. See [UX.md](UX.md).
+- **A course.** [LEARNING-PATH.md](LEARNING-PATH.md) became a 16-lesson
+  curriculum in four parts ([docs/course/](course)), built on the existing
+  concepts, labs, tests and UI.
 
 ## Epic 5: Auditability and supervision (FR24–FR27, FR34–FR35)
 

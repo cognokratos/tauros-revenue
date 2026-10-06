@@ -110,7 +110,7 @@ the backstop if anything ever bypassed them.
 
 ## In the UI
 
-The approval inbox shows the payload in plain language ("Acme Inc owes 1200.00
+The review screen (**Needs review**) names who proposed and who decides, and shows the payload in plain language ("Acme Inc owes 1200.00
 USDC, payable on Arbitrum One to 0x…, due 2026-11-04"), the lines, the
 destination's state, the revision number, the hash and the canonical bytes.
 The decision form carries the `revision_id` and `payload_hash` that were on

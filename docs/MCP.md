@@ -105,7 +105,7 @@ Both errors name the unknown argument and list the accepted ones.
 5. revise_invoice               → new immutable revision, still draft
 6. submit_invoice               → pending_approval
    ─────────────────────────────────────────────────────────────
-   THE AGENT STOPS HERE. A human approver decides in /approvals.
+   THE AGENT STOPS HERE. A human approver decides in Needs review.
    ─────────────────────────────────────────────────────────────
 7. get_invoice (later)          → approved, rejected, or draft with
                                   approval.reason after "changes_requested";

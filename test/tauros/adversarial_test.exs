@@ -14,7 +14,7 @@ defmodule Tauros.AdversarialTest do
   > another interface.
 
   REST variants of these attacks are in `TaurosWeb.Api.InvoicesTest`, and UI
-  variants in `TaurosWeb.ApprovalLiveTest` and `TaurosWeb.AdversarialLiveTest`.
+  variants in `TaurosWeb.InvoiceReviewLiveTest` and `TaurosWeb.AdversarialLiveTest`.
   """
   use Tauros.DataCase, async: true
 

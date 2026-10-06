@@ -130,7 +130,7 @@ is not generator output or a configuration line:
 | `Revenue.Errors.Conflict` | 40 | 409 errors with a machine-readable code |
 | `Tauros.Authority` | 90 | the reviewed agent-safe / human-only list |
 | `TaurosWeb.ApiAuth` | 55 | one bearer header for both actor kinds; 401 without credentials; interface context |
-| `ApprovalLive`, `InvoiceLive.*`, `InvoiceComponents`, `InviteLive` | 745 | the approval inbox, invoice pages, invitations |
+| `DashboardLive`, `InvoiceLive.*` (list, page, review), `InvoiceComponents`, `InviteLive` | ~1,150 | the overview, the invoice workflow and its review, invitations |
 | `tools` block in `Tauros.Revenue` | ~130 of DSL | the eight MCP tools: action, output fields, model-facing description |
 | `TaurosWeb.Mcp.StrictArguments` | 60 | refuse unknown top-level tool arguments and JSON floats (amounts are decimal strings) |
 | `ApiAuth.require_agent`, `:mcp` pipeline | 35 | MCP callers are agents |
@@ -243,7 +243,8 @@ decisions resolve those disagreements.
 7. **`wallet_accounts.agent_id` is a real foreign key** (it was a NOT NULL check
    misnamed `agent_fk`), and agents with dependents can't be deleted.
 8. **The placeholder invoice counters were removed from the dashboard.** They
-   showed zeros for a feature that does not exist. The dashboard now counts
+   showed zeros for a feature that does not exist. (Since replaced by a
+   workflow overview built on real invoices.) The dashboard then counted
    agents, customers and payment destinations through policies, and links to waiting proposals.
 9. **Dropped: the `/test` endpoints, the account-settings page and the unused
    PubSub subscription.** The test endpoints only existed to smoke-test auth.
