@@ -162,3 +162,7 @@ Epic 6 issues approved invoices and reconciles payments. See the
 Tauros is an educational blueprint, not financial, legal or compliance advice.
 It is part of [CognoKratos](https://github.com/cognokratos), an open-source
 initiative by [BelaZayka](https://www.belazayka.com).
+
+**License.** Original code and documentation are released under the
+[MIT License](LICENSE). Vendored third-party assets and the brand images are
+listed with their terms in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
