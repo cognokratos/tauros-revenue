@@ -85,20 +85,13 @@ is a few hundred lines of DSL.
 
 ## Architecture
 
-```text
- Human browser            Services / agents            AI clients (agents only)
-      │                          │                            │
- LiveView + AshPhoenix     AshJsonApi (/api/v1)        AshAI MCP (/mcp, 8 reviewed tools)
-      └──────────────┬───────────┴────────────────────────────┘
-                     ▼
-     Tauros.Accounts                 Tauros.Revenue
-     User (operator | approver)      Customer · PaymentDestination
-     Agent · ApiKey · Token          Invoice ─▶ InvoiceRevision (immutable, sealed)
-                                     Approval · InvoiceEvent
-                     │  actions · policies · validations · changes · state machines
-                     ▼
-               AshPostgres ──▶ PostgreSQL
-```
+![Tauros Revenue financial-authority architecture](docs/assets/tauros-revenue-architecture.svg)
+
+The architecture is intentionally asymmetric: **AI capability stops at proposal,
+while financial authority remains human and is enforced by deterministic domain
+rules**. LiveView, REST and MCP all converge on the same Ash actions, policies,
+validations and state machines. A human approval names one exact immutable
+revision and its payload hash, never a mutable invoice in the abstract.
 
 - **Humans** sign in with a password (Argon2id) or a magic link, or get a bearer
   token from the API. Registration is closed: approvers invite humans. An
@@ -113,6 +106,10 @@ is a few hundred lines of DSL.
 - **Financial intent is immutable.** An invoice's content lives in revisions
   that are never edited; each is sealed with a SHA-256 of its canonical
   payload, and a human approval names one revision and its hash.
+
+For the detailed layer-by-layer reference, see [Architecture](docs/ARCHITECTURE.md).
+For the authority model and adversarial reasoning, see
+[AI capability is not financial authority](docs/AI-AUTHORITY.md).
 
 ## Status
 
