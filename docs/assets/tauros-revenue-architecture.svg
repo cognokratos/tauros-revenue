@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+<defs>
+  <marker id="gray" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8B949E"/></marker>
+  <marker id="green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#3FB950"/></marker>
+  <marker id="gold" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#D29922"/></marker>
+  <marker id="red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#F85149"/></marker>
+</defs>
+<rect width="1600" height="980" fill="#0D1117"/>
+<text x="60" y="58" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="800" fill="#F0F6FC">Ταύρος Revenue</text>
+<text x="60" y="94" font-family="Arial,Helvetica,sans-serif" font-size="19" fill="#8B949E">Agentic financial workflow architecture</text>
+<rect x="1230" y="34" width="310" height="38" rx="19" fill="#241B0B" stroke="#D29922" stroke-width="2"/>
+<text x="1385" y="59" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#F2CC60" text-anchor="middle">CAPABILITY ≠ FINANCIAL AUTHORITY</text>
+<rect x="40" y="130" width="310" height="560" rx="24" fill="#10161D" stroke="#2B3540" stroke-width="2"/>
+<text x="65" y="165" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#79C0FF">CALLERS</text>
+<text x="65" y="192" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8B949E">Different identities, same domain rules</text>
+<rect x="75" y="245" width="240" height="120" rx="18" fill="#111A24" stroke="#3D4B55" stroke-width="2"/>
+<text x="195" y="282" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="800" fill="#E6EDF3" text-anchor="middle">Human browser</text>
+<text x="195" y="316" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#C9D1D9" text-anchor="middle">LiveView + AshPhoenix</text>
+<text x="195" y="341" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8B949E" text-anchor="middle">operator or approver</text>
+<rect x="75" y="405" width="240" height="120" rx="18" fill="#111A24" stroke="#3D4B55" stroke-width="2"/>
+<text x="195" y="442" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="800" fill="#E6EDF3" text-anchor="middle">REST client</text>
+<text x="195" y="476" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#C9D1D9" text-anchor="middle">AshJsonApi /api/v1</text>
+<text x="195" y="501" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8B949E" text-anchor="middle">human or agent actor</text>
+<rect x="75" y="565" width="240" height="100" rx="18" fill="#111B18" stroke="#2EA043" stroke-width="2"/>
+<text x="195" y="602" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="800" fill="#D8FFE1" text-anchor="middle">AI client</text>
+<text x="195" y="634" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#B7F7C4" text-anchor="middle">AshAI MCP /mcp · agent only</text>
+<text x="195" y="657" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#7EE787" text-anchor="middle">8 reviewed tools · no approve tool</text>
+<rect x="390" y="130" width="760" height="560" rx="24" fill="#0F1C15" stroke="#2EA043" stroke-width="2"/>
+<text x="415" y="165" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#7EE787">SHARED ASH DOMAIN</text>
+<text x="415" y="192" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8ECF9D">One action path for UI, REST and AI tools</text>
+<rect x="440" y="245" width="200" height="125" rx="18" fill="#111B18" stroke="#365F48" stroke-width="2"/>
+<text x="540" y="282" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#E6EDF3" text-anchor="middle">Ash actions</text>
+<text x="540" y="316" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#B7F7C4" text-anchor="middle">draft · revise · submit</text>
+<text x="540" y="341" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8B949E" text-anchor="middle">approve · reject · cancel</text>
+<rect x="690" y="245" width="200" height="125" rx="18" fill="#111B18" stroke="#365F48" stroke-width="2"/>
+<text x="790" y="282" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#E6EDF3" text-anchor="middle">Policies</text>
+<text x="790" y="316" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#B7F7C4" text-anchor="middle">who may act</text>
+<text x="790" y="341" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8B949E" text-anchor="middle">actor + ownership checks</text>
+<rect x="940" y="245" width="160" height="125" rx="18" fill="#111B18" stroke="#365F48" stroke-width="2"/>
+<text x="1020" y="282" font-family="Arial,Helvetica,sans-serif" font-size="21" font-weight="800" fill="#E6EDF3" text-anchor="middle">State machine</text>
+<text x="1020" y="316" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#B7F7C4" text-anchor="middle">which move exists</text>
+<text x="1020" y="341" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8B949E" text-anchor="middle">row-locked transition</text>
+<rect x="500" y="455" width="540" height="175" rx="20" fill="#171A1E" stroke="#6E7681" stroke-width="2"/>
+<text x="770" y="495" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="800" fill="#E6EDF3" text-anchor="middle">Immutable financial intent</text>
+<text x="770" y="532" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#D0D7DE" text-anchor="middle">Invoice → append-only InvoiceRevision</text>
+<text x="770" y="560" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#D0D7DE" text-anchor="middle">canonical payload → SHA-256 payload_hash</text>
+<text x="770" y="590" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#F2CC60" text-anchor="middle">a human decision names one exact revision + hash</text>
+<text x="770" y="614" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#8B949E" text-anchor="middle">changing amount, destination or due date creates a new undecided revision</text>
+<rect x="1190" y="130" width="370" height="560" rx="24" fill="#171113" stroke="#63383D" stroke-width="2"/>
+<text x="1215" y="165" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#FF7B72">HUMAN FINANCIAL AUTHORITY</text>
+<text x="1215" y="192" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#A98F93">Authority cannot be manufactured by the model</text>
+<rect x="1225" y="245" width="300" height="110" rx="18" fill="#241114" stroke="#F85149" stroke-width="2"/>
+<text x="1375" y="282" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#FFB4AE" text-anchor="middle">Human approver</text>
+<text x="1375" y="315" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#F0B7B3" text-anchor="middle">approve · reject · request changes</text>
+<text x="1375" y="339" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#A98F93" text-anchor="middle">must own the proposing agent</text>
+<rect x="1225" y="405" width="300" height="150" rx="18" fill="#241114" stroke="#F85149" stroke-width="2"/>
+<text x="1375" y="442" font-family="Arial,Helvetica,sans-serif" font-size="21" font-weight="800" fill="#FFB4AE" text-anchor="middle">Exact-payload checks</text>
+<text x="1375" y="476" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#F0B7B3" text-anchor="middle">revision is current</text>
+<text x="1375" y="501" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#F0B7B3" text-anchor="middle">hash matches payload</text>
+<text x="1375" y="526" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#F0B7B3" text-anchor="middle">destination still active</text>
+<rect x="1225" y="595" width="300" height="70" rx="18" fill="#101821" stroke="#3D4B55" stroke-width="2"/>
+<text x="1375" y="625" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="800" fill="#D0D7DE" text-anchor="middle">Agent cannot approve</text>
+<text x="1375" y="650" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#8B949E" text-anchor="middle">no MCP tool + policy refusal + no state field</text>
+<line x1="315" y1="305" x2="440" y2="305" stroke="#8B949E" stroke-width="3" marker-end="url(#gray)"/>
+<line x1="315" y1="465" x2="440" y2="465" stroke="#8B949E" stroke-width="3" marker-end="url(#gray)"/>
+<path d="M315 615 L385 615 L385 340 L440 340" fill="none" stroke="#3FB950" stroke-width="3" marker-end="url(#green)"/>
+<text x="360" y="597" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#7EE787">proposal tools</text>
+<line x1="640" y1="305" x2="690" y2="305" stroke="#8B949E" stroke-width="3" marker-end="url(#gray)"/>
+<line x1="890" y1="305" x2="940" y2="305" stroke="#8B949E" stroke-width="3" marker-end="url(#gray)"/>
+<path d="M1020 370 L1020 420 L770 420 L770 455" fill="none" stroke="#8B949E" stroke-width="3" marker-end="url(#gray)"/>
+<path d="M1040 545 L1150 545 L1150 300 L1225 300" fill="none" stroke="#F85149" stroke-width="2.8" stroke-dasharray="7 6" marker-end="url(#red)"/>
+<text x="1135" y="530" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#FF7B72" text-anchor="end">decision request</text>
+<path d="M1225 480 L1135 480 L1135 585 L1040 585" fill="none" stroke="#D29922" stroke-width="2.8" stroke-dasharray="7 6" marker-end="url(#gold)"/>
+<text x="1115" y="570" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#F2CC60" text-anchor="end">exact revision + hash</text>
+<rect x="40" y="735" width="1520" height="185" rx="24" fill="#0C1510" stroke="#2C4C37" stroke-width="2"/>
+<text x="65" y="770" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#7EE787">PERSISTENT BUSINESS STATE · POSTGRESQL</text>
+<text x="65" y="797" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#8ECF9D">Identity, ownership, immutable revisions, approvals and audit are durable domain facts</text>
+<rect x="85" y="835" width="290" height="55" rx="15" fill="#0F1D16" stroke="#2EA043" stroke-width="2"/>
+<text x="230" y="858" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="800" fill="#D8FFE1" text-anchor="middle">Accounts</text>
+<text x="230" y="880" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#B7F7C4" text-anchor="middle">users · agents · API keys</text>
+<rect x="415" y="835" width="330" height="55" rx="15" fill="#0F1D16" stroke="#2EA043" stroke-width="2"/>
+<text x="580" y="858" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="800" fill="#D8FFE1" text-anchor="middle">Revenue resources</text>
+<text x="580" y="880" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#B7F7C4" text-anchor="middle">customers · destinations · invoices</text>
+<rect x="785" y="835" width="330" height="55" rx="15" fill="#2A210A" stroke="#D29922" stroke-width="2"/>
+<text x="950" y="858" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="800" fill="#F2CC60" text-anchor="middle">Immutable revisions</text>
+<text x="950" y="880" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#E8D9A5" text-anchor="middle">canonical payload + hash</text>
+<rect x="1155" y="835" width="350" height="55" rx="15" fill="#241114" stroke="#F85149" stroke-width="2"/>
+<text x="1330" y="858" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="800" fill="#FFB4AE" text-anchor="middle">Human decisions + events</text>
+<text x="1330" y="880" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#F0B7B3" text-anchor="middle">approval · rejection · audit envelope</text>
+<path d="M540 370 L540 710 L580 710 L580 835" fill="none" stroke="#3FB950" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#green)"/>
+<path d="M790 630 L790 705 L950 705 L950 835" fill="none" stroke="#D29922" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#gold)"/>
+<path d="M1375 555 L1375 800 L1330 800 L1330 835" fill="none" stroke="#F85149" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#red)"/>
+<text x="40" y="955" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="600" fill="#5E6A75">CognoKratos · tauros-revenue</text>
+<text x="1560" y="955" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="600" fill="#5E6A75" text-anchor="end">AI proposes · deterministic code enforces · humans authorize</text>
+</svg>
