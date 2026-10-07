@@ -11,6 +11,27 @@ reconciliation. AI agents do the operational work. Humans keep the authority.
 
 ![](docs/bg.png)
 
+## Where Tauros fits in CognoKratos
+
+Tauros is **Part V — Agentic Financial Workflow Engineering** in the current
+[CognoKratos curriculum](https://github.com/cognokratos/.github/blob/main/CURRICULUM.md).
+It brings the earlier layers together inside a consequential domain: identity,
+capability boundaries, deterministic policy, durable intent, human approval,
+idempotency and audit all matter because the system is preparing financial
+actions.
+
+> **Core lesson:** AI capability is not financial authority.
+
+This repository deliberately stops before settlement. Tauros knows financial
+intent; Arktos currently knows how to protect cryptographic secrets and derive
+public addresses. Secure signing, delegated cryptographic authority, payment
+execution and reconciliation remain part of the open curriculum frontier.
+
+The repository is a laboratory, not a finished financial platform. Read the
+[CognoKratos foundation](https://github.com/cognokratos/.github/blob/main/FOUNDATION.md),
+follow the structured synthesis in the [CognoKratos Book](https://book.cognokratos.com/part-5/introduction.html),
+or help [challenge and extend the curriculum](https://github.com/cognokratos/.github/blob/main/CONTRIBUTING.md).
+
 Tauros answers with architecture rather than prompts. Every interface (the
 LiveView UI, the REST API and AI tools over MCP through AshAI) calls the
 **same Ash actions**. The same **policies** and **state machines** decide what may
@@ -47,25 +68,26 @@ then try to break it with the [exercises](docs/EXERCISES.md).
 | Know what's next | [Roadmap](docs/ROADMAP.md) · [Workflows](docs/WORKFLOWS.md) |
 | Contribute | [Development](docs/DEVELOPMENT.md) · [Security](docs/SECURITY.md) |
 
-## Where it fits in CognoKratos
+## Where it fits in the current curriculum
 
 [CognoKratos](https://github.com/cognokratos) projects teach complementary
-layers of agentic systems:
+layers of trustworthy autonomous systems:
 
 | Project | Teaches |
 | --- | --- |
-| [simple-agent-template](https://github.com/cognokratos/simple-agent-template) | production agent engineering: trust boundaries, MCP, guardrails, evaluation |
-| [etf-research-agent](https://github.com/cognokratos/etf-research-agent) | governed decision engineering: policy-as-data, evidence, decision authority |
-| [sophos-agent](https://github.com/cognokratos/sophos-agent) | agent construction: loops, memory, durable and local-first orchestration |
-| [arktos-wallet](https://github.com/cognokratos/arktos-wallet) | secure financial and cryptographic capabilities: custody, keys, signing |
-| **tauros-revenue** | **agentic financial workflows**: domain modelling, policies, human authority, state machines, idempotency, audit, reconciliation |
+| [simple-agent-template](https://github.com/cognokratos/simple-agent-template) | production agent engineering: trust boundaries, MCP, guardrails, evaluation, identity and controlled mutation |
+| [sophos-agent](https://github.com/cognokratos/sophos-agent) | durable agent runtime engineering: state, checkpoints, recovery, replay and idempotency |
+| [etf-research-agent](https://github.com/cognokratos/etf-research-agent) | governed decision engineering: policy-as-data, evidence, decision authority and audit |
+| [arktos-wallet](https://github.com/cognokratos/arktos-wallet) | cryptographic capability engineering: custody, key isolation, public derivation and least-capability tool design; no signing today |
+| **tauros-revenue** | **agentic financial workflows**: domain modelling, policies, human authority, state machines, idempotency, audit and future reconciliation |
 
 The Rust projects show how low-level infrastructure and protocols work.
 Tauros shows how **Elixir and Ash compose sophisticated business and agentic
 applications with very little handwritten infrastructure**.
 
-**Tauros knows financial intent; Arktos knows cryptographic authority.** Tauros
-stores public addresses only, and never holds or uses a key.
+**Tauros knows financial intent; Arktos protects cryptographic capability.** Tauros
+stores public addresses only, and never holds or uses a key. Arktos currently
+derives addresses but does not sign or broadcast transactions.
 
 ## Why Elixir and Ash
 
@@ -148,6 +170,18 @@ mix precommit    # warnings-as-errors, format, credo, sobelow, tests
 CI also runs dependency audits and checks that migrations match the resources
 (`mix ash.codegen --check`).
 
+## Contribute to the curriculum
+
+Tauros should evolve through real engineering experience. Particularly useful
+contributions include adversarial authority tests, stronger audit models,
+settlement/reconciliation experiments, alternative approval semantics,
+concurrency failures, and proposals for how financial intent should cross into
+a separate signing or settlement boundary.
+
+A new contribution does not have to preserve the current design. If you can
+show that an assumption fails, that evidence is itself valuable curriculum.
+See the CognoKratos [contribution model](https://github.com/cognokratos/.github/blob/main/CONTRIBUTING.md).
+
 ## What comes next
 
 Epic 5 turns the audit envelope into full, database-enforced history (AshPaperTrail);
@@ -157,8 +191,8 @@ Epic 6 issues approved invoices and reconciles payments. See the
 ---
 
 Tauros is an educational blueprint, not financial, legal or compliance advice.
-It is part of [CognoKratos](https://github.com/cognokratos), an open-source
-initiative by [BelaZayka](https://www.belazayka.com).
+It is part of [CognoKratos](https://github.com/cognokratos), an open-source,
+community-built engineering curriculum supported by [BelaZayka](https://www.belazayka.com).
 
 **License.** Original code and documentation are released under the
 [MIT License](LICENSE). Vendored third-party assets and the brand images are
